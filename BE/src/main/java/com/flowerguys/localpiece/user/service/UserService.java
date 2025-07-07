@@ -1,7 +1,7 @@
 package com.flowerguys.localpiece.user.service;
 
 import com.flowerguys.localpiece.user.domain.User;
-import com.flowerguys.localpiece.user.domain.UserRole;
+import com.flowerguys.localpiece.user.domain.Gender;
 import com.flowerguys.localpiece.user.dto.UserSignupRequest;
 import com.flowerguys.localpiece.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class UserService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
-                .role(UserRole.USER)
+                .gender(request.getGender())
                 .build();
 
         userRepository.save(user);
