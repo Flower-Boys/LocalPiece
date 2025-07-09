@@ -3,11 +3,8 @@ version: "3.8"
 services:
   # 1. Spring Boot App 서비스
   app:
-    # 현재 폴더의 Dockerfile을 사용하여 'localpiece-app'이라는 이름으로 이미지를 빌드
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: localpiece-app
+    # ⬇️ Docker Hub에서 이미지를 가져오도록 명확하게 지정합니다.
+    image: chungmingyu/localpiece-app:latest
     # 컨테이너 이름 지정
     container_name: localpiece-app-container
     # .env 파일에 정의된 환경 변수를 컨테이너 내부로 전달
