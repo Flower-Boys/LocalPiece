@@ -50,10 +50,10 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             # 1. 프로젝트 폴더로 이동
-            cd my-travel-project
+            cd LocalPiece
 
             # 2. GitHub에서 최신 소스 코드(docker-compose.yml 등)를 받아옴
-            git pull origin feature/deployment-setup
+            git pull origin feature/INFRA
 
             # 3. .env 파일 생성 (민감 정보 주입)
             echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
