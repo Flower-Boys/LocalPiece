@@ -23,8 +23,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
       - name: Grant execute permission for gradlew
+        working-directory: ./BE
         run: chmod +x ./gradlew
       - name: Build with Gradle
+        working-directory: ./BE
         run: ./gradlew build --no-daemon
 
       # 3. Docker Hub 로그인, 이미지 빌드 및 푸시
@@ -34,6 +36,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Docker image
+        working-directory: ./BE
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app
