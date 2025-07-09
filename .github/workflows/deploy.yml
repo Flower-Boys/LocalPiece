@@ -1,5 +1,4 @@
 # .github/workflows/deploy.yml
-
 name: Deploy to EC2
 
 on:
@@ -7,6 +6,11 @@ on:
     branches:
       - "feature/INFRA" # 현재 작업 브랜치
       - "BE"
+# ECR 로그인 및 이미지 푸시에 필요한 변수 설정
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: localpiece-app
+  IMAGE_TAG: latest
 
 jobs:
   deploy:
@@ -29,17 +33,37 @@ jobs:
         working-directory: ./BE
         run: ./gradlew build --no-daemon -x test
 
-      # 3. Docker Hub 로그인, 이미지 빌드 및 푸시
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      # # 3. Docker Hub 로그인, 이미지 빌드 및 푸시
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # - name: Build and push Docker image
+      #   working-directory: ./BE
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app .
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app
+
+      # ⬇️ Docker Hub 로그인 대신 ECR 로그인을 사용하도록 변경
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push Docker image
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ⬇️ Docker 이미지 빌드 및 ECR 푸시
+      - name: Build, tag, and push image to Amazon ECR
         working-directory: ./BE
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+
 
       # 4. EC2에 접속하여 배포 스크립트 실행
       - name: Deploy to EC2
