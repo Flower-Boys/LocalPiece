@@ -39,13 +39,18 @@ jobs:
           registry: ${{ env.OCI_REGISTRY }}
           username: ${{ secrets.OCI_REGISTRY_USERNAME }}
           password: ${{ secrets.OCI_PASSWORD }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       # ⬇️ Docker 이미지 빌드 및 ECR 푸시
-      - name: Build and push image to OCIR
+      - name: Build and push for ARM64
         working-directory: ./BE
         run: |
-          docker build -t ${{ env.OCI_REGISTRY }}/${{ env.OCI_IMAGE_NAME }}:latest .
-          docker push ${{ env.OCI_REGISTRY }}/${{ env.OCI_IMAGE_NAME }}:latest
+          docker buildx build \
+            --platform linux/arm64 \
+            --tag ${{ env.OCI_REGISTRY }}/${{ env.OCI_IMAGE_NAME }}:latest \
+            --output type=image,push=true .
 
       # ⬇️ EC2 배포 대신 OCI 배포로 이름 변경 및 스크립트 수정
       - name: Deploy to OCI Server
