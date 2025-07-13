@@ -1,16 +1,14 @@
 # .github/workflows/deploy.yml
-name: Deploy to EC2
+name: Deploy to OCI
 
 on:
   push:
-    branches:
-      - "feature/INFRA" # 현재 작업 브랜치
-      - "BE"
-# ECR 로그인 및 이미지 푸시에 필요한 변수 설정
+    branches: [ "feature/INFRA", "be" ]
+
 env:
-  AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: localpiece-app
-  IMAGE_TAG: latest
+  # OCIR 주소와 이미지 이름을 변수로 설정
+  OCI_REGISTRY: ${{ secrets.OCI_REGION_KEY }}.ocir.io
+  OCI_IMAGE_NAME: ${{ secrets.OCI_TENANCY_NAMESPACE }}/localpiece-app
 
 jobs:
   deploy:
@@ -26,67 +24,54 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          
       - name: Grant execute permission for gradlew
         working-directory: ./BE
         run: chmod +x ./gradlew
+        
       - name: Build with Gradle
         working-directory: ./BE
         run: ./gradlew build --no-daemon -x test
 
-      # # 3. Docker Hub 로그인, 이미지 빌드 및 푸시
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # - name: Build and push Docker image
-      #   working-directory: ./BE
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app .
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/localpiece-app
-
-      # ⬇️ Docker Hub 로그인 대신 ECR 로그인을 사용하도록 변경
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Login to Oracle Cloud Infrastructure Registry
+        uses: docker/login-action@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+          registry: ${{ env.OCI_REGISTRY }}
+          username: ${{ secrets.OCI_USERNAME }}
+          password: ${{ secrets.OCI_PASSWORD }}
 
       # ⬇️ Docker 이미지 빌드 및 ECR 푸시
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build and push image to OCIR
         working-directory: ./BE
         run: |
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
-          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker build -t ${{ env.OCI_REGISTRY }}/${{ env.OCI_IMAGE_NAME }}:latest .
+          docker push ${{ env.OCI_REGISTRY }}/${{ env.OCI_IMAGE_NAME }}:latest
 
-
-      # 4. EC2에 접속하여 배포 스크립트 실행
-      - name: Deploy to EC2
+      # ⬇️ EC2 배포 대신 OCI 배포로 이름 변경 및 스크립트 수정
+      - name: Deploy to OCI Server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_SERVER_USERNAME }}
+          key: ${{ secrets.OCI_PRIVATE_KEY }}
           script: |
-            # 1. 프로젝트 폴더로 이동
+            # 프로젝트 폴더로 이동
             cd LocalPiece
 
-            # 2. GitHub에서 최신 소스 코드(docker-compose.yml 등)를 받아옴
+            # GitHub에서 최신 소스 코드(docker-compose.yml 등)를 받아옴
             git pull origin ${{ github.ref_name }}
 
-            # 3. .env 파일 생성 (민감 정보 주입)
+            # .env 파일 생성 (민감 정보 주입)
             echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
             echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
             echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
 
-            # 4. Docker Hub에서 최신 앱 이미지를 받아옴
+            # OCIR 로그인
+            docker login ${{ env.OCI_REGISTRY }} -u "${{ secrets.OCI_USERNAME }}" -p "${{ secrets.OCI_PASSWORD }}"
+
+            # Docker Hub에서 최신 앱 이미지를 받아옴
             docker-compose pull app
 
-            # 5. Docker Compose로 서비스 재시작 (변경된 내용 적용)
+            # Docker Compose로 서비스 재시작 (변경된 내용 적용)
             docker-compose up -d --remove-orphans
