@@ -68,7 +68,7 @@ jobs:
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
 
             # OCIR 로그인
-            docker login ${{ env.OCI_REGISTRY }} -u "${{ secrets.OCI_USERNAME }}" -p "${{ secrets.OCI_PASSWORD }}"
+            docker login ${{ env.OCI_REGISTRY }} -u "${{ secrets.OCI_REGISTRY_USERNAME }}" -p "${{ secrets.OCI_PASSWORD }}"
 
             # Docker Hub에서 최신 앱 이미지를 받아옴
             docker-compose pull app
