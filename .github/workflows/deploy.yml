@@ -3,7 +3,7 @@ name: Deploy to OCI
 
 on:
   push:
-    branches: [ "feature/INFRA", "be" ]
+    branches: [ "feature/INFRA", "BE" ]
 
 env:
   # OCIR 주소와 이미지 이름을 변수로 설정
