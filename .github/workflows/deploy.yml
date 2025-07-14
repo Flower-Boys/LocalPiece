@@ -85,11 +85,6 @@ jobs:
             echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
 
-            # 기존에 실행 중인 컨테이너가 있다면 완전히 내리고 삭제
-            docker-compose down
-
-            # 서버에서 직접 네이티브 ARM 이미지 빌드 (매우 빠름)
-            docker build -t my-localpiece-app ./BE
 
             # Docker Compose로 서비스 재시작 
-            docker-compose up -d --remove-orphans
+            docker-compose up -d --build
