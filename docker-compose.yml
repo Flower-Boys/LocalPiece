@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # 1. Spring Boot App 서비스
+  # Spring Boot App 서비스
   app:
     image: syd.ocir.io/sd0zbybvimiz/localpiece-app:latest
     # 컨테이너 이름 지정
@@ -9,10 +9,25 @@ services:
     # .env 파일에 정의된 환경 변수를 컨테이너 내부로 전달
     env_file:
       - ./.env
+    # ⬇️ db 서비스가 먼저 실행된 후에 app 서비스를 시작합니다.
+    depends_on:
+      - db
     # 항상 재시작
     restart: always
 
-  # 2. Nginx 서비스
+  # PostgreSQL 데이터베이스 서비스
+  db:
+    image: postgres:15-alpine 
+    container_name: localpiece-db-container
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # Nginx 서비스
   nginx:
     # 공식 Nginx 최신 이미지를 사용
     image: nginx:latest
@@ -27,3 +42,7 @@ services:
     depends_on:
       - app
     restart: always
+
+# ⬇️ 데이터베이스의 데이터를 서버 디스크에 저장(영속화)하기 위한 설정
+volumes:
+  postgres_data:
