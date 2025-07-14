@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # Spring Boot App 서비스
   app:
-    image: syd.ocir.io/sd0zbybvimiz/localpiece-app:latest
+    image: my-localpiece-app
     # 컨테이너 이름 지정
     container_name: localpiece-app-container
     # .env 파일에 정의된 환경 변수를 컨테이너 내부로 전달
