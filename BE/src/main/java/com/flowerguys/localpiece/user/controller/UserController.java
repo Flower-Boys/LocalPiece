@@ -11,6 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseCookie;
+
+import org.springframework.http.HttpHeaders;
+
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -47,10 +52,24 @@ public class UserController {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
-        return ResponseEntity.ok(new LoginResponse(token));
+        String accessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+        // HttpOnly 쿠키로 Refresh Token 설정
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true) // HTTPS가 아닐 경우 false로 설정
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60) // 7일
+                .sameSite("Strict") // or "Lax"
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body(new LoginResponse(accessToken));
     }
-    
+
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
         // JWT 기반은 서버가 상태를 갖고 있지 않기 때문에,
