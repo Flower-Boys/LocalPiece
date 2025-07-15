@@ -10,6 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.userdetails.UserDetails;
+
 
 import java.io.IOException;
 
@@ -40,15 +42,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String email = jwtUtil.extractEmail(token);
 
-        // 인증 객체 생성 (비밀번호는 null로 둠, 권한은 없음)
+        // 🔥 핵심 부분: UserDetails로 인증 객체 생성
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(email)
+                .password("") // 패스워드 불필요
+                .authorities("ROLE_USER") // 최소 권한 필요
+                .build();
+
         UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(email, null, null);
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-        // SecurityContext에 인증 정보 저장
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         filterChain.doFilter(request, response);
     }
+
 }

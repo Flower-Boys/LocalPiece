@@ -50,4 +50,12 @@ public class UserController {
         String token = jwtUtil.generateToken(user.getEmail());
         return ResponseEntity.ok(new LoginResponse(token));
     }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        // JWT 기반은 서버가 상태를 갖고 있지 않기 때문에,
+        // 프론트에서 토큰을 지우면 로그아웃이 완료됨
+        return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
+
 }
