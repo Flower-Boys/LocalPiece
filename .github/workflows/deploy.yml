@@ -62,7 +62,7 @@ jobs:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_SERVER_USERNAME }}
           key: ${{ secrets.OCI_PRIVATE_KEY }}
-          source: "*.jar"
+          source: "localpiece-jar/*.jar"
           target: "LocalPiece/BE/build/libs/"
 
       # ⬇️ EC2 배포 대신 OCI 배포로 이름 변경 및 스크립트 수정
