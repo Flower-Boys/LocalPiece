@@ -1,6 +1,6 @@
 package com.flowerguys.localpiece.user.repository;
 
-import com.flowerguys.localpiece.user.domain.User;
+import com.flowerguys.localpiece.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

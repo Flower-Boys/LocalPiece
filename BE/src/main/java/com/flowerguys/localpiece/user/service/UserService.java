@@ -1,7 +1,6 @@
 package com.flowerguys.localpiece.user.service;
 
-import com.flowerguys.localpiece.user.domain.User;
-import com.flowerguys.localpiece.user.domain.Gender;
+import com.flowerguys.localpiece.user.entity.User;
 import com.flowerguys.localpiece.user.dto.UserSignupRequest;
 import com.flowerguys.localpiece.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

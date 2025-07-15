@@ -3,7 +3,7 @@ package com.flowerguys.localpiece.user.controller;
 import com.flowerguys.localpiece.user.dto.LoginRequest;
 import com.flowerguys.localpiece.user.dto.LoginResponse;
 import com.flowerguys.localpiece.user.dto.UserSignupRequest;
-import com.flowerguys.localpiece.user.domain.User;
+import com.flowerguys.localpiece.user.entity.User;
 import com.flowerguys.localpiece.user.repository.UserRepository;
 import com.flowerguys.localpiece.config.jwt.JwtUtil;
 

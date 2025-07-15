@@ -1,6 +1,6 @@
 package com.flowerguys.localpiece.user.dto;
 
-import com.flowerguys.localpiece.user.domain.Gender;
+import com.flowerguys.localpiece.user.entity.Gender;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

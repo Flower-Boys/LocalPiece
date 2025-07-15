@@ -1,4 +1,4 @@
-package com.flowerguys.localpiece.user.domain;
+package com.flowerguys.localpiece.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
