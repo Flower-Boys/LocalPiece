@@ -6,16 +6,17 @@ import com.flowerguys.localpiece.user.dto.UserSignupRequest;
 import com.flowerguys.localpiece.user.entity.User;
 import com.flowerguys.localpiece.user.repository.UserRepository;
 import com.flowerguys.localpiece.config.jwt.JwtUtil;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseCookie;
-
 import org.springframework.http.HttpHeaders;
-
-
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/users")
@@ -37,6 +38,7 @@ public class UserController {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .gender(request.getGender())
+                .isDeleted(false)
                 .build();
 
         userRepository.save(user);
@@ -45,8 +47,10 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+        // 삭제되지 않은 유저만 로그인 가능
+        User user = userRepository.findByEmailAndIsDeletedFalse(request.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않거나 탈퇴된 이메일입니다."));
+
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
@@ -55,13 +59,12 @@ public class UserController {
         String accessToken = jwtUtil.generateAccessToken(user.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-        // HttpOnly 쿠키로 Refresh Token 설정
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true) // HTTPS가 아닐 경우 false로 설정
+                .secure(true)
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60) // 7일
-                .sameSite("Strict") // or "Lax"
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Strict")
                 .build();
 
         return ResponseEntity.ok()
@@ -69,12 +72,48 @@ public class UserController {
                 .body(new LoginResponse(accessToken));
     }
 
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
-        // JWT 기반은 서버가 상태를 갖고 있지 않기 때문에,
-        // 프론트에서 토큰을 지우면 로그아웃이 완료됨
         return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 
+    @DeleteMapping("/cancel")
+    public ResponseEntity<Map<String, String>> deleteUser(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization 헤더가 없습니다.");
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다.");
+        }
+
+        String email = jwtUtil.extractEmail(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 유저를 찾을 수 없습니다."));
+
+        if (user.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 탈퇴된 회원입니다.");
+        }
+
+        user.setDeleted(true);
+        userRepository.save(user);
+
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "회원 탈퇴가 완료되었습니다.");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .body(response);
+    }
 }

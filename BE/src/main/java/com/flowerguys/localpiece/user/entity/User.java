@@ -2,24 +2,24 @@ package com.flowerguys.localpiece.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 @Entity
-@Table(name = "users") // PostgreSQL에서 "user"는 예약어라서 "users"로 테이블 이름 설정!
+@Table(name = "users")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // PostgreSQL auto-increment
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
-    private String password; // 암호화된 비밀번호 저장
+    private String password;
 
     @Column(nullable = false)
     private String nickname;
@@ -27,4 +27,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Gender gender;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isDeleted = false;
 }

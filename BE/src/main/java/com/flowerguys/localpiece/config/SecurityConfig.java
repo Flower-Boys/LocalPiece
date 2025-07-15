@@ -9,6 +9,16 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.List;
+
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -20,15 +30,60 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/login", "/api/users/signup").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(login -> login.disable());
+                .formLogin(login -> login.disable())
 
-        // 🔥 커스텀 JWT 필터 추가
+                // 예외 처리 커스터마이징 추가
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new AuthenticationEntryPoint() {
+                            @Override
+                            public void commence(jakarta.servlet.http.HttpServletRequest request,
+                                                 jakarta.servlet.http.HttpServletResponse response,
+                                                 org.springframework.security.core.AuthenticationException authException)
+                                    throws java.io.IOException, jakarta.servlet.ServletException {
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("{\"error\":\"이메일이 올바르지 않거나 탈퇴한 유저입니다.\"}");
+                            }
+                        })
+                        .accessDeniedHandler(new AccessDeniedHandler() {
+                            @Override
+                            public void handle(jakarta.servlet.http.HttpServletRequest request,
+                                               jakarta.servlet.http.HttpServletResponse response,
+                                               org.springframework.security.access.AccessDeniedException accessDeniedException)
+                                    throws java.io.IOException, jakarta.servlet.ServletException {
+                                response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("{\"error\":\"접근 권한이 없습니다.\"}");
+                            }
+                        })
+                );
+
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // CORS 정책 설정 빈 등록
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // 허용할 출처 주소 (프론트엔드 주소)
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // 필요에 따라 변경
+
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // 쿠키, 인증 헤더 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
