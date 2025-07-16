@@ -16,7 +16,7 @@ services:
       - db
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health/liveness || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
