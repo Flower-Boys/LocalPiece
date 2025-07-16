@@ -1,6 +1,9 @@
 # 베이스 이미지로 Java 21 ARM64 버전을 사용
 FROM openjdk:21-jdk-slim
 
+# 패키지 목록 업데이트 및 curl 설치, 이후 불필요한 캐시 삭제
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # 작업 디렉토리 설정
 WORKDIR /app
 
