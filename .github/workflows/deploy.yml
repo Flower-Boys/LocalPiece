@@ -4,12 +4,11 @@ name: Build and Deploy to OCI
 on:
   push:
     branches: ["feature/INFRA", "BE"]
-
-  paths:
-    - 'BE/**'
-    - 'docker-compose.yml'
-    - 'nginx.conf'
-    - '.github/workflows/deploy.yml'
+    paths:
+      - 'BE/**'
+      - 'docker-compose.yml'
+      - 'nginx.conf'
+      - '.github/workflows/deploy.yml'
 
   pull_request:
     branches:
