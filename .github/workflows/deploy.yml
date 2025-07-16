@@ -5,6 +5,12 @@ on:
   push:
     branches: ["feature/INFRA", "BE"]
 
+  paths:
+        - 'BE/**'
+        - 'docker-compose.yml'
+        - 'nginx.conf'
+        - '.github/workflows/deploy.yml'
+
 env:
   # OCIR 주소와 이미지 이름을 변수로 설정
   OCI_REGISTRY: ${{ secrets.OCI_REGION_KEY }}.ocir.io
@@ -42,7 +48,7 @@ jobs:
 
     # 2. 빌드된 JAR 파일을 서버에 배포하는 작업
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/BE'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/BE' || github.ref == 'refs/heads/feature/INFRA')
     # build 작업이 끝나야 실행됨
     needs: build
     runs-on: ubuntu-latest
