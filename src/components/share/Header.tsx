@@ -1,7 +1,24 @@
-const Header = () => {
-    return (
-        <></>
-    )
-}
+import { NavLink } from "react-router-dom";
 
-export default Header
+const Header = () => {
+  return (
+    <header>
+      <nav>
+        <ul>
+          <li>
+            <NavLink to={"/"} end>
+                Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to={"/about"}>
+                About
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+    </header>
+  );
+};
+
+export default Header;
