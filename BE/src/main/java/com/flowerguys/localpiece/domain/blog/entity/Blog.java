@@ -44,6 +44,14 @@ public class Blog {
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
+    // 조회수 추가
+    @Column(name = "view_count")
+    private int viewCount = 0;
+
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

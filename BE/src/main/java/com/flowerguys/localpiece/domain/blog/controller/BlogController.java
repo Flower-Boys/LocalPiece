@@ -42,4 +42,16 @@ public class BlogController {
         List<BlogResponse> blogList = blogService.getBlogList();
         return ResponseEntity.ok(blogList);
     }
+
+    // 블로그 상세 조회 API
+    @GetMapping("/{blogId}")
+    public ResponseEntity<BlogResponse> getBlogDetail(
+            @PathVariable Long blogId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // ⬇️ 서비스의 단일 메소드 호출
+        BlogResponse blogDetail = blogService.getBlogAndIncreaseViewCount(blogId, userDetails);
+        
+        return ResponseEntity.ok(blogDetail);
+    }
 }

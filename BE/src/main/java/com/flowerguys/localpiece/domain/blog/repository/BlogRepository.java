@@ -4,7 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 public interface BlogRepository extends JpaRepository<Blog, Long> {
-    // 앞으로 필요한 조회 메소드들을 여기에 추가하게 됩니다.
-    // 예: List<Blog> findByUserAndIsDeletedFalse(User user);
+    @Modifying
+    @Query("update Blog b set b.viewCount = b.viewCount + 1 where b.id = :id")
+    int updateViewCount(@Param("id") Long id);
 }
