@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import java.net.URI;
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.flowerguys.localpiece.domain.blog.dto.BlogCreateRequest;
 import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
+import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.service.BlogService;
 
 @RestController
@@ -53,5 +56,30 @@ public class BlogController {
         BlogResponse blogDetail = blogService.getBlogAndIncreaseViewCount(blogId, userDetails);
         
         return ResponseEntity.ok(blogDetail);
+    }
+
+    // 블로그 수정 API
+    @PatchMapping("/{blogId}")
+    public ResponseEntity<BlogResponse> updateBlog(
+            @PathVariable Long blogId,
+            @RequestBody @Valid BlogUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        String email = userDetails.getUsername();
+        BlogResponse updatedBlog = blogService.updateBlog(blogId, email, request);
+        
+        return ResponseEntity.ok(updatedBlog);
+    }
+
+    // 블로그 삭제 API
+    @DeleteMapping("/{blogId}")
+    public ResponseEntity<Void> deleteBlog(
+            @PathVariable Long blogId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String email = userDetails.getUsername();
+        blogService.deleteBlog(blogId, email);
+        
+        return ResponseEntity.noContent().build(); // ⬅️ 삭제 성공 시 표준 응답 (204 No Content)
     }
 }

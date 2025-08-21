@@ -2,6 +2,7 @@ package com.flowerguys.localpiece.domain.blog.service;
 
 import com.flowerguys.localpiece.domain.blog.dto.BlogCreateRequest;
 import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
+import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
 import com.flowerguys.localpiece.domain.user.entity.User;
@@ -81,5 +82,48 @@ public class BlogService {
 
         // 5. DTO로 변환하여 반환
         return new BlogResponse(blog);
+    }
+
+    // 블로그 수정 로직
+    @Transactional
+    public BlogResponse updateBlog(Long blogId, String userEmail, BlogUpdateRequest request) {
+        // 1. 블로그 존재 여부 확인
+        Blog blog = blogRepository.findById(blogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOG_NOT_FOUND));
+
+        // 2. 삭제된 글인지 확인
+        if (blog.isDeleted()) {
+            throw new BusinessException(ErrorCode.BLOG_NOT_FOUND); // 삭제된 글은 없는 글처럼 취급
+        }
+
+        // 3. 사용자 존재 여부 및 글 작성자 권한 확인
+        User user = userRepository.findByEmailAndIsDeletedFalse(userEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!blog.getUser().equals(user)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 4. (Setter 대신) 엔티티 내부의 업데이트 메소드를 호출하여 수정 (더 객체지향적인 방식)
+        blog.update(request.getTitle(), request.getContent(), request.getIsPrivate());
+        
+        return new BlogResponse(blog);
+    }
+
+    // 블로그 삭제 로직
+    @Transactional
+    public void deleteBlog(Long blogId, String userEmail) {
+        Blog blog = blogRepository.findById(blogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOG_NOT_FOUND));
+
+        User user = userRepository.findByEmailAndIsDeletedFalse(userEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 글 작성자인지 권한 확인
+        if (!blog.getUser().equals(user)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
+        blog.delete();
     }
 }

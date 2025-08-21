@@ -4,6 +4,8 @@ import com.flowerguys.localpiece.global.common.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,7 +18,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error("handleMethodArgumentNotValidException", e);
-        final ErrorResponse response = new ErrorResponse(ErrorCode.INVALID_ARGUMENT);
+
+        BindingResult bindingResult = e.getBindingResult();
+        // 여러 유효성 검사 오류 중 첫 번째 오류의 메시지를 가져옵니다.
+        String errorMessage = bindingResult.getFieldErrors().stream()
+                .findFirst()
+                .map(FieldError::getDefaultMessage)
+                .orElse(ErrorCode.INVALID_ARGUMENT.getMessage());
+
+        // ErrorResponse를 직접 생성하여 상세 메시지를 담아줍니다.
+        final ErrorResponse response = new ErrorResponse(ErrorCode.INVALID_ARGUMENT, errorMessage);
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 

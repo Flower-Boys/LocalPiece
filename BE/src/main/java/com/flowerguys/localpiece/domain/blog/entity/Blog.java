@@ -69,4 +69,22 @@ public class Blog {
         this.content = content;
         this.isPrivate = isPrivate;
     }
+
+    // 수정 메소드
+    public void update(String title, String content, Boolean isPrivate) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (isPrivate != null) {
+            this.isPrivate = isPrivate;
+        }
+    }
+
+    // 삭제 메소드 (논리적 삭제)
+    public void delete() {
+        this.isDeleted = true;
+    }
 }
