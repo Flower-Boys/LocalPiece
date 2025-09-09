@@ -1,6 +1,6 @@
 # blog_generator.py
 import re
-from typing import Dict, List
+from typing import Dict, List, Union
 
 # -------------------------------
 # 유틸
@@ -374,12 +374,13 @@ def make_blog(photo: Dict, city: str = "OO도시") -> str:
     return " ".join(parts)
 
 
-def make_blog_batch(photos: List[Dict], city: str = "OO도시") -> str:
-    """
-    다장 처리: 도입 1회 → 중간(연결사+이동+이벤트/감상) → 마지막(이동+이벤트/감상+마무리 1회)
-    """
+def make_blog_batch(photos: List[Dict], city: str = "OO도시", return_list: bool = False) -> Union[str, List[str]]:
     if not photos:
-        return ""
+        return "" if not return_list else []
+
+    if return_list:
+        # 사진마다 독립적으로 make_blog() 호출해서 리스트로 반환
+        return [make_blog(p, city=city) for p in photos]
 
     # 도입 (첫 사진)
     first_places = photos[0].get("places", [])

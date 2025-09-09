@@ -8,6 +8,7 @@ from PIL import Image
 from ultralytics import YOLO
 from torchvision import models, transforms
 from transformers import BlipProcessor, BlipForConditionalGeneration
+from app.utils.make_summary_comment import make_summary_comment
 
 # ====== 경로 설정 ======
 BASE_DIR = Path(__file__).resolve().parent  # services/
@@ -150,7 +151,36 @@ def analyze_images(paths: List[Path]) -> List[Dict]:
     return [analyze_image(p) for p in paths]
 
 def make_blog_from_paths(paths: List[Path], city: str = "OO도시") -> Dict:
+    # 1. 사진별 객체 인식, 장소 분류, 캡셔닝
     photos = analyze_images(paths)
-    pg_photos = [{"yolo": p["yolo"], "places": p["places"], "caption": p["caption"]} for p in photos]
-    blog_text = make_blog_batch(pg_photos, city=city)
-    return {"blog_text": blog_text, "photos": photos}
+
+    # 2. blog_generator에 보낼 포맷
+    pg_photos = [
+        {
+            "yolo": p["yolo"],
+            "places": p["places"],
+            "caption": p["caption"]
+        }
+        for p in photos
+    ]
+
+    # 3. 사진 1장당 문단 1개 생성 (문장 리스트로 받기)
+    blog_texts = make_blog_batch(pg_photos, city=city, return_list=True)
+
+
+    # 4. 사진 + 텍스트 쌍으로 정리
+    blog = []
+    for p, text in zip(photos, blog_texts):
+        blog.append({
+            "image": p["path"],   # 나중에 여기에 S3 URL이 들어갈 수도 있음
+            "text": text
+        })
+
+    # 5. 요약 멘트 생성
+    summary_comment = make_summary_comment(pg_photos, city=city)
+
+    # 6. 최종 반환 형태
+    return {
+        "blog": blog,        # [{'image': ..., 'text': ...}, ...]
+        "comment": summary_comment  # ex: "자연과 도시를 함께 누빈 특별한 하루였네요."
+    }

@@ -4,6 +4,8 @@ import os
 import hashlib
 from pathlib import Path
 from typing import List, Optional
+from fastapi.responses import JSONResponse
+from uuid import uuid4
 
 import requests
 from fastapi import FastAPI, HTTPException
@@ -74,12 +76,12 @@ def download_image(url: str, timeout: int = 25) -> Path:
             status_code=400, detail=f"Download error for {url}: {e}")
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health():
     return {"ok": True}
 
 
-@app.post("/analyze", response_model=AnalyzeResponse)
+@app.post("/api/blogs", response_model=AnalyzeResponse)
 def analyze(req: AnalyzeRequest):
     # URL → 로컬 파일
     paths: List[Path] = []
@@ -89,6 +91,7 @@ def analyze(req: AnalyzeRequest):
 
     if not paths:
         raise HTTPException(status_code=400, detail="다운로드된 이미지가 없습니다.")
+    result["id"] = req.id
 
     # 파이프라인 실행
     result = main_blip.make_blog_from_paths(paths, city=(req.city or "OO도시"))
