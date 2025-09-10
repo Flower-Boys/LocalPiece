@@ -47,6 +47,10 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	// OCI
+	implementation platform("com.oracle.oci.sdk:oci-java-sdk-bom:3.38.0")
+    implementation "com.oracle.oci.sdk:oci-java-sdk-objectstorage"
 }
 
 // ✅ Gson 충돌 방지 (jjwt-gson 대신 jackson 사용을 보장)

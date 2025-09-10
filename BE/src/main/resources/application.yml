@@ -21,6 +21,13 @@ spring:
   server:
     port: 8080
 
+# OCI Object Storage 설정
+oci:
+  object-storage:
+    namespace: ${OCI_NAMESPACE}
+    bucket-name: ${OCI_BUCKET_NAME}
+
+
 # --- 는 프로파일을 나누는 구분선입니다.
 
 ---
