@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 
 import com.flowerguys.localpiece.domain.user.entity.User;
 
@@ -62,6 +65,9 @@ public class Blog {
         this.modifiedAt = LocalDateTime.now();
     }
     
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BlogImage> images = new ArrayList<>();
+
     @Builder
     public Blog(User user, String title, String content, boolean isPrivate) {
         this.user = user;
