@@ -4,18 +4,25 @@ import com.flowerguys.localpiece.domain.blog.dto.BlogCreateRequest;
 import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
 import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
+import com.flowerguys.localpiece.domain.blog.entity.BlogImage;
 import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
+import com.flowerguys.localpiece.domain.image.service.ImageUploadService;
 import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.domain.user.repository.UserRepository;
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
+import com.flowerguys.localpiece.domain.blog.entity.BlogImage;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -25,10 +32,11 @@ public class BlogService {
 
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
+    private final ImageUploadService imageUploadService;
 
     // 블로그 작성 로직
     @Transactional
-    public BlogResponse createBlog(String userEmail, BlogCreateRequest request) {
+    public BlogResponse createBlog(String userEmail, BlogCreateRequest request, List<MultipartFile> images) {
         // 1. 사용자 정보 찾기
         User user = userRepository.findByEmailAndIsDeletedFalse(userEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -40,8 +48,20 @@ public class BlogService {
                 .content(request.getContent())
                 .isPrivate(request.isPrivate())
                 .build();
-       
         Blog savedBlog = blogRepository.save(blog);
+
+        // 3. 이미지 파일들을 Object Storage에 업로드하고, URL들을 DB에 저장
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile imageFile : images) {
+                String imageUrl = imageUploadService.uploadImage(imageFile);
+                BlogImage blogImage = BlogImage.builder()
+                        .blog(savedBlog)
+                        .imageUrl(imageUrl)
+                        .build();
+                // Blog 엔티티의 images 리스트에도 추가 (JPA 연관관계 편의 메소드)
+                savedBlog.getImages().add(blogImage);
+            }
+        }
 
         return new BlogResponse(savedBlog);
     }

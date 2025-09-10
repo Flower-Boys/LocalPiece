@@ -9,5 +9,4 @@ public class BlogCreateRequest {
     private String title;
     private String content;
     private boolean isPrivate;
-    private List<String> imageUrls;
 }

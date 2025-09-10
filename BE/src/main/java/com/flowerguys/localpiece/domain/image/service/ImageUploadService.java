@@ -6,15 +6,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
+import com.flowerguys.localpiece.global.common.ErrorCode;
+import com.flowerguys.localpiece.global.common.exception.BusinessException;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ImageUploadService {
 
-    private final ObjectStorage objectStorage;
+    private final ObjectStorage objectStorage; // OciConfig에서 Bean으로 주입받음
 
     @Value("${oci.object-storage.namespace}")
     private String namespace;
@@ -22,27 +23,25 @@ public class ImageUploadService {
     @Value("${oci.object-storage.bucket-name}")
     private String bucketName;
 
-    public String uploadImage(MultipartFile file) throws IOException {
-        // 1. 파일 이름이 겹치지 않도록 UUID를 사용하여 고유한 파일 이름 생성
-        String originalFileName = file.getOriginalFilename();
-        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String uniqueFileName = UUID.randomUUID().toString() + extension;
+    public String uploadImage(MultipartFile file) {
+        String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
 
-        // 2. OCI Object Storage에 업로드 요청 생성
-        PutObjectRequest request = PutObjectRequest.builder()
-                .namespaceName(namespace)
-                .bucketName(bucketName)
-                .objectName(uniqueFileName)
-                .putObjectBody(file.getInputStream())
-                .contentType(file.getContentType())
-                .build();
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .namespaceName(namespace)
+                    .bucketName(bucketName)
+                    .objectName(uniqueFileName)
+                    .putObjectBody(file.getInputStream()) // ⬅️ 이 부분이 IOException을 발생시킬 수 있음
+                    .contentType(file.getContentType())
+                    .build();
 
-        // 3. 파일 업로드 실행
-        objectStorage.putObject(request);
+            objectStorage.putObject(request);
 
-        // 4. 업로드된 파일의 공개 URL 생성 및 반환
-        // 형식: https://objectstorage.{region}.oraclecloud.com/n/{namespace}/b/{bucketName}/o/{objectName}
-        return String.format("https://objectstorage.ap-sydney-1.oraclecloud.com/n/%s/b/%s/o/%s",
-                             namespace, bucketName, uniqueFileName);
+            return String.format("https://objectstorage.ap-sydney-1.oraclecloud.com/n/%s/b/%s/o/%s",
+                                 namespace, bucketName, uniqueFileName);
+        } catch (IOException e) {
+            // ⬇️ IOException 발생 시, BusinessException으로 변환하여 던짐
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
     }
 }

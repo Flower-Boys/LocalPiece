@@ -17,6 +17,10 @@ import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
 import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.service.BlogService;
 
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/blogs")
 @RequiredArgsConstructor
@@ -25,16 +29,15 @@ public class BlogController {
     private final BlogService blogService;
 
     // 블로그 생성 API
-    @PostMapping
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<BlogResponse> createBlog(
-            @RequestBody BlogCreateRequest request,
+            @RequestPart("request") BlogCreateRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        // 현재 로그인한 사용자의 이메일(username) 가져오기
         String email = userDetails.getUsername();
-        BlogResponse blogResponse = blogService.createBlog(email, request);
+        BlogResponse blogResponse = blogService.createBlog(email, request, images);
 
-        // ⬇️ Location 헤더와 함께, 응답 Body에도 생성된 Blog 객체를 담아 보냅니다.
         URI location = URI.create("/api/blogs/" + blogResponse.getId());
         return ResponseEntity.created(location).body(blogResponse);
     }

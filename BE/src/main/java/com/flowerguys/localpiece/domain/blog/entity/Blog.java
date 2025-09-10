@@ -11,12 +11,13 @@ import java.util.List;
 
 
 import com.flowerguys.localpiece.domain.user.entity.User;
+import com.flowerguys.localpiece.global.common.BaseTimeEntity;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "blog")
-public class Blog {
+public class Blog extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,16 +54,6 @@ public class Blog {
 
     public void increaseViewCount() {
         this.viewCount++;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.modifiedAt = LocalDateTime.now();
     }
     
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
