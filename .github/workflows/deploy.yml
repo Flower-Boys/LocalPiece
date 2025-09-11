@@ -95,6 +95,7 @@ jobs:
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "OCI_NAMESPACE=${{ secrets.OCI_NAMESPACE }}" >> .env
             echo "OCI_BUCKET_NAME=${{ secrets.OCI_BUCKET_NAME }}" >> .env
+            echo "TOUR_API_SERVICE_KEY=${{ secrets.TOUR_API_SERVICE_KEY }}" >> .env
 
 
             # Docker Compose로 서비스 재시작 

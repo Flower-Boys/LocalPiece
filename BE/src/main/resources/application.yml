@@ -27,6 +27,10 @@ oci:
     namespace: ${OCI_NAMESPACE}
     bucket-name: ${OCI_BUCKET_NAME}
 
+tour-api:
+  base-url: "https://apis.data.go.kr/B551011/KorService2"
+  service-key: ${TOUR_API_SERVICE_KEY}
+
 # --- 는 프로파일을 나누는 구분선입니다.
 
 ---
