@@ -106,4 +106,9 @@ public class SecurityConfig {
 
         return source;
     }
+
+    @Bean
+    public org.springframework.web.client.RestTemplate restTemplate() {
+        return new org.springframework.web.client.RestTemplate();
+    }
 }
