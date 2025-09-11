@@ -1,6 +1,7 @@
 package com.flowerguys.localpiece.domain.image.service;
 
 import com.oracle.bmc.objectstorage.ObjectStorage;
+import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,5 +44,18 @@ public class ImageUploadService {
             // ⬇️ IOException 발생 시, BusinessException으로 변환하여 던짐
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
         }
+    }
+
+    public void deleteImage(String imageUrl) {
+        // URL에서 객체 이름(파일 이름)을 추출
+        String objectName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .namespaceName(namespace)
+                .bucketName(bucketName)
+                .objectName(objectName)
+                .build();
+
+        objectStorage.deleteObject(request);
     }
 }

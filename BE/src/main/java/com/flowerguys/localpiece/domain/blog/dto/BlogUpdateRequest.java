@@ -1,5 +1,7 @@
 package com.flowerguys.localpiece.domain.blog.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,4 +16,6 @@ public class BlogUpdateRequest {
     private String content;
     
     private Boolean isPrivate; // ⬅️ Boolean (객체 타입)으로 선언하여 null 값을 받을 수 있게 함
+
+    private List<String> urlsToDelete;
 }

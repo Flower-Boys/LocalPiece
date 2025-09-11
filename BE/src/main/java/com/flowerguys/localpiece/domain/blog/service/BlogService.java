@@ -5,6 +5,7 @@ import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
 import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import com.flowerguys.localpiece.domain.blog.entity.BlogImage;
+import com.flowerguys.localpiece.domain.blog.repository.BlogImageRepository;
 import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
 import com.flowerguys.localpiece.domain.image.service.ImageUploadService;
 import com.flowerguys.localpiece.domain.user.entity.User;
@@ -30,6 +31,7 @@ public class BlogService {
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
     private final ImageUploadService imageUploadService;
+    private final BlogImageRepository blogImageRepository;
 
     // 블로그 작성 로직
     @Transactional
@@ -103,7 +105,7 @@ public class BlogService {
 
     // 블로그 수정 로직
     @Transactional
-    public BlogResponse updateBlog(Long blogId, String userEmail, BlogUpdateRequest request) {
+    public BlogResponse updateBlog(Long blogId, String userEmail, BlogUpdateRequest request, List<MultipartFile> newImages) {
         // 1. 블로그 존재 여부 확인
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BLOG_NOT_FOUND));
@@ -121,7 +123,27 @@ public class BlogService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        // 4. (Setter 대신) 엔티티 내부의 업데이트 메소드를 호출하여 수정 (더 객체지향적인 방식)
+        // 4. 삭제할 이미지 URL이 있으면 삭제 처리
+        if (request.getUrlsToDelete() != null && !request.getUrlsToDelete().isEmpty()) {
+            // DB에서 BlogImage 엔티티 삭제
+            blogImageRepository.deleteByBlogAndImageUrlIn(blog, request.getUrlsToDelete());
+            // OCI Object Storage에서 실제 파일 삭제
+            request.getUrlsToDelete().forEach(imageUploadService::deleteImage);
+        }
+        
+        // 5. 새로운 이미지가 있으면 업로드 처리
+        if (newImages != null && !newImages.isEmpty()) {
+            newImages.forEach(imageFile -> {
+                String imageUrl = imageUploadService.uploadImage(imageFile);
+                BlogImage blogImage = BlogImage.builder()
+                        .blog(blog)
+                        .imageUrl(imageUrl)
+                        .build();
+                blog.getImages().add(blogImage);
+            });
+        }
+
+        // 6. (Setter 대신) 엔티티 내부의 업데이트 메소드를 호출하여 수정 (더 객체지향적인 방식)
         blog.update(request.getTitle(), request.getContent(), request.getIsPrivate());
         
         return new BlogResponse(blog);

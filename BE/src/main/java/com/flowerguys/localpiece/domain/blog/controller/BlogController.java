@@ -65,14 +65,15 @@ public class BlogController {
     }
 
     // 블로그 수정 API
-    @PatchMapping("/{blogId}")
+    @PatchMapping(value = "/{blogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BlogResponse> updateBlog(
             @PathVariable Long blogId,
-            @RequestBody @Valid BlogUpdateRequest request,
+            @ModelAttribute @Valid BlogUpdateRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal UserDetails userDetails) {
         
         String email = userDetails.getUsername();
-        BlogResponse updatedBlog = blogService.updateBlog(blogId, email, request);
+        BlogResponse updatedBlog = blogService.updateBlog(blogId, email, request, images);
         
         return ResponseEntity.ok(updatedBlog);
     }
