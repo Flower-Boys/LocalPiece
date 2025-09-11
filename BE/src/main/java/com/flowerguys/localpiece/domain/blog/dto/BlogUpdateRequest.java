@@ -17,5 +17,5 @@ public class BlogUpdateRequest {
     
     private Boolean isPrivate; // ⬅️ Boolean (객체 타입)으로 선언하여 null 값을 받을 수 있게 함
 
-    private List<String> urlsToDelete;
+    private List<Long> idsToDelete;
 }

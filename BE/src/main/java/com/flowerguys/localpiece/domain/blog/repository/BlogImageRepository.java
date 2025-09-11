@@ -8,5 +8,5 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BlogImageRepository extends JpaRepository<BlogImage, Long> {
-    void deleteByBlogAndImageUrlIn(Blog blog, List<String> imageUrls);
+    List<BlogImage> findAllByBlogAndIdIn(Blog blog, List<Long> ids);
 }

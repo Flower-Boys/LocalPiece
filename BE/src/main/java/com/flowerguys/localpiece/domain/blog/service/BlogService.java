@@ -123,13 +123,22 @@ public class BlogService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        // 4. 삭제할 이미지 URL이 있으면 삭제 처리
-        if (request.getUrlsToDelete() != null && !request.getUrlsToDelete().isEmpty()) {
-            // DB에서 BlogImage 엔티티 삭제
-            blogImageRepository.deleteByBlogAndImageUrlIn(blog, request.getUrlsToDelete());
-            // OCI Object Storage에서 실제 파일 삭제
-            request.getUrlsToDelete().forEach(imageUploadService::deleteImage);
-        }
+        // 4. 삭제할 이미지가 있으면 삭제 처리
+        if (request.getIdsToDelete() != null && !request.getIdsToDelete().isEmpty()) {
+        // 4-1. (보안) 삭제 요청된 이미지들이 정말 이 블로그 소속인지 확인
+        List<BlogImage> imagesToDelete = blogImageRepository.findAllByBlogAndIdIn(blog, request.getIdsToDelete());
+
+        // 4-2. OCI Object Storage에서 실제 파일을 삭제하기 위해 URL 목록을 미리 확보
+        List<String> urlsToDeleteFromOCI = imagesToDelete.stream()
+                                                         .map(BlogImage::getImageUrl)
+                                                         .collect(Collectors.toList());
+
+        // 4-3. DB에서 BlogImage 엔티티 삭제
+        blogImageRepository.deleteAllInBatch(imagesToDelete);
+
+        // 4-4. OCI Object Storage에서 실제 파일 삭제
+        urlsToDeleteFromOCI.forEach(imageUploadService::deleteImage);
+    }
         
         // 5. 새로운 이미지가 있으면 업로드 처리
         if (newImages != null && !newImages.isEmpty()) {
