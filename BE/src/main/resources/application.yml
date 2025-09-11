@@ -21,6 +21,12 @@ spring:
   server:
     port: 8080
 
+# OCI Object Storage 설정
+oci:
+  object-storage:
+    namespace: ${OCI_NAMESPACE}
+    bucket-name: ${OCI_BUCKET_NAME}
+
 # --- 는 프로파일을 나누는 구분선입니다.
 
 ---
@@ -35,12 +41,14 @@ spring:
   # 로컬 PostgreSQL 데이터베이스 설정
   datasource:
     url: jdbc:postgresql://localhost:5432/localpiece-dev # ⬅️ DB 이름은 직접 만드신 것으로 수정
-    username: postgres # ⬅️ 내 컴퓨터의 postgres 계정
-    password: password # ⬅️ 내 컴퓨터의 postgres 비밀번호
+    username: localpiece # ⬅️ 내 컴퓨터의 postgres 계정
+    password: localpiece # ⬅️ 내 컴퓨터의 postgres 비밀번호
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop # ⬅️ 앱 실행 시 테이블 생성, 종료 시 삭제
+      # ddl-auto: create-drop # ⬅️ 앱 실행 시 테이블 생성, 종료 시 삭제
+      ddl-auto: update
+
     show-sql: true
 
 ---
@@ -58,6 +66,7 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
 
 management:
   endpoint:
