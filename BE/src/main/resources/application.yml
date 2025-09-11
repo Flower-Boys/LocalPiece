@@ -51,6 +51,10 @@ spring:
 
     show-sql: true
 
+oci:
+  object-storage:
+    config-path: "/Users/mingyu/.oci/config" # ⬅️ 내 컴퓨터의 OCI config 파일 경로 
+
 ---
 # ==================================
 #  배포 환경 (prod profile)
@@ -66,6 +70,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+oci:
+  object-storage:
+    config-path: "/root/.oci/config"
 
 
 management:

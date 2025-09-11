@@ -25,7 +25,7 @@ services:
     restart: always
 
     volumes:
-      - ~/.oci:/home/ubuntu/.oci:ro
+      - /home/ubuntu/LocalPiece/oci:/root/.oci:ro
       
   # PostgreSQL 데이터베이스 서비스
   db:
