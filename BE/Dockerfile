@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # 로컬 OCI config 복사
-COPY oci /root/.oci
+COPY .oci /root/.oci
 
 # 빌드된 JAR 파일의 이름을 app.jar로 복사
 COPY build/libs/app.jar app.jar
