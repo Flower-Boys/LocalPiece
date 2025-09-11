@@ -11,7 +11,6 @@ import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.domain.user.repository.UserRepository;
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
-import com.flowerguys.localpiece.domain.blog.entity.BlogImage;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
@@ -22,8 +21,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Service
@@ -48,20 +45,20 @@ public class BlogService {
                 .content(request.getContent())
                 .isPrivate(request.isPrivate())
                 .build();
-        Blog savedBlog = blogRepository.save(blog);
 
         // 3. 이미지 파일들을 Object Storage에 업로드하고, URL들을 DB에 저장
-        if (images != null && !images.isEmpty()) {
-            for (MultipartFile imageFile : images) {
-                String imageUrl = imageUploadService.uploadImage(imageFile);
+          if (images != null && !images.isEmpty()) {
+            images.forEach(imageFile -> {
+                String imageUrl = imageUploadService.uploadImage(imageFile); // 여기서 실패 시 BusinessException 발생
                 BlogImage blogImage = BlogImage.builder()
-                        .blog(savedBlog)
+                        .blog(blog)
                         .imageUrl(imageUrl)
                         .build();
-                // Blog 엔티티의 images 리스트에도 추가 (JPA 연관관계 편의 메소드)
-                savedBlog.getImages().add(blogImage);
-            }
+                blog.getImages().add(blogImage);
+            });
         }
+
+        Blog savedBlog = blogRepository.saveAndFlush(blog);
 
         return new BlogResponse(savedBlog);
     }

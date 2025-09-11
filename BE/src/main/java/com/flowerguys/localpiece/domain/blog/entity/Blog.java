@@ -2,9 +2,12 @@ package com.flowerguys.localpiece.domain.blog.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +18,10 @@ import com.flowerguys.localpiece.global.common.BaseTimeEntity;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Table(name = "blog")
 public class Blog extends BaseTimeEntity {
 
@@ -41,12 +47,6 @@ public class Blog extends BaseTimeEntity {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
-    
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "modified_at")
-    private LocalDateTime modifiedAt;
 
     // 조회수 추가
     @Column(name = "view_count")
@@ -56,10 +56,11 @@ public class Blog extends BaseTimeEntity {
         this.viewCount++;
     }
     
+    @Builder.Default
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BlogImage> images = new ArrayList<>();
 
-    @Builder
+
     public Blog(User user, String title, String content, boolean isPrivate) {
         this.user = user;
         this.title = title;

@@ -17,6 +17,8 @@ import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
 import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.service.BlogService;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 import java.util.List;
@@ -29,9 +31,10 @@ public class BlogController {
     private final BlogService blogService;
 
     // 블로그 생성 API
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "블로그 생성", description = "블로그를 생성합니다.")
     public ResponseEntity<BlogResponse> createBlog(
-            @RequestPart("request") BlogCreateRequest request,
+            @ModelAttribute @Valid BlogCreateRequest request, 
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal UserDetails userDetails) {
 
