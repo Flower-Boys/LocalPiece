@@ -27,7 +27,6 @@ oci:
     namespace: ${OCI_NAMESPACE}
     bucket-name: ${OCI_BUCKET_NAME}
 
-
 # --- 는 프로파일을 나누는 구분선입니다.
 
 ---
@@ -49,6 +48,7 @@ spring:
     hibernate:
       # ddl-auto: create-drop # ⬅️ 앱 실행 시 테이블 생성, 종료 시 삭제
       ddl-auto: update
+
     show-sql: true
 
 ---
@@ -66,3 +66,15 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true # ⬇️ Liveness/Readiness 프로브 활성화
+  health:
+    livenessstate:
+      enabled: true # ⬇️ Liveness 상태 엔드포인트 활성화 (/actuator/health/liveness)
+    readinessstate:
+      enabled: true # ⬇️ Readiness 상태 엔드포인트 활성화 (/actuator/health/readiness)
