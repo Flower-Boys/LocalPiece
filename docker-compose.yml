@@ -25,7 +25,8 @@ services:
     restart: always
 
     volumes:
-      - /home/ubuntu/.oci:/root/.oci:ro
+        - /home/ubuntu/.oci/config-docker:/root/.oci/config:ro
+        - /home/ubuntu/.oci/oci_api_key.pem:/root/.oci/oci_api_key.pem:ro
       
   # PostgreSQL 데이터베이스 서비스
   db:
