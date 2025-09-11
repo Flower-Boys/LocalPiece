@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/",
+                        .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -85,9 +85,14 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 허용할 출처 주소 (프론트엔드 주소)
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // 필요에 따라 변경
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000", // 로컬 React 개발 서버
+                "http://localhost:5173", // 로컬 Vite 개발 서버 (필요 시 추가)
+                "http://localpiece.duckdns.org",     // Duck DNS 도메인 (HTTP)
+                "https://localpiece.duckdns.org"   // Duck DNS 도메인 (HTTPS)
+        )); 
 
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PATCH","PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true); // 쿠키, 인증 헤더 허용
 
