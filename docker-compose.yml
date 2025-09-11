@@ -24,6 +24,9 @@ services:
     # 항상 재시작
     restart: always
 
+    volumes:
+      - ~/.oci:/root/.oci:ro
+      
   # PostgreSQL 데이터베이스 서비스
   db:
     image: postgres:15-alpine 
