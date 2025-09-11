@@ -172,6 +172,18 @@ public class BlogService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
+        List<BlogImage> imagesToDelete = blog.getImages();
+
+        if (imagesToDelete != null && !imagesToDelete.isEmpty()) {
+            List<String> urlsToDeleteFromOCI = imagesToDelete.stream()
+                                                             .map(BlogImage::getImageUrl)
+                                                             .collect(Collectors.toList());
+
+            urlsToDeleteFromOCI.forEach(imageUploadService::deleteImage);
+
+            blogImageRepository.deleteAllInBatch(imagesToDelete);
+        }
+
         blog.delete();
     }
 }
