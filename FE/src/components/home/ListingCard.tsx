@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 interface ListingCardProps {
   id: number;
   title: string;
@@ -6,14 +8,15 @@ interface ListingCardProps {
   image: string;
 }
 
-const ListingCard = ({ title, location, price, image }: ListingCardProps) => {
+const ListingCard = ({ id, title, location, price, image }: ListingCardProps) => {
+  const navigate = useNavigate();
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden">
+    <div onClick={() => navigate(`/blog/${id}`)} className="cursor-pointer border rounded-lg overflow-hidden shadow hover:shadow-lg transition">
       <img src={image} alt={title} className="w-full h-48 object-cover" />
       <div className="p-4">
-        <h3 className="font-semibold text-lg">{title}</h3>
+        <h3 className="font-bold text-lg">{title}</h3>
         <p className="text-sm text-gray-500">{location}</p>
-        <p className="mt-2 font-bold">{price}</p>
+        <p className="text-sm text-gray-400">{price}</p>
       </div>
     </div>
   );
