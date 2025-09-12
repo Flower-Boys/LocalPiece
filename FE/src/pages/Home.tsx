@@ -1,8 +1,33 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api"; // 우리가 만든 API 클라이언트 import
 import { SigunguCode, TourItem } from "../types/tour"; // 방금 만든 타입 import
+import SearchBar from "../components/home/SearchBar";
+import ListingCard from "../components/home/ListingCard";
 
 function Home() {
+  const listings = [
+    {
+      id: 1,
+      title: "서울 강남 아파트",
+      location: "강남구, 서울",
+      price: "₩120,000 / 박",
+      image: "https://placekitten.com/400/300",
+    },
+    {
+      id: 2,
+      title: "부산 해운대 오션뷰",
+      location: "해운대구, 부산",
+      price: "₩200,000 / 박",
+      image: "https://placekitten.com/401/300",
+    },
+    {
+      id: 3,
+      title: "제주도 돌담집",
+      location: "제주시, 제주",
+      price: "₩150,000 / 박",
+      image: "https://placekitten.com/402/300",
+    },
+  ];
   // 관광정보 목록을 저장할 상태
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   // 시군구 코드 목록을 저장할 상태
@@ -55,44 +80,28 @@ function Home() {
 
   // 데이터 로딩이 완료되었을 때 보여줄 화면
   return (
-    <div className="w-full min-h-screen bg-gray-100">
-      <div className="max-w-2xl py-8 px-4">
-        {/* 시군구 선택 */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2 text-gray-700">경상북도 시/군/구 목록</h2>
-          <select className="w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-2 focus:ring-blue-400">
-            <option value="">전체</option>
-            {sigunguCodes.map((sigungu) => (
-              <option key={sigungu.code} value={sigungu.code}>
-                {sigungu.name}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="w-full min-h-screen bg-gray-50">
+      {/* Hero + 검색창 */}
+      <section className="from-pink-500 to-red-500 text-white py-8 px-6 text-center">
+        <SearchBar />
+      </section>
+      <div className="border-b border-gray-300"></div>
 
-        {/* 관광 정보 목록 */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">관광 정보 목록 (경상북도 전체)</h2>
-          <ul className="space-y-6">
-            {tourItems.map((item) => (
-              <li key={item.id} className="bg-white border border-gray-200 rounded-lg shadow hover:shadow-md transition p-4">
-                <h3 className="text-lg font-bold mb-2 text-gray-800">{item.title}</h3>
-                <p className="text-gray-600 mb-3">{item.address}</p>
-                {item.firstimage && (
-                  <img
-                    src={item.firstimage}
-                    alt={item.title}
-                    className="w-full rounded-md"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      {/* 카테고리 */}
+      <section className="max-w-6xl mx-auto px-4 py-8 flex gap-4 overflow-x-auto">
+        {["해변", "한옥", "캠핑", "도심", "펜션"].map((cat) => (
+          <button key={cat} className="px-4 py-2 rounded-full border border-gray-300 bg-white hover:shadow whitespace-nowrap">
+            {cat}
+          </button>
+        ))}
+      </section>
+
+      {/* 숙소 카드 그리드 */}
+      <section className="max-w-6xl mx-auto px-4 pb-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {listings.map((item) => (
+          <ListingCard key={item.id} {...item} />
+        ))}
+      </section>
     </div>
   );
 }
