@@ -8,7 +8,7 @@ function Home() {
   // 시군구 코드 목록을 저장할 상태
   const [sigunguCodes, setSigunguCodes] = useState<SigunguCode[]>([]);
   // 로딩 상태를 관리할 상태
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   // 에러 상태를 관리할 상태
   const [error, setError] = useState<string | null>(null);
 
@@ -44,9 +44,9 @@ function Home() {
   // }, []); // []를 넣어 이 효과가 최초 1번만 실행되도록 합니다.
 
   // 로딩 중일 때 보여줄 화면
-  if (isLoading) {
-    return <div>데이터를 불러오는 중입니다...</div>;
-  }
+  // if (isLoading) {
+  //   return <div>데이터를 불러오는 중입니다...</div>;
+  // }
 
   // 에러가 발생했을 때 보여줄 화면
   if (error) {
@@ -55,41 +55,44 @@ function Home() {
 
   // 데이터 로딩이 완료되었을 때 보여줄 화면
   return (
-    <div>
-      <h1>LocalPiece 홈페이지</h1>
-      <hr />
+    <div className="w-full min-h-screen bg-gray-100">
+      <div className="max-w-2xl py-8 px-4">
+        {/* 시군구 선택 */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2 text-gray-700">경상북도 시/군/구 목록</h2>
+          <select className="w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-2 focus:ring-blue-400">
+            <option value="">전체</option>
+            {sigunguCodes.map((sigungu) => (
+              <option key={sigungu.code} value={sigungu.code}>
+                {sigungu.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <h2>경상북도 시/군/구 목록</h2>
-      <select>
-        <option value="">전체</option>
-        {sigunguCodes.map((sigungu) => (
-          <option key={sigungu.code} value={sigungu.code}>
-            {sigungu.name}
-          </option>
-        ))}
-      </select>
-
-      <hr />
-
-      <h2>관광 정보 목록 (경상북도 전체)</h2>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {tourItems.map((item) => (
-          <li key={item.id} style={{ border: "1px solid #ccc", marginBottom: "10px", padding: "10px" }}>
-            <h3>{item.title}</h3>
-            <p>{item.address}</p>
-            {item.firstimage && (
-              <img
-                src={item.firstimage}
-                alt={item.title}
-                width="200"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }} // 이미지가 없을 경우 숨김
-              />
-            )}
-          </li>
-        ))}
-      </ul>
+        {/* 관광 정보 목록 */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">관광 정보 목록 (경상북도 전체)</h2>
+          <ul className="space-y-6">
+            {tourItems.map((item) => (
+              <li key={item.id} className="bg-white border border-gray-200 rounded-lg shadow hover:shadow-md transition p-4">
+                <h3 className="text-lg font-bold mb-2 text-gray-800">{item.title}</h3>
+                <p className="text-gray-600 mb-3">{item.address}</p>
+                {item.firstimage && (
+                  <img
+                    src={item.firstimage}
+                    alt={item.title}
+                    className="w-full rounded-md"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
