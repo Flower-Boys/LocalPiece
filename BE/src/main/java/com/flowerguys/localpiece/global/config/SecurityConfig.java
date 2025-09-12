@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/actuator/health/liveness",
                                 "/actuator/health/readiness"
                                 ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/**").permitAll()
                         .requestMatchers("/api/users/login", "/api/users/signup").permitAll()
                         .requestMatchers("/api/tour/**").permitAll() 
@@ -94,7 +95,8 @@ public class SecurityConfig {
                 "http://localhost:3000", // 로컬 React 개발 서버
                 "http://localhost:5173", // 로컬 Vite 개발 서버 (필요 시 추가)
                 "http://localpiece.duckdns.org",     // Duck DNS 도메인 (HTTP)
-                "https://localpiece.duckdns.org"   // Duck DNS 도메인 (HTTPS)
+                "https://localpiece.duckdns.org",   // Duck DNS 도메인 (HTTPS)
+                "https://localpiece.netlify.app"  // Netlify 배포 주소
         )); 
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PATCH","PUT", "DELETE", "OPTIONS"));
