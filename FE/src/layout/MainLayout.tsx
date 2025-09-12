@@ -1,8 +1,11 @@
 import Navbar from "../components/share/Navbar";
 import Footer from "../components/share/Footer";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 const MainLayout = () => {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* 왼쪽 네비게이션 (데스크탑 전용) */}
@@ -12,8 +15,7 @@ const MainLayout = () => {
 
       {/* 메인 컨텐츠 */}
       <main className="flex-1 flex justify-center">
-        {/* 모바일에서 하단 고정 푸터 높이만큼 패딩 확보 */}
-        <div className="w-full max-w-2xl p-4 pb-20 md:pb-4">
+        <div className={`w-full p-4 pb-20 md:pb-4 ${isHome ? "" : "max-w-2xl"}`}>
           <Outlet />
         </div>
       </main>
