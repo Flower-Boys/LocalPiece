@@ -13,33 +13,35 @@ function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // 컴포넌트가 처음 렌더링될 때 API를 호출합니다.
-  useEffect(() => {
-    // 비동기 데이터를 가져오는 함수
-    const fetchTourData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  // useEffect(() => {
+  //   // 비동기 데이터를 가져오는 함수
+  //   const fetchTourData = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       setError(null);
 
-        // 두 개의 API를 동시에 호출하여 효율성을 높입니다.
-        const [sigunguResponse, tourResponse] = await Promise.all([apiClient.get<SigunguCode[]>("/tour/sigungu-codes"), apiClient.get<TourItem[]>("/tour/area-based")]);
+  //       // 두 개의 API를 동시에 호출하여 효율성을 높입니다.
+  //       const [sigunguResponse, tourResponse] = await Promise.all([apiClient.get<SigunguCode[]>("/tour/sigungu-codes"), apiClient.get<TourItem[]>("/tour/area-based")]);
 
-        // 받아온 데이터를 상태에 저장합니다.
-        setSigunguCodes(sigunguResponse.data);
-        setTourItems(tourResponse.data);
+  //       // 받아온 데이터를 상태에 저장합니다.
+  //       setSigunguCodes(sigunguResponse.data);
+  //       setTourItems(tourResponse.data);
+  //       console.log("sigunguResponse.data:", sigunguResponse.data);
+  //       console.log("tourResponse.data:", tourResponse.data);
 
-        // 콘솔에 데이터가 잘 들어왔는지 확인합니다.
-        console.log("시군구 코드 목록:", sigunguResponse.data);
-        console.log("초기 관광 정보:", tourResponse.data);
-      } catch (err) {
-        console.error("API 호출 중 오류 발생:", err);
-        setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       // 콘솔에 데이터가 잘 들어왔는지 확인합니다.
+  //       console.log("시군구 코드 목록:", sigunguResponse.data);
+  //       console.log("초기 관광 정보:", tourResponse.data);
+  //     } catch (err) {
+  //       console.error("API 호출 중 오류 발생:", err);
+  //       setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchTourData();
-  }, []); // []를 넣어 이 효과가 최초 1번만 실행되도록 합니다.
+  //   fetchTourData();
+  // }, []); // []를 넣어 이 효과가 최초 1번만 실행되도록 합니다.
 
   // 로딩 중일 때 보여줄 화면
   if (isLoading) {
