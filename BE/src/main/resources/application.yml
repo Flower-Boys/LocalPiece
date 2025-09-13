@@ -33,7 +33,7 @@ tour-api:
 
 ai-server:
   url: ${AI_SERVER_URL}
-  hf-token: ${HF_TOKEN}
+  token: ${HF_TOKEN}
 
 # --- 는 프로파일을 나누는 구분선입니다.
 
