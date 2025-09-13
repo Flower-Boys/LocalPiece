@@ -2,8 +2,6 @@ package com.flowerguys.localpiece.global.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
-import org.checkerframework.checker.units.qual.N;
 import org.springframework.http.HttpStatus;
 
 @Getter
