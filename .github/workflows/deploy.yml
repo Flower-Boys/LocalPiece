@@ -5,18 +5,18 @@ on:
   push:
     branches: ["feature/INFRA", "BE"]
     paths:
-      - 'BE/**'
-      - 'docker-compose.yml'
-      - 'nginx.conf'
-      - '.github/workflows/deploy.yml'
+      - "BE/**"
+      - "docker-compose.yml"
+      - "nginx.conf"
+      - ".github/workflows/deploy.yml"
 
   pull_request:
     branches:
       - "BE"
     paths:
-      - 'BE/**'
-      - 'docker-compose.yml'
-      - 'nginx.conf'
+      - "BE/**"
+      - "docker-compose.yml"
+      - "nginx.conf"
 
 jobs:
   build:
@@ -96,6 +96,8 @@ jobs:
             echo "OCI_NAMESPACE=${{ secrets.OCI_NAMESPACE }}" >> .env
             echo "OCI_BUCKET_NAME=${{ secrets.OCI_BUCKET_NAME }}" >> .env
             echo "TOUR_API_SERVICE_KEY=${{ secrets.TOUR_API_SERVICE_KEY }}" >> .env
+            echo "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" >> .env
+            echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
 
 
             # Docker Compose로 서비스 재시작 
