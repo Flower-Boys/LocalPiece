@@ -2,6 +2,8 @@ package com.flowerguys.localpiece.global.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import org.checkerframework.checker.units.qual.N;
 import org.springframework.http.HttpStatus;
 
 @Getter
@@ -21,6 +23,7 @@ public enum ErrorCode {
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "이 리소스에 접근할 권한이 없습니다."),
 
     // 404 Not Found
+    NOT_FOUND(HttpStatus.NOT_FOUND, "리소스를 찾을 수 없습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     BLOG_NOT_FOUND(HttpStatus.NOT_FOUND, "블로그를 찾을 수 없습니다."),
 

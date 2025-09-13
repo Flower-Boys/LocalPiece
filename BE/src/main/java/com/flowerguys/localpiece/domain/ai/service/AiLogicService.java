@@ -1,14 +1,11 @@
 package com.flowerguys.localpiece.domain.ai.service;
 
-import com.flowerguys.localpiece.domain.ai.dto.AiGenerationRequestDto;
-import com.flowerguys.localpiece.domain.ai.dto.AiResponseDto;
-import com.flowerguys.localpiece.domain.ai.dto.ImageMetadataDto;
+import com.flowerguys.localpiece.domain.ai.dto.*;
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import com.flowerguys.localpiece.domain.blog.entity.BlogImage;
 import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
 import com.flowerguys.localpiece.domain.image.service.ImageUploadService;
 import com.flowerguys.localpiece.domain.user.entity.User;
-import com.flowerguys.localpiece.domain.user.repository.UserRepository;
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,14 +25,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Component // @Service 대신 @Component를 사용하여 '독립적인 로직 컴포넌트'임을 명시
 @RequiredArgsConstructor
-public class AiService {
+public class AiLogicService {
 
     private final RestTemplate restTemplate;
     private final ImageUploadService imageUploadService;
     private final MetadataService metadataService;
-    private final UserRepository userRepository;
     private final BlogRepository blogRepository;
 
     @Value("${ai-server.url}")
@@ -44,49 +40,40 @@ public class AiService {
     private String hfToken;
 
     @Transactional
-    public Long generateAiBlog(String userEmail, String city, List<MultipartFile> images) {
-        User user = userRepository.findByEmailAndIsDeletedFalse(userEmail)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public Long executeAiPipeline(User user, String city, List<MultipartFile> images) {
+        log.info("AI 파이프라인 시작. 사용자: {}", user.getEmail());
 
-        // 1. OCI 업로드 및 메타데이터 추출을 병렬로 처리 (성능 향상)
+        // 1. OCI 업로드 및 메타데이터 추출 (병렬 처리)
         List<ImageMetadataDto> imageInfos = images.parallelStream().map(file -> {
             String imageUrl = imageUploadService.uploadImage(file);
             return metadataService.extractMetadata(file, imageUrl);
         }).collect(Collectors.toList());
 
-        // 2. 촬영 시간(timestamp)을 기준으로 이미지 정렬하여 '타임라인' 생성
+        // 2. 촬영 시간을 기준으로 이미지 정렬 (타임라인 생성)
         imageInfos.sort(Comparator.comparing(ImageMetadataDto::getSafeTimestamp));
-        
-        // 3. 정렬된 이미지 URL 목록
-        List<String> sortedImageUrls = imageInfos.stream()
-                                                 .map(ImageMetadataDto::getUrl)
-                                                 .collect(Collectors.toList());
+        List<String> sortedImageUrls = imageInfos.stream().map(ImageMetadataDto::getUrl).collect(Collectors.toList());
 
-        // 4. AI 서버에 보낼 요청 데이터 생성 (향후 AI가 메타데이터를 활용할 것을 대비)
-        // 현재 AI 서버는 image_urls만 사용하지만, 미리 전체 데이터를 보내도록 설계
+        // 3. AI 서버에 보낼 요청 준비
         AiGenerationRequestDto aiRequest = new AiGenerationRequestDto(UUID.randomUUID().toString(), imageInfos, city);
         String requestUrl = aiServerUrl + "/api/blogs";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(hfToken); // ⬅️ Hugging Face 인증 토큰 추가
-
+        headers.setBearerAuth(hfToken);
         HttpEntity<AiGenerationRequestDto> entity = new HttpEntity<>(aiRequest, headers);
 
+        // 4. AI 서버 호출 및 블로그 생성
         try {
-            // 5. AI 서버 호출
             AiResponseDto aiResponse = restTemplate.postForObject(requestUrl, entity, AiResponseDto.class);
 
             if (aiResponse == null) {
                 throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "AI 서버 응답 없음");
             }
 
-            // 6. AI 응답을 하나의 문자열로 조합
             StringBuilder contentBuilder = new StringBuilder();
             aiResponse.getBlog().forEach(content -> contentBuilder.append(content.getText()).append("\n\n"));
             contentBuilder.append(aiResponse.getComment());
 
-            // 7. DB에 블로그 저장
             Blog newBlog = Blog.builder()
                     .user(user)
                     .title(city + "에서의 AI 추천 여행기")
@@ -99,13 +86,14 @@ public class AiService {
             newBlog.setImages(blogImages);
 
             Blog savedBlog = blogRepository.save(newBlog);
+            log.info("AI 블로그 생성 완료. 블로그 ID: {}", savedBlog.getId());
             return savedBlog.getId();
 
         } catch (Exception e) {
-            log.error("AI 서버 호출 또는 블로그 생성 중 오류 발생: {}", e.getMessage(), e);
-            sortedImageUrls.forEach(imageUploadService::deleteImage); // 실패 시 업로드된 이미지 삭제
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "AI 블로그 생성에 실패했습니다.");
+            log.error("AI 파이프라인 실행 중 오류 발생: {}", e.getMessage(), e);
+            // 💡 중요: 실패 시 OCI에 업로드했던 이미지들을 삭제하여 뒷정리합니다.
+            sortedImageUrls.forEach(imageUploadService::deleteImage);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "AI 블로그 생성에 실패했습니다: " + e.getMessage());
         }
     }
 }
-
