@@ -1,4 +1,4 @@
-# 1. 베이스 이미지 선택 (안정적인 파이썬 3.9 버전을 사용합니다)
+# 1. 베이스 이미지를 파이썬 3.11 버전으로 선택합니다.
 FROM python:3.11
 
 # 2. 보안을 위해 루트가 아닌 일반 사용자를 생성하고 전환합니다.
@@ -8,17 +8,18 @@ USER user
 # 3. pip 실행 파일 경로를 환경 변수에 추가합니다.
 ENV PATH="/home/user/.local/bin:$PATH"
 
-# 4. 작업 디렉토리를 생성하고 이동합니다.
+# 4. 전체 프로젝트를 복사할 기본 작업 디렉토리를 생성합니다.
 WORKDIR /app
 
-# 5. 의존성 파일을 먼저 복사합니다. (경로 수정!)
-COPY --chown=user ./blog_generator/requirements.txt requirements.txt
-
-# 6. 의존성을 설치합니다.
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
-
-# 7. 프로젝트의 모든 파일을 작업 디렉토리로 복사합니다.
+# 5. 로컬의 모든 파일을 Docker 이미지 안으로 복사합니다.
+# 이제 Docker 이미지 안에는 /app/blog_generator/app/main.py 와 같은 구조가 됩니다.
 COPY --chown=user . .
 
-# 8. 서버를 실행합니다. Hugging Face가 요구하는 7860번 포트를 사용합니다.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# 6. 실제 파이썬 프로젝트가 있는 폴더로 작업 디렉토리를 변경합니다.
+WORKDIR /app/blog_generator
+
+# 7. 의존성을 설치합니다. (이제 requirements.txt를 바로 찾을 수 있습니다.)
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+# 8. 서버를 실행합니다. (이제 app/main.py를 바로 찾을 수 있습니다.)
+CMD ["uvicorn", "app.main:app", "--host", "0.S0.0.0", "--port", "7860"]
