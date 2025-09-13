@@ -5,7 +5,8 @@ on:
     branches:
       - AI
     paths:
-      - 'AI/**'
+      - "AI/**"
+      - ".github/workflows/deploy-ai-to-hf.yml"
 
 jobs:
   deploy-to-hf-space:
@@ -44,4 +45,3 @@ jobs:
           else
             echo "No changes to deploy."
           fi
-
