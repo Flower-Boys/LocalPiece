@@ -13,17 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # 1. 우리 GitHub 저장소의 코드를 가져옵니다.
+      # lfs: true 옵션을 추가하여 LFS로 관리되는 파일을 실제 파일로 다운로드합니다.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
-      # 2. Hugging Face에 접근할 수 있도록 Git 인증 정보를 설정합니다. (더 안정적인 방법)
-      # "앞으로 https://huggingface.co 주소를 만나면, 아래 인증 정보가 포함된 주소로 대신 사용해라" 라고 Git에게 알려줍니다.
+      # 2. Hugging Face에 접근할 수 있도록 Git 인증 정보를 설정합니다.
       - name: Configure Git for Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: git config --global url."https://Min9yu:${HF_TOKEN}@huggingface.co".insteadOf "https://huggingface.co"
 
-      # 3. 이제 인증 정보 없이 원래 주소로 클론합니다. Git이 위에서 설정한 규칙에 따라 자동으로 인증합니다.
+      # 3. Hugging Face Space 저장소를 'hf-space'라는 이름의 폴더에 클론합니다.
       - name: Clone Hugging Face space
         run: git clone https://huggingface.co/spaces/Min9yu/localpiece-ai-generator hf-space
 
@@ -31,7 +33,18 @@ jobs:
       - name: Sync AI directory to HF space
         run: rsync -av --delete --exclude='.git/' AI/ hf-space/
 
-      # 5. hf-space 폴더로 이동하여 변경사항을 Hugging Face 저장소에 push합니다.
+      # 5. hf-space 폴더로 이동하여 Git LFS를 설정하고 대용량 파일을 추적합니다.
+      - name: Set up Git LFS in target repository
+        run: |
+          cd hf-space
+          git lfs install
+          # AI 모델 가중치 파일들을 LFS로 추적하도록 설정합니다.
+          git lfs track "*.pth.tar"
+          git lfs track "*.pt"
+          # LFS 설정을 담고 있는 .gitattributes 파일을 Git에 추가합니다.
+          git add .gitattributes
+
+      # 6. 변경사항을 Hugging Face 저장소에 push합니다.
       - name: Push to Hugging Face Hub
         run: |
           cd hf-space
@@ -39,8 +52,7 @@ jobs:
           git config --global user.name "GitHub Action"
           git add .
           if ! git diff --staged --quiet; then
-            git commit -m "🚀 Auto-deploy from main repo"
-            # push 할 때도 Git이 자동으로 인증 정보를 사용합니다.
+            git commit -m "🚀 Auto-deploy from main repo, setting up LFS"
             git push origin main
           else
             echo "No changes to deploy."
