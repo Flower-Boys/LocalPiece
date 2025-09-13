@@ -1,6 +1,10 @@
 # 1. 베이스 이미지를 파이썬 3.11 버전으로 선택합니다.
 FROM python:3.11
 
+# OpenCV(cv2) 실행에 필요한 시스템 라이브러리를 미리 설치합니다.
+# apt-get update로 패키지 목록을 최신화하고, libgl1-mesa-glx를 설치합니다.
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
+
 # 2. 보안을 위해 루트가 아닌 일반 사용자를 생성하고 전환합니다.
 RUN useradd -m -u 1000 user
 USER user
