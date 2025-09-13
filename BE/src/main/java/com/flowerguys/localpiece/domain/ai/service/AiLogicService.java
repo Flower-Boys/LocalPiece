@@ -62,36 +62,16 @@ public class AiLogicService {
 
             if (aiResponse == null) throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "AI 서버 응답 없음");
 
-            // AI 응답을 새로운 '블록' 구조로 변환
-            List<BlogContent> blogContents = new ArrayList<>();
-            int sequence = 1;
-            for (AiResponseDto.BlogContent contentBlock : aiResponse.getBlog()) {
-                blogContents.add(BlogContent.builder()
-                        .contentType(ContentType.IMAGE)
-                        .sequence(sequence++)
-                        .content(contentBlock.getImage())
-                        .build());
-                blogContents.add(BlogContent.builder()
-                        .contentType(ContentType.TEXT)
-                        .sequence(sequence++)
-                        .content(contentBlock.getText())
-                        .build());
-            }
-            // 최종 코멘트도 텍스트 블록으로 추가
-            blogContents.add(BlogContent.builder()
-                    .contentType(ContentType.TEXT)
-                    .sequence(sequence)
-                    .content(aiResponse.getComment())
-                    .build());
-
             Blog newBlog = Blog.builder()
                     .user(user)
-                    .title(city + "에서의 AI 추천 여행기")
-                    .isPrivate(false)
+                    .title("[AI 생성 초안] " + city + " 추천 여행기") 
+                    .isPrivate(true)
                     .build();
             
             // Blog 엔티티에 생성된 contents 목록을 연결
-            newBlog.setContents(blogContents.stream().peek(bc -> bc.setBlog(newBlog)).collect(Collectors.toList()));
+            List<BlogContent> blogContents = createBlogContentsFromAiResponse(aiResponse); // 로직 분리 (가독성)
+            blogContents.forEach(bc -> bc.setBlog(newBlog));
+            newBlog.setContents(blogContents);
 
             Blog savedBlog = blogRepository.save(newBlog);
             log.info("AI 블로그 생성 완료. 블로그 ID: {}", savedBlog.getId());
@@ -102,5 +82,28 @@ public class AiLogicService {
             sortedImageUrls.forEach(imageUploadService::deleteImage);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "AI 블로그 생성 실패: " + e.getMessage());
         }
+    }
+
+    private List<BlogContent> createBlogContentsFromAiResponse(AiResponseDto aiResponse) {
+        List<BlogContent> blogContents = new ArrayList<>();
+        int sequence = 1;
+        for (AiResponseDto.BlogContent contentBlock : aiResponse.getBlog()) {
+            blogContents.add(BlogContent.builder()
+                    .contentType(ContentType.IMAGE)
+                    .sequence(sequence++)
+                    .content(contentBlock.getImage())
+                    .build());
+            blogContents.add(BlogContent.builder()
+                    .contentType(ContentType.TEXT)
+                    .sequence(sequence++)
+                    .content(contentBlock.getText())
+                    .build());
+        }
+        blogContents.add(BlogContent.builder()
+                .contentType(ContentType.TEXT)
+                .sequence(sequence)
+                .content(aiResponse.getComment())
+                .build());
+        return blogContents;
     }
 }
