@@ -11,8 +11,8 @@ ENV PATH="/home/user/.local/bin:$PATH"
 # 4. 작업 디렉토리를 생성하고 이동합니다.
 WORKDIR /app
 
-# 5. 의존성 파일을 먼저 복사합니다. (빌드 캐시 효율을 위함)
-COPY --chown=user ./requirements.txt requirements.txt
+# 5. 의존성 파일을 먼저 복사합니다. (경로 수정!)
+COPY --chown=user ./blog_generator/requirements.txt requirements.txt
 
 # 6. 의존성을 설치합니다.
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
