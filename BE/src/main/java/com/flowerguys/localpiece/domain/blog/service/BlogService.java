@@ -18,8 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,8 +42,13 @@ public class BlogService {
                 .title(request.getTitle())
                 .isPrivate(request.isPrivate())
                 .build();
+
+        Queue<MultipartFile> imageFilesQueue = (imageFiles != null) ? new LinkedList<>(imageFiles) : new LinkedList<>();
+
         
-        List<BlogContent> contents = processBlogContents(blog, request.getContents(), imageFiles);
+        List<BlogContent> contents = processBlogContents(blog, request.getContents(), imageFilesQueue);
+
+        contents.forEach(content -> content.setBlog(blog));
         blog.setContents(contents);
 
         Blog savedBlog = blogRepository.save(blog);
@@ -83,11 +90,13 @@ public class BlogService {
                 .filter(oldUrl -> !newImageUrls.contains(oldUrl))
                 .forEach(imageUploadService::deleteImage);
 
+        Queue<MultipartFile> imageFilesQueue = (imageFiles != null) ? new LinkedList<>(imageFiles) : new LinkedList<>();
+
         // 1. 기존 contents 컬렉션을 비웁니다. (orphanRemoval=true에 의해 DB에서도 삭제됨)
         blog.getContents().clear();
 
         // 2. 새로운 BlogContent 리스트를 만듭니다. (이때 blog와의 연관관계가 설정됩니다)
-        List<BlogContent> newContents = processBlogContents(blog, request.getContents(), imageFiles);
+        List<BlogContent> newContents = processBlogContents(blog, request.getContents(), imageFilesQueue);
 
         // 3. 비워진 기존 컬렉션에 새로운 내용들을 모두 추가합니다.
         blog.getContents().addAll(newContents);
@@ -111,33 +120,32 @@ public class BlogService {
     
     // --- Private Helper Methods ---
 
-    private List<BlogContent> processBlogContents(Blog blog, List<BlogContentDto> contentDtos, List<MultipartFile> imageFiles) {
-        Map<String, MultipartFile> imageMap = (imageFiles != null) ? imageFiles.stream()
-                .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file)) : Map.of();
-        
-        return contentDtos.stream().map(dto -> {
-            String contentValue;
-            if (dto.getContentType() == ContentType.IMAGE) {
-                if (dto.getContent().startsWith("http")) {
-                    contentValue = dto.getContent();
-                } else {
-                    MultipartFile imageFile = imageMap.get(dto.getContent());
-                    if (imageFile == null) {
-                        throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "요청된 이미지 파일을 찾을 수 없습니다: " + dto.getContent());
-                    }
-                    contentValue = imageUploadService.uploadImage(imageFile);
-                }
-            } else {
+    private List<BlogContent> processBlogContents(Blog blog, List<BlogContentDto> contentDtos, Queue<MultipartFile> imageFilesQueue) {
+    return contentDtos.stream().map(dto -> {
+        String contentValue;
+        if (dto.getContentType() == ContentType.IMAGE) {
+            // content가 http로 시작하면 기존 URL을 그대로 사용 (수정 시)
+            if (dto.getContent().startsWith("http")) {
                 contentValue = dto.getContent();
+            } else {
+                // 파일 이름으로 찾는 대신, 큐에서 파일을 하나 꺼냄
+                if (imageFilesQueue.isEmpty()) {
+                    throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "요청된 콘텐츠 수에 비해 이미지 파일이 부족합니다.");
+                }
+                MultipartFile imageFile = imageFilesQueue.poll();
+                contentValue = imageUploadService.uploadImage(imageFile);
             }
-            return BlogContent.builder()
-                    .blog(blog)
-                    .sequence(dto.getSequence())
-                    .contentType(dto.getContentType())
-                    .content(contentValue)
-                    .build();
-        }).collect(Collectors.toList());
-    }
+        } else {
+            contentValue = dto.getContent();
+        }
+        return BlogContent.builder()
+                .blog(blog)
+                .sequence(dto.getSequence())
+                .contentType(dto.getContentType())
+                .content(contentValue)
+                .build();
+    }).collect(Collectors.toList());
+}
 
     private User findUser(String email) {
         return userRepository.findByEmailAndIsDeletedFalse(email)
