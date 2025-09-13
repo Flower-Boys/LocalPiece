@@ -1,7 +1,13 @@
-title: LocalPiece AI Blog Generator emoji: ✍️ colorFrom: green colorTo: blue sdk: docker pinned: false
+---
+title: LocalPiece AI Blog Generator 
+emoji: ✍️ 
+colorFrom: green
+colorTo: blue 
+sdk: docker 
+pinned: false
+---
 📘 AI Blog Generator - 프로젝트 설명서
 본 프로젝트는 이미지를 기반으로 장소/객체/상황을 자동 분석하여, 한글 감성 블로그 문장을 자동 생성하는 AI 파이프라인입니다.
-
 
 # 📘 AI Blog Generator - 프로젝트 설명서 (README)
 
