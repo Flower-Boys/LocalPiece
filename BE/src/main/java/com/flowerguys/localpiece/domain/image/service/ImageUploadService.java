@@ -1,9 +1,11 @@
 package com.flowerguys.localpiece.domain.image.service;
 
+import com.oracle.bmc.model.BmcException; // ✨ 1. BmcException import
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +14,7 @@ import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageUploadService {
@@ -56,6 +59,19 @@ public class ImageUploadService {
                 .objectName(objectName)
                 .build();
 
-        objectStorage.deleteObject(request);
+        try {
+            objectStorage.deleteObject(request);
+            log.info("Object Storage에서 이미지를 성공적으로 삭제했습니다: {}", objectName);
+        } catch (BmcException e) {
+            // HTTP 404 Not Found 오류는 이미지가 존재하지 않는다는 의미이므로,
+            // 비즈니스 로직상 오류로 간주하지 않고 경고 로그만 남기고 넘어갑니다.
+            if (e.getStatusCode() == 404) {
+                log.warn("삭제하려던 이미지가 Object Storage에 존재하지 않습니다. URL: {}", imageUrl);
+            } else {
+                // 404가 아닌 다른 모든 오류는 심각한 문제일 수 있으므로 다시 예외를 던집니다.
+                log.error("Object Storage 이미지 삭제 중 예상치 못한 오류가 발생했습니다.", e);
+                throw e; 
+            }
+        }
     }
 }

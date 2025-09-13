@@ -1,7 +1,6 @@
 // 이 파일은 AI 서버로 보낼 '완벽한' 데이터 구조를 정의합니다.
 package com.flowerguys.localpiece.domain.ai.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import java.util.List;

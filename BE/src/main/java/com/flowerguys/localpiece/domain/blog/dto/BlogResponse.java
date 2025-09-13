@@ -1,9 +1,9 @@
 package com.flowerguys.localpiece.domain.blog.dto;
 
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
-import com.flowerguys.localpiece.domain.user.dto.UserResponse;
-
+import com.flowerguys.localpiece.domain.blog.entity.BlogContent;
 import lombok.Getter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,24 +11,31 @@ import java.util.stream.Collectors;
 @Getter
 public class BlogResponse {
     private Long id;
-    private UserResponse user; // User 엔티티 대신 UserResponse 사용
     private String title;
-    private String content;
     private boolean isPrivate;
-    private List<ImageInfo> images;
+    private int viewCount;
     private LocalDateTime createdAt;
-    private LocalDateTime modifiedAt;
+    private LocalDateTime modifiedAt; 
+    private String author;
+    private List<BlogContentDto> contents;
 
     public BlogResponse(Blog blog) {
         this.id = blog.getId();
-        this.user = new UserResponse(blog.getUser()); // User 객체를 DTO로 변환
         this.title = blog.getTitle();
-        this.content = blog.getContent();
         this.isPrivate = blog.isPrivate();
-        this.images = blog.getImages().stream()
-                             .map(ImageInfo::new)
-                             .collect(Collectors.toList());
+        this.viewCount = blog.getViewCount();
         this.createdAt = blog.getCreatedAt();
-        this.modifiedAt = blog.getModifiedAt();
+        this.modifiedAt = blog.getModifiedAt(); // ✨ Blog가 BaseTimeEntity를 상속하므로 사용 가능
+        this.author = blog.getUser().getNickname();
+        
+        this.contents = blog.getContents().stream()
+                .map(entity -> {
+                    BlogContentDto dto = new BlogContentDto();
+                    dto.setSequence(entity.getSequence());
+                    dto.setContentType(entity.getContentType());
+                    dto.setContent(entity.getContent());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }
