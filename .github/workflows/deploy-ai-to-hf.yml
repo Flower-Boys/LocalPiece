@@ -17,11 +17,13 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Hugging Face Space 저장소를 'hf-space'라는 이름의 폴더에 클론합니다.
+      #    (인증 정보를 URL에 포함하여 Private 저장소 클론)
       - name: Clone Hugging Face space
-        run: git clone https://huggingface.co/spaces/Min9yu/localpiece-ai-generator hf-space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git clone https://Min9yu:${HF_TOKEN}@huggingface.co/spaces/Min9yu/localpiece-ai-generator hf-space
 
       # 3. 우리 저장소의 AI/ 폴더 내용을 hf-space 폴더로 완벽하게 복사(동기화)합니다.
-      #    --delete 옵션은 원본에 없는 파일은 대상에서 삭제하여 항상 똑같은 상태를 유지합니다.
       - name: Sync AI directory to HF space
         run: rsync -av --delete --exclude='.git/' AI/ hf-space/
 
@@ -37,6 +39,7 @@ jobs:
           # 변경사항이 있을 때만 커밋하고 푸시합니다.
           if ! git diff --staged --quiet; then
             git commit -m "🚀 Auto-deploy from main repo"
+            # push 할 때도 인증 정보를 URL에 포함하는 것이 가장 확실합니다.
             git push https://Min9yu:${HF_TOKEN}@huggingface.co/spaces/Min9yu/localpiece-ai-generator main
           else
             echo "No changes to deploy."
