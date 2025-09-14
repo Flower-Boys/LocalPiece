@@ -72,10 +72,10 @@ export interface TourIntroResponse {
 export interface TourInfoResponse {
   contentid: string;
   contenttypeid: string;
-  fldgubun: string;   // 구분 코드 (ex. 3 = 이용안내)
-  infoname: string;   // 정보명 (ex. 입장료, 화장실)
-  infotext: string;   // 정보 내용 (ex. 무료, 있음)
-  serialnum: string;  // 순번
+  fldgubun?: string;   // 구분 코드 (ex. 3 = 이용안내)
+  infoname?: string;   // 정보명 (ex. 입장료, 화장실)
+  infotext?: string;   // 정보 내용 (ex. 무료, 있음)
+  serialnum?: string;  // 순번
   [key: string]: any; // 다른 contentTypeId에서 추가 필드가 있을 수 있음
 }
 
