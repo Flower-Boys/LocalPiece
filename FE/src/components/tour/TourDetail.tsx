@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import SearchBar from "../../components/home/SearchBar";
 import TourMap from "../../components/tour/TourMap";
 import { getTourCommon, getTourIntro, getTourInfo, getTourImages } from "../../api/tour";
@@ -79,34 +79,6 @@ const renderers: Record<string, (item: TourInfoResponse) => React.ReactNode | nu
   ),
 };
 
-// 🔑 InfoSection 컴포넌트
-const InfoSection = ({ info }: { info: TourInfoResponse[] }) => {
-  if (!info || info.length === 0) return null;
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <BadgeInfo className="w-5 h-5 text-rose-500" />
-        이용 안내
-      </h2>
-      <div className="space-y-4">
-        {info.map((item) => {
-          const renderer = renderers[item.contenttypeid];
-          return renderer ? (
-            renderer(item)
-          ) : (
-            // fallback: 공통 처리
-            <div key={item.serialnum} className="text-sm">
-              {item.infoname && <strong>{item.infoname}: </strong>}
-              {item.infotext}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 const TourDetail = () => {
   const { state } = useLocation() as {
     state: {
@@ -163,17 +135,6 @@ const TourDetail = () => {
   const prettyType = contentTypeLabel[String(type)] || "정보";
   const phoneText = formatTel(common?.tel);
   const homepage = common?.homepage?.includes("http") ? common?.homepage : common?.homepage ? `https://${common?.homepage}` : "";
-
-  // 이용안내(반복정보) 섹션을 그룹화 (fldgubun 기준)
-  const infoGrouped = useMemo(() => {
-    const map = new Map<string, TourInfoResponse[]>();
-    info.forEach((row) => {
-      const key = row.fldgubun || "기타";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(row);
-    });
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [info]);
 
   // 길찾기/공유/복사 등
   const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapy},${mapx}`;
