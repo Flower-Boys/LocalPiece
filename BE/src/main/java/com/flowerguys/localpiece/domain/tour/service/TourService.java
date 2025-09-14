@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.CommonInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.IntroductionInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
@@ -266,5 +267,19 @@ public class TourService {
         });
 
         return parseItems(jsonString, CommonInfoDto.class);
+    }
+
+    /**
+     * 소개정보 조회
+     */
+    public List<IntroductionInfoDto> getIntroductionInfo(String contentId, String contentTypeId) {
+        String jsonString = callTourApi("/detailIntro2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId)
+                   .queryParam("contentTypeId", contentTypeId);
+        });
+
+        // Object.class -> IntroductionInfoDto.class 로 변경
+        return parseItems(jsonString, IntroductionInfoDto.class);
     }
 }

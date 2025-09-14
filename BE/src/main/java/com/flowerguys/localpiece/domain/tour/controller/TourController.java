@@ -3,6 +3,7 @@ package com.flowerguys.localpiece.domain.tour.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.IntroductionInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
@@ -178,5 +179,18 @@ public class TourController {
         List<CommonInfoDto> commonInfo = tourService.getCommonInfo(contentId);
         
         return ResponseEntity.ok(commonInfo);
+    }
+
+    /**
+     * 소개정보 조회 Controller
+     */
+    @GetMapping("/detail/intro/{contentId}")
+    public ResponseEntity<List<IntroductionInfoDto>> getIntroductionInfo(
+            @PathVariable String contentId,
+            @RequestParam String contentTypeId) throws JsonProcessingException {
+
+        List<IntroductionInfoDto> introInfo = tourService.getIntroductionInfo(contentId, contentTypeId);
+        
+        return ResponseEntity.ok(introInfo);
     }
 }
