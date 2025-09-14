@@ -8,6 +8,7 @@ import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.IntroductionInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
+import com.flowerguys.localpiece.domain.tour.dto.RepeatInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
@@ -281,5 +282,18 @@ public class TourService {
 
         // Object.class -> IntroductionInfoDto.class 로 변경
         return parseItems(jsonString, IntroductionInfoDto.class);
+    }
+
+    /**
+     * 반복정보 조회
+     */
+    public List<RepeatInfoDto> getRepeatInfo(String contentId, String contentTypeId) {
+        String jsonString = callTourApi("/detailInfo2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId)
+                   .queryParam("contentTypeId", contentTypeId);
+        });
+
+        return parseItems(jsonString, RepeatInfoDto.class);
     }
 }

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
+import com.flowerguys.localpiece.domain.tour.dto.RepeatInfoDto;
+
 import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
@@ -192,5 +194,18 @@ public class TourController {
         List<IntroductionInfoDto> introInfo = tourService.getIntroductionInfo(contentId, contentTypeId);
         
         return ResponseEntity.ok(introInfo);
+    }
+
+    /**
+     * 반복정보 조회 Controller
+     */
+    @GetMapping("/detail/info/{contentId}")
+    public ResponseEntity<List<RepeatInfoDto>> getRepeatInfo(
+            @PathVariable String contentId,
+            @RequestParam String contentTypeId) throws JsonProcessingException {
+
+        List<RepeatInfoDto> repeatInfo = tourService.getRepeatInfo(contentId, contentTypeId);
+        
+        return ResponseEntity.ok(repeatInfo);
     }
 }
