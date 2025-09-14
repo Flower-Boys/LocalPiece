@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 import { useState } from "react";
 import SearchBar from "../../components/home/SearchBar";
@@ -19,6 +19,8 @@ const TourDetail = () => {
       mapy: string; // 위도
     };
   };
+
+  const navigate = useNavigate();
 
   if (!state) return <div>잘못된 접근입니다.</div>;
 
@@ -43,7 +45,9 @@ const TourDetail = () => {
           <img src={image || "https://placekitten.com/600/400"} alt={title} className="w-full h-80 object-cover rounded-lg mb-6" />
 
           <div className="bg-white shadow rounded-lg p-6">
-            <h1 className="text-2xl font-bold mb-2">{title}</h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold">{title}</h1>
+            </div>
             <p className="text-gray-600 mb-4">{location}</p>
             <ul className="text-gray-700 space-y-2">
               <li>
@@ -79,6 +83,10 @@ const TourDetail = () => {
           </LoadScript>
         </div>
       </div>
+      {/* ✅ 뒤로가기 버튼 */}
+      <button onClick={() => navigate(-1)} className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300">
+        ← 뒤로가기
+      </button>
     </div>
   );
 };
