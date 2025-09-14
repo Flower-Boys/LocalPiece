@@ -6,6 +6,7 @@ import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
+import com.flowerguys.localpiece.domain.tour.dto.CommonInfoDto;
 import com.flowerguys.localpiece.domain.tour.service.TourService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -165,5 +166,17 @@ public class TourController {
         List<PetTourInfoDto> petTourInfo = tourService.getPetTourInfo(contentId);
         
         return ResponseEntity.ok(petTourInfo);
+    }
+
+    /**
+     * 공통정보 조회 Controller
+     */
+    @GetMapping("/detail/common/{contentId}")
+    public ResponseEntity<List<CommonInfoDto>> getCommonInfo(
+            @PathVariable String contentId) throws JsonProcessingException {
+
+        List<CommonInfoDto> commonInfo = tourService.getCommonInfo(contentId);
+        
+        return ResponseEntity.ok(commonInfo);
     }
 }

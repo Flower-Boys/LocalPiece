@@ -3,6 +3,7 @@ package com.flowerguys.localpiece.domain.tour.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.CommonInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
@@ -253,5 +254,17 @@ public class TourService {
         });
 
         return parseItems(jsonString, PetTourInfoDto.class);
+    }
+
+    /**
+     * 공통정보 조회
+     */
+    public List<CommonInfoDto> getCommonInfo(String contentId) {
+        String jsonString = callTourApi("/detailCommon2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId);
+        });
+
+        return parseItems(jsonString, CommonInfoDto.class);
     }
 }
