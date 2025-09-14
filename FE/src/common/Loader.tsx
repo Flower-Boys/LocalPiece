@@ -8,7 +8,7 @@ type LoaderProps = {
 
 export default function Loader({ size = 160, label = "로딩 중" }: LoaderProps) {
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40">
       <Lottie animationData={loadingAnim} loop autoplay style={{ width: size, height: size }} />
       <span className="sr-only">{label}</span>
     </div>
