@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 // API 클라이언트 인스턴스 생성
 const apiClient = axios.create({
@@ -9,7 +9,7 @@ const apiClient = axios.create({
   timeout: 10000,
   // 요청 헤더에 JSON 형식임을 명시합니다.
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 

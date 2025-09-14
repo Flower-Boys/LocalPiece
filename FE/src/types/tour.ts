@@ -4,12 +4,12 @@ export interface SigunguCode {
   name: string;
 }
 
-// 백엔드의 TourItemDto와 일치하는 타입
+// 백엔드 응답 DTO랑 일치시킴
 export interface TourItem {
-  id: string;
+  contentid: string;
   title: string;
-  address: string;
+  addr1: string;
   firstimage: string;
-  mapX: string;
-  mapY: string;
+  mapx: string;
+  mapy: string;
 }
