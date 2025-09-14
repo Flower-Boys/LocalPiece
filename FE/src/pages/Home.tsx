@@ -9,11 +9,9 @@ function Home() {
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [page, setPage] = useState(1);
 
-  // ✅ 최대 페이지 고정
-  const totalPages = 302;
+  const totalPages = 302; // ✅ 최대 페이지 고정
 
   useEffect(() => {
     const fetchTourData = async () => {
@@ -31,22 +29,19 @@ function Home() {
         });
 
         setTourItems(data);
-
         console.log(`페이지 ${page} 관광 정보:`, data);
       } catch (err) {
         console.error("API 호출 중 오류 발생:", err);
         setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
       } finally {
         setIsLoading(false);
-        // ✅ API 호출이 끝나면 최상단으로 이동
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: "smooth" }); // ✅ API 호출 끝나면 최상단 이동
       }
     };
 
     fetchTourData();
   }, [page]);
 
-  // ✅ 항상 최대 5개 보이도록 보정된 페이지 번호 계산
   const pageNumbers = useMemo(() => {
     const maxVisible = 5;
     let start = page - Math.floor(maxVisible / 2);
@@ -63,9 +58,7 @@ function Home() {
     if (start < 1) start = 1;
 
     const pages: number[] = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }, [page, totalPages]);
 
@@ -74,15 +67,20 @@ function Home() {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       {isLoading && <Loader label="관광 데이터를 불러오는 중" />}
+      
       {/* Hero + 검색창 */}
       <section className="from-pink-500 to-red-500 text-white py-8 px-6 text-center">
         <SearchBar />
       </section>
       <div className="border-b border-gray-300"></div>
+
       {/* 카테고리 */}
       <section className="max-w-6xl mx-auto px-4 py-8 flex gap-4 overflow-x-auto">
         {["해변", "한옥", "캠핑", "도심", "펜션"].map((cat) => (
-          <button key={cat} className="px-4 py-2 rounded-full border border-gray-300 bg-white hover:shadow whitespace-nowrap">
+          <button
+            key={cat}
+            className="px-4 py-2 rounded-full border border-gray-300 bg-white hover:shadow whitespace-nowrap"
+          >
             {cat}
           </button>
         ))}
@@ -96,40 +94,59 @@ function Home() {
             id={item.contentid}
             title={item.title}
             location={item.addr1}
-            image={item.firstimage && item.firstimage.trim() !== "" ? item.firstimage : "https://placekitten.com/400/300"}
+            image={
+              item.firstimage && item.firstimage.trim() !== ""
+                ? item.firstimage
+                : "https://placekitten.com/400/300"
+            }
             mapx={item.mapx}
             mapy={item.mapy}
           />
         ))}
       </section>
 
-      {/* ✅ 페이지네이션 */}
+      {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div className="max-w-6xl mx-auto px-4 pb-10 flex items-center justify-center gap-2 flex-wrap">
-          {/* 처음 */}
-          <button onClick={() => setPage(1)} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+          <button
+            onClick={() => setPage(1)}
+            disabled={page === 1}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {"<<"}
           </button>
-
-          {/* 이전 */}
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {"<"}
           </button>
-
-          {/* 숫자 버튼 (최대 5개) */}
           {pageNumbers.map((p) => (
-            <button key={p} onClick={() => setPage(p)} className={`px-3 py-1 rounded ${page === p ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}>
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`px-3 py-1 rounded ${
+                page === p
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
+            >
               {p}
             </button>
           ))}
-
-          {/* 다음 */}
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {">"}
           </button>
-
-          {/* 마지막 */}
-          <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+          <button
+            onClick={() => setPage(totalPages)}
+            disabled={page === totalPages}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {">>"}
           </button>
         </div>

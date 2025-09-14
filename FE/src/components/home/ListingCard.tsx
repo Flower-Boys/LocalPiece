@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 interface ListingCardProps {
-  id: string; // 🔹 contentid가 문자열이므로 string으로 변경
+  id: string | number; // 🔹 contentid가 문자열이므로 string으로 변경
   title: string;
   location: string;
   image: string;
