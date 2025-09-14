@@ -2,7 +2,8 @@ package com.flowerguys.localpiece.domain.tour.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flowerguys.localpiece.domain.tour.dto.SigunguCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
 import com.flowerguys.localpiece.global.common.ErrorCode;
@@ -30,12 +31,8 @@ public class TourService {
     private final TourApiProperties apiProperties;
     private final ObjectMapper objectMapper;
 
-    // 경상북도 신규 법정동 시도 코드 (유지)
     private static final String GYEONGBUK_LDONG_REGN_CD = "47";
 
-    /**
-     * 관광정보 조회 (최종 수정본)
-     */
     public List<TourItemDto> getAreaBasedList(
             String sigunguCode, String contentTypeId, int pageNo, int numOfRows, String arrange,
             String lclsSystm1, String lclsSystm2, String lclsSystm3, String modifiedtime) {
@@ -58,15 +55,30 @@ public class TourService {
     }
 
     /**
-     * 경상북도 내 시군구 코드 목록 조회 (기존 코드 유지)
+     * 법정동 코드 조회 (기존 getSigunguCodes -> getLdongCodeList로 변경 및 확장)
      */
-    public List<SigunguCodeDto> getSigunguCodes() {
+    public List<LdongCodeDto> getLdongCodeList(String ldongAreaCd, String lDongListYn) {
         String jsonString = callTourApi("/ldongCode2", builder -> {
-            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD)
-                   .queryParam("numOfRows", 100);
+            builder.queryParam("numOfRows", 100); // 충분한 결과 수를 위해 100으로 설정
+            if (StringUtils.hasText(ldongAreaCd)) builder.queryParam("lDongRegnCd", ldongAreaCd);
+            if (StringUtils.hasText(lDongListYn)) builder.queryParam("lDongListYn", lDongListYn);
         });
-        return parseItems(jsonString, SigunguCodeDto.class);
+        return parseItems(jsonString, LdongCodeDto.class);
     }
+
+    /**
+     * 신규 분류체계 코드 조회
+     */
+    public List<CategoryCodeDto> getCategoryCodeList(String lclsSystm1, String lclsSystm2, String lclsSystmListYn) {
+        String jsonString = callTourApi("/lclsSystmCode2", builder -> {
+            builder.queryParam("numOfRows", 300); // 모든 카테고리를 가져오기 위해 충분히 큰 값 설정
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystmListYn)) builder.queryParam("lclsSystmListYn", lclsSystmListYn);
+        });
+        return parseItems(jsonString, CategoryCodeDto.class);
+    }
+
 
     @FunctionalInterface
     private interface UriBuilderCustomizer {
