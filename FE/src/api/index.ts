@@ -4,7 +4,7 @@ import axios from "axios";
 const apiClient = axios.create({
   // 벡엔드 서버의 기본 URL을 설정합니다.
   // 이제 모든 요청은 이 주소를 기준으로 이루어집니다.
-  baseURL: "https://localpiece.duckdns.org/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   // 요청 타임아웃을 10초로 설정합니다.
   timeout: 10000,
   // 요청 헤더에 JSON 형식임을 명시합니다.
