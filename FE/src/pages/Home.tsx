@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import apiClient from "../api";
-import { SigunguCode, TourItem } from "../types/tour";
+import { TourItem } from "../types/tour";
 import SearchBar from "../components/home/SearchBar";
 import TourCard from "../components/tour/TourCard";
 import Loader from "../common/Loader";
 
 function Home() {
-  // 관광정보 목록을 저장할 상태
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
-  // 시군구 코드 목록을 저장할 상태
-  const [sigunguCodes, setSigunguCodes] = useState<SigunguCode[]>([]);
-  // 로딩 상태
   const [isLoading, setIsLoading] = useState(true);
-  // 에러 상태
   const [error, setError] = useState<string | null>(null);
+
+  const [page, setPage] = useState(1);
+
+  // ✅ 최대 페이지 고정
+  const totalPages = 302;
 
   useEffect(() => {
     const fetchTourData = async () => {
@@ -21,34 +21,64 @@ function Home() {
         setIsLoading(true);
         setError(null);
 
-        const [sigunguResponse, tourResponse] = await Promise.all([apiClient.get<SigunguCode[]>("/tour/sigungu-codes"), apiClient.get<TourItem[]>("/tour/area-based")]);
+        const { data } = await apiClient.get<TourItem[]>("/tour/area-based", {
+          params: {
+            lDongListYn: "Y",
+            pageNo: page,
+            numOfRows: 12,
+            arrange: "A",
+          },
+        });
 
-        setSigunguCodes(sigunguResponse.data);
-        setTourItems(tourResponse.data);
+        setTourItems(data);
 
-        console.log("시군구 코드 목록:", sigunguResponse.data);
-        console.log("초기 관광 정보:", tourResponse.data);
+        console.log(`페이지 ${page} 관광 정보:`, data);
       } catch (err) {
         console.error("API 호출 중 오류 발생:", err);
         setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
       } finally {
         setIsLoading(false);
+        // ✅ API 호출이 끝나면 최상단으로 이동
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
 
     fetchTourData();
-  }, []);
+  }, [page]);
+
+  // ✅ 항상 최대 5개 보이도록 보정된 페이지 번호 계산
+  const pageNumbers = useMemo(() => {
+    const maxVisible = 5;
+    let start = page - Math.floor(maxVisible / 2);
+    let end = page + Math.floor(maxVisible / 2);
+
+    if (start < 1) {
+      end += 1 - start;
+      start = 1;
+    }
+    if (end > totalPages) {
+      start -= end - totalPages;
+      end = totalPages;
+    }
+    if (start < 1) start = 1;
+
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [page, totalPages]);
 
   if (error) return <div>오류: {error}</div>;
 
   return (
     <div className="w-full min-h-screen bg-gray-50">
+      {isLoading && <Loader label="관광 데이터를 불러오는 중" />}
       {/* Hero + 검색창 */}
       <section className="from-pink-500 to-red-500 text-white py-8 px-6 text-center">
         <SearchBar />
       </section>
       <div className="border-b border-gray-300"></div>
-
       {/* 카테고리 */}
       <section className="max-w-6xl mx-auto px-4 py-8 flex gap-4 overflow-x-auto">
         {["해변", "한옥", "캠핑", "도심", "펜션"].map((cat) => (
@@ -59,7 +89,6 @@ function Home() {
       </section>
 
       {/* 숙소 카드 그리드 */}
-
       <section className="max-w-6xl mx-auto px-4 pb-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {tourItems.map((item) => (
           <TourCard
@@ -72,10 +101,39 @@ function Home() {
             mapy={item.mapy}
           />
         ))}
-
-        {/* 로딩 오버레이 */}
-        {isLoading && <Loader label="관광 데이터를 불러오는 중" />}
       </section>
+
+      {/* ✅ 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className="max-w-6xl mx-auto px-4 pb-10 flex items-center justify-center gap-2 flex-wrap">
+          {/* 처음 */}
+          <button onClick={() => setPage(1)} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+            {"<<"}
+          </button>
+
+          {/* 이전 */}
+          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+            {"<"}
+          </button>
+
+          {/* 숫자 버튼 (최대 5개) */}
+          {pageNumbers.map((p) => (
+            <button key={p} onClick={() => setPage(p)} className={`px-3 py-1 rounded ${page === p ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}>
+              {p}
+            </button>
+          ))}
+
+          {/* 다음 */}
+          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+            {">"}
+          </button>
+
+          {/* 마지막 */}
+          <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+            {">>"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
