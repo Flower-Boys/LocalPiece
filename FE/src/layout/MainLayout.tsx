@@ -15,7 +15,7 @@ const MainLayout = () => {
 
       {/* 메인 컨텐츠 */}
       <main className="flex-1 flex justify-center">
-        <div className={`w-full p-4 pb-20 md:pb-4 ${isHome ? "" : "max-w-2xl"}`}>
+        <div className={`w-full p-4 pb-20 md:pb-4 ${isHome || location.pathname.startsWith("/tour") ? "" : "max-w-2xl"}`}>
           <Outlet />
         </div>
       </main>
