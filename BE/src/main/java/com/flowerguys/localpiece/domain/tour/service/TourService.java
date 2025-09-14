@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.CommonInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.ImageInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.IntroductionInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
@@ -295,5 +296,18 @@ public class TourService {
         });
 
         return parseItems(jsonString, RepeatInfoDto.class);
+    }
+
+    /**
+     * 이미지정보 조회
+     */
+    public List<ImageInfoDto> getImageInfo(String contentId) {
+        String jsonString = callTourApi("/detailImage2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId)
+                   .queryParam("imageYN", "Y"); // 콘텐츠 이미지 조회
+        });
+
+        return parseItems(jsonString, ImageInfoDto.class);
     }
 }
