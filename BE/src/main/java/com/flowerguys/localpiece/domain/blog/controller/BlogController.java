@@ -1,26 +1,20 @@
 package com.flowerguys.localpiece.domain.blog.controller;
 
-import lombok.RequiredArgsConstructor;
-
-import java.net.URI;
-import java.util.List;
-
-import jakarta.validation.Valid;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowerguys.localpiece.domain.blog.dto.BlogCreateRequest;
 import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
 import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.service.BlogService;
-
-import io.swagger.v3.oas.annotations.Operation;
-
-import org.springframework.web.multipart.MultipartFile;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -29,64 +23,53 @@ import java.util.List;
 public class BlogController {
 
     private final BlogService blogService;
+    private final ObjectMapper objectMapper;
 
-    // 블로그 생성 API
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "블로그 생성", description = "블로그를 생성합니다.")
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<BlogResponse> createBlog(
-            @ModelAttribute @Valid BlogCreateRequest request, 
-            @RequestPart(value = "images", required = false) List<MultipartFile> images,
-            @AuthenticationPrincipal UserDetails userDetails) {
-
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestPart("request") String jsonRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) throws IOException {
+        
+        BlogCreateRequest requestDto = objectMapper.readValue(jsonRequest, BlogCreateRequest.class);
         String email = userDetails.getUsername();
-        BlogResponse blogResponse = blogService.createBlog(email, request, images);
+        BlogResponse blogResponse = blogService.createBlog(email, requestDto, images);
 
-        URI location = URI.create("/api/blogs/" + blogResponse.getId());
-        return ResponseEntity.created(location).body(blogResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(blogResponse);
     }
 
-    // 블로그 목록 조회 API
+    @PutMapping(value = "/{blogId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<BlogResponse> updateBlog(
+            @PathVariable Long blogId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestPart("request") String jsonRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) throws IOException {
+        
+        BlogUpdateRequest requestDto = objectMapper.readValue(jsonRequest, BlogUpdateRequest.class);
+        String email = userDetails.getUsername();
+        BlogResponse updatedBlog = blogService.updateBlog(blogId, email, requestDto, images);
+        
+        return ResponseEntity.ok(updatedBlog);
+    }
+    
     @GetMapping
     public ResponseEntity<List<BlogResponse>> getBlogList() {
-        List<BlogResponse> blogList = blogService.getBlogList();
-        return ResponseEntity.ok(blogList);
+        return ResponseEntity.ok(blogService.getBlogList());
     }
 
-    // 블로그 상세 조회 API
     @GetMapping("/{blogId}")
     public ResponseEntity<BlogResponse> getBlogDetail(
             @PathVariable Long blogId,
             @AuthenticationPrincipal UserDetails userDetails) {
-
-        // ⬇️ 서비스의 단일 메소드 호출
-        BlogResponse blogDetail = blogService.getBlogAndIncreaseViewCount(blogId, userDetails);
-        
-        return ResponseEntity.ok(blogDetail);
+        return ResponseEntity.ok(blogService.getBlogAndIncreaseViewCount(blogId, userDetails));
     }
 
-    // 블로그 수정 API
-    @PatchMapping(value = "/{blogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BlogResponse> updateBlog(
-            @PathVariable Long blogId,
-            @ModelAttribute @Valid BlogUpdateRequest request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        String email = userDetails.getUsername();
-        BlogResponse updatedBlog = blogService.updateBlog(blogId, email, request, images);
-        
-        return ResponseEntity.ok(updatedBlog);
-    }
-
-    // 블로그 삭제 API
     @DeleteMapping("/{blogId}")
     public ResponseEntity<Void> deleteBlog(
             @PathVariable Long blogId,
             @AuthenticationPrincipal UserDetails userDetails) {
-
         String email = userDetails.getUsername();
         blogService.deleteBlog(blogId, email);
-        
-        return ResponseEntity.noContent().build(); // ⬅️ 삭제 성공 시 표준 응답 (204 No Content)
+        return ResponseEntity.noContent().build();
     }
 }

@@ -10,6 +10,7 @@ spring:
     name: localpiece
   # JPA 및 하이버네이트 공통 설정
   jpa:
+    open-in-view: false
     # SQL 쿼리를 보기 좋게 포맷팅
     properties:
       hibernate:
@@ -34,6 +35,9 @@ tour-api:
 ai-server:
   url: ${AI_SERVER_URL}
   token: ${HF_TOKEN}
+
+
+
 
 # --- 는 프로파일을 나누는 구분선입니다.
 

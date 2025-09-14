@@ -14,7 +14,7 @@ import java.util.UUID;
 public class AiJob extends BaseTimeEntity {
 
     @Id
-    @Column(columnDefinition = "BINARY(16)")
+    @Column(columnDefinition = "UUID")
     private UUID jobId;
 
     @Enumerated(EnumType.STRING)

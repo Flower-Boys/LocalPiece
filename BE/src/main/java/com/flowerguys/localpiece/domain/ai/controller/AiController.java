@@ -2,7 +2,6 @@ package com.flowerguys.localpiece.domain.ai.controller;
 
 import com.flowerguys.localpiece.domain.ai.entity.AiJob;
 import com.flowerguys.localpiece.domain.ai.repository.AiJobRepository;
-import com.flowerguys.localpiece.domain.ai.service.AiLogicService;
 import com.flowerguys.localpiece.domain.ai.service.AiRequestService;
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
