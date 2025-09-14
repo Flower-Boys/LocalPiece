@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.7",
     "@tailwindcss/typography": "^0.5.16",
     "@tiptap/extension-blockquote": "^3.4.2",
     "@tiptap/extension-bullet-list": "^3.4.2",
