@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -58,10 +60,28 @@ public class BlogService {
     }
 
     @Transactional(readOnly = true)
-    public List<BlogResponse> getBlogList() {
-        return blogRepository.findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc()
-                .stream()
-                .map(BlogResponse::new)
+    public List<BlogListResponseDto> getBlogList(UserDetails userDetails) {
+        
+        Set<Long> likedBlogIds = Collections.emptySet();
+
+        // 로그인한 사용자라면, 좋아요 누른 블로그 ID 목록을 미리 조회
+        if (userDetails != null) {
+            User user = findUser(userDetails.getUsername());
+            likedBlogIds = blogLikeRepository.findLikedBlogIdsByUserId(user.getId());
+        }
+
+        // DB에서 블로그 목록 조회
+        List<Blog> blogs = blogRepository.findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc();
+
+        // final로 선언하여 람다 내부에서 사용할 수 있도록 함
+        final Set<Long> finalLikedBlogIds = likedBlogIds;
+
+        // DTO로 변환
+        return blogs.stream()
+                .map(blog -> {
+                    boolean isLiked = finalLikedBlogIds.contains(blog.getId());
+                    return new BlogListResponseDto(blog, isLiked);
+                })
                 .collect(Collectors.toList());
     }
 

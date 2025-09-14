@@ -49,7 +49,7 @@ public class LikeService {
     }
 
     private Blog findBlog(Long blogId) {
-        return blogRepository.findById(blogId)
+        return blogRepository.findActiveById(blogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BLOG_NOT_FOUND));
     }
 }

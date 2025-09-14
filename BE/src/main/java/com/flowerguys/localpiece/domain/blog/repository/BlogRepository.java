@@ -29,4 +29,8 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     @Modifying 
     @Query("UPDATE Blog b SET b.viewCount = b.viewCount + 1 WHERE b.id = :blogId")
     void updateViewCount(@Param("blogId") Long blogId);
+
+    // ✨ 삭제되지 않은 블로그만 ID로 조회하는 메소드 추가
+    @Query("SELECT b FROM Blog b WHERE b.id = :blogId AND b.isDeleted = false")
+    Optional<Blog> findActiveById(@Param("blogId") Long blogId);
 }
