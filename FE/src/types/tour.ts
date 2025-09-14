@@ -6,10 +6,10 @@ export interface SigunguCode {
 
 // 백엔드의 TourItemDto와 일치하는 타입
 export interface TourItem {
-  id: string;
+  contentid: string;
   title: string;
-  address: string;
+  addr1: string;
   firstimage: string;
-  mapX: string;
-  mapY: string;
+  mapx: string;
+  mapy: string;
 }
