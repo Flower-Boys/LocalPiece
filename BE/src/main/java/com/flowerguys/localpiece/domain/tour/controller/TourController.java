@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
+import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 @RestController
@@ -152,5 +153,17 @@ public class TourController {
                 pageNo, numOfRows);
         
         return ResponseEntity.ok(stayData);
+    }
+
+    /**
+     * 반려동물 동반여행 정보 조회 Controller
+     */
+    @GetMapping("/pet-friendly-info/{contentId}")
+    public ResponseEntity<List<PetTourInfoDto>> getPetTourInfo(
+            @PathVariable String contentId) throws JsonProcessingException {
+
+        List<PetTourInfoDto> petTourInfo = tourService.getPetTourInfo(contentId);
+        
+        return ResponseEntity.ok(petTourInfo);
     }
 }

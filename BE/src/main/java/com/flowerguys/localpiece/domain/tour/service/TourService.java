@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
@@ -240,5 +241,17 @@ public class TourService {
         });
 
         return parseItems(jsonString, TourItemDto.class);
+    }
+
+    /**
+     * 반려동물 동반여행 정보 조회
+     */
+    public List<PetTourInfoDto> getPetTourInfo(String contentId) {
+        String jsonString = callTourApi("/detailPetTour2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId);
+        });
+
+        return parseItems(jsonString, PetTourInfoDto.class);
     }
 }
