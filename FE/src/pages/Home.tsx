@@ -24,7 +24,7 @@ function Home() {
             lDongListYn: "Y",
             pageNo: page,
             numOfRows: 12,
-            arrange: "A",
+            arrange: "Q",
           },
         });
 
