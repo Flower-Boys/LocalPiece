@@ -218,4 +218,27 @@ public class TourService {
 
         return parseItems(jsonString, EventItemDto.class);
     }
+
+    /**
+     * 숙박정보 조회
+     */
+    public List<TourItemDto> searchStay(
+            String arrange, String lclsSystm1, String lclsSystm2, String lclsSystm3,
+            int pageNo, int numOfRows) {
+
+        String jsonString = callTourApi("/searchStay2", builder -> {
+            // 경북 지역 내 숙박업소만 조회
+            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            // 옵션 파라미터
+            builder.queryParam("pageNo", pageNo)
+                   .queryParam("numOfRows", numOfRows)
+                   .queryParam("arrange", arrange);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+        });
+
+        return parseItems(jsonString, TourItemDto.class);
+    }
 }

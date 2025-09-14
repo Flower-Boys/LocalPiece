@@ -134,4 +134,23 @@ public class TourController {
         
         return ResponseEntity.ok(eventData);
     }
+
+    /**
+     * 숙박정보 조회 Controller
+     */
+    @GetMapping("/stays")
+    public ResponseEntity<List<TourItemDto>> searchStay(
+            @RequestParam(defaultValue = "A") String arrange,
+            @RequestParam(required = false) String lclsSystm1,
+            @RequestParam(required = false) String lclsSystm2,
+            @RequestParam(required = false) String lclsSystm3,
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "12") int numOfRows) throws JsonProcessingException {
+
+        List<TourItemDto> stayData = tourService.searchStay(
+                arrange, lclsSystm1, lclsSystm2, lclsSystm3,
+                pageNo, numOfRows);
+        
+        return ResponseEntity.ok(stayData);
+    }
 }
