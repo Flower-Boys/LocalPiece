@@ -3,6 +3,10 @@ package com.flowerguys.localpiece.domain.blog.dto;
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import com.flowerguys.localpiece.domain.blog.entity.BlogContent;
 import lombok.Getter;
+import com.flowerguys.localpiece.domain.comment.dto.CommentResponseDto;
+import com.flowerguys.localpiece.domain.comment.entity.Comment;
+
+import java.util.Comparator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,8 +22,11 @@ public class BlogResponse {
     private LocalDateTime modifiedAt; 
     private String author;
     private List<BlogContentDto> contents;
+    private List<CommentResponseDto> comments;
+    private int likeCount;
+    private boolean isLikedByCurrentUser;
 
-    public BlogResponse(Blog blog) {
+    public BlogResponse(Blog blog, boolean isLiked) {
         this.id = blog.getId();
         this.title = blog.getTitle();
         this.isPrivate = blog.isPrivate();
@@ -37,5 +44,12 @@ public class BlogResponse {
                     return dto;
                 })
                 .collect(Collectors.toList());
+        this.comments = blog.getComments().stream()
+                .sorted(Comparator.comparing(Comment::getCreatedAt)) // 작성순으로 정렬
+                .map(CommentResponseDto::new)
+                .collect(Collectors.toList());
+        
+        this.likeCount = blog.getLikes().size();
+        this.isLikedByCurrentUser = isLiked;
     }
 }

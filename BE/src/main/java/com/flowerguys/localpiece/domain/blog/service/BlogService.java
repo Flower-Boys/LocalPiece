@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,6 +33,7 @@ public class BlogService {
     private final UserRepository userRepository;
     private final BlogContentRepository blogContentRepository;
     private final ImageUploadService imageUploadService;
+    private final BlogLikeRepository blogLikeRepository;
 
     @Transactional
     public BlogResponse createBlog(String userEmail, BlogCreateRequest request, List<MultipartFile> imageFiles) {
@@ -65,11 +67,18 @@ public class BlogService {
 
     @Transactional
     public BlogResponse getBlogAndIncreaseViewCount(Long blogId, UserDetails userDetails) {
-        Blog blog = findBlogWithContents(blogId);
+        Blog blog = findBlogWithContents(blogId); // findById로 변경해도 무방
         checkBlogAccess(blog, userDetails);
         blogRepository.updateViewCount(blogId);
-        return new BlogResponse(blog);
-    }
+
+        // ✨ 좋아요 여부 확인 로직 추가
+        boolean isLiked = false;
+        if (userDetails != null) {
+            User user = findUser(userDetails.getUsername());
+            isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
+        }
+
+        return new BlogResponse(blog, isLiked); // 수정된 생성자로 DTO 생성
 
     @Transactional
     public BlogResponse updateBlog(Long blogId, String userEmail, BlogUpdateRequest request, List<MultipartFile> imageFiles) {

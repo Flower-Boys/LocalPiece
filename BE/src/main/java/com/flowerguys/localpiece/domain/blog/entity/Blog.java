@@ -1,7 +1,12 @@
 package com.flowerguys.localpiece.domain.blog.entity;
 
+import com.flowerguys.localpiece.domain.like.entity.BlogLike;
 import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.global.common.BaseTimeEntity;
+import com.flowerguys.localpiece.domain.comment.entity.Comment;
+import com.flowerguys.localpiece.domain.like.entity.BlogLike;
+import java.util.HashSet;
+import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -39,6 +44,14 @@ public class Blog extends BaseTimeEntity {
 
     @Builder.Default
     private int viewCount = 0;
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<BlogLike> likes = new HashSet<>();
     
     // Setter 대신 의미있는 이름의 메소드를 사용
     public void setContents(List<BlogContent> contents) {
