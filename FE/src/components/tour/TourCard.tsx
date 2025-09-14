@@ -4,19 +4,20 @@ interface TourCardProps {
   id: string;
   title: string;
   location: string;
+  type: string | number;
   image: string;
   mapx: string;
   mapy: string;
 }
 
-const TourCard = ({ id, title, location, image, mapx, mapy }: TourCardProps) => {
+const TourCard = ({ id, title, location, type, image, mapx, mapy }: TourCardProps) => {
   const navigate = useNavigate();
 
   return (
     <div
       onClick={() =>
         navigate(`/tour/${id}`, {
-          state: { id, title, location, image, mapx, mapy },
+          state: { id, title, location, image, mapx, mapy, type },
         })
       }
       className="cursor-pointer border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
