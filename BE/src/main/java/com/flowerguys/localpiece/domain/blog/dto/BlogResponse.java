@@ -26,6 +26,10 @@ public class BlogResponse {
     private int likeCount;
     private boolean isLikedByCurrentUser;
 
+    public BlogResponse(Blog blog) {
+        this(blog, false); // 내부적으로 두 번째 생성자를 호출하며 isLiked는 false로 고정
+    }
+
     public BlogResponse(Blog blog, boolean isLiked) {
         this.id = blog.getId();
         this.title = blog.getTitle();

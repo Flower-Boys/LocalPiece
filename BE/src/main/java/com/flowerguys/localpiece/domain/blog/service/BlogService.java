@@ -79,6 +79,7 @@ public class BlogService {
         }
 
         return new BlogResponse(blog, isLiked); // 수정된 생성자로 DTO 생성
+    }
 
     @Transactional
     public BlogResponse updateBlog(Long blogId, String userEmail, BlogUpdateRequest request, List<MultipartFile> imageFiles) {
