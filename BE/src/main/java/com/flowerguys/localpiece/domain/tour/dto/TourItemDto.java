@@ -6,28 +6,72 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-// 프론트엔드에 최종적으로 전달될 깔끔한 관광정보 DTO
 @Getter
 @ToString
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true) // JSON에 있는데 DTO에 없는 필드는 무시
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TourItemDto {
 
     @JsonProperty("contentid")
-    private String id;
+    private String contentid;
+
+    @JsonProperty("contenttypeid")
+    private String contenttypeid;
 
     @JsonProperty("title")
     private String title;
 
     @JsonProperty("addr1")
-    private String address;
+    private String addr1;
+
+    @JsonProperty("addr2")
+    private String addr2;
+
+    @JsonProperty("zipcode")
+    private String zipcode;
+
+    @JsonProperty("areacode")
+    private String areacode;
+
+    @JsonProperty("sigungucode")
+    private String sigungucode;
+
+    @JsonProperty("tel")
+    private String tel;
 
     @JsonProperty("firstimage")
-    private String imageUrl;
+    private String firstimage;
+
+    @JsonProperty("firstimage2")
+    private String firstimage2;
 
     @JsonProperty("mapx")
-    private String mapX;
+    private String mapx;
 
     @JsonProperty("mapy")
-    private String mapY;
+    private String mapy;
+
+    @JsonProperty("createdtime")
+    private String createdtime;
+
+    @JsonProperty("modifiedtime")
+    private String modifiedtime;
+
+    @JsonProperty("cpyrhtDivCd")
+    private String cpyrhtDivCd;
+    
+    @JsonProperty("lDongRegnCd")
+    private String lDongRegnCd;
+    
+    @JsonProperty("lDongSignguCd")
+    private String lDongSignguCd;
+
+    @JsonProperty("lclsSystm1")
+    private String lclsSystm1;
+
+    @JsonProperty("lclsSystm2")
+    private String lclsSystm2;
+
+    @JsonProperty("lclsSystm3")
+    private String lclsSystm3;
 }
