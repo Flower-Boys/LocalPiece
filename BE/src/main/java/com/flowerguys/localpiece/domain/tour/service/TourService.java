@@ -34,26 +34,20 @@ public class TourService {
     private static final String GYEONGBUK_LDONG_REGN_CD = "47";
 
     /**
-     * 관광정보 조회 (모든 파라미터 반영)
+     * 관광정보 조회 (최종 수정본)
      */
     public List<TourItemDto> getAreaBasedList(
             String sigunguCode, String contentTypeId, int pageNo, int numOfRows, String arrange,
-            String cat1, String cat2, String cat3, String lclsSystm1, String lclsSystm2, String lclsSystm3,
-            String modifiedtime) {
+            String lclsSystm1, String lclsSystm2, String lclsSystm3, String modifiedtime) {
 
-        // 템플릿 메소드 패턴을 사용하여 API 호출 로직 재사용
         String jsonString = callTourApi("/areaBasedList2", builder -> {
             builder.queryParam("numOfRows", numOfRows)
                    .queryParam("pageNo", pageNo)
                    .queryParam("arrange", arrange)
-                   .queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD); // 경북 코드는 유지
+                   .queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
 
-            // Optional 파라미터 추가
             if (StringUtils.hasText(sigunguCode)) builder.queryParam("lDongSignguCd", sigunguCode);
             if (StringUtils.hasText(contentTypeId)) builder.queryParam("contentTypeId", contentTypeId);
-            if (StringUtils.hasText(cat1)) builder.queryParam("cat1", cat1);
-            if (StringUtils.hasText(cat2)) builder.queryParam("cat2", cat2);
-            if (StringUtils.hasText(cat3)) builder.queryParam("cat3", cat3);
             if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
             if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
             if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
@@ -62,7 +56,6 @@ public class TourService {
 
         return parseItems(jsonString, TourItemDto.class);
     }
-
 
     /**
      * 경상북도 내 시군구 코드 목록 조회 (기존 코드 유지)
@@ -75,9 +68,6 @@ public class TourService {
         return parseItems(jsonString, SigunguCodeDto.class);
     }
 
-    /**
-     * TourAPI 호출 공통 로직 (빌더 커스터마이징을 위한 Functional Interface 사용)
-     */
     @FunctionalInterface
     private interface UriBuilderCustomizer {
         void customize(UriComponentsBuilder builder);
@@ -96,7 +86,6 @@ public class TourService {
                 .queryParam("MobileApp", "LocalPiece")
                 .queryParam("_type", "json");
 
-        // 각 API에 맞는 파라미터 설정을 외부에서 주입
         customizer.customize(builder);
 
         URI uri = builder.build(true).toUri();
@@ -110,9 +99,6 @@ public class TourService {
         }
     }
 
-    /**
-     * JSON 응답 파싱 및 DTO 변환 공통 로직 (기존 코드 유지)
-     */
     private <T> List<T> parseItems(String jsonString, Class<T> itemClass) {
         try {
             JsonNode root = objectMapper.readTree(jsonString);
@@ -127,7 +113,7 @@ public class TourService {
 
             JsonNode itemsNode = root.path("response").path("body").path("items").path("item");
 
-            if (itemsNode.isMissingNode() || itemsNode.isNull() || !items.isArray()) {
+            if (itemsNode.isMissingNode() || itemsNode.isNull() || !itemsNode.isArray()) {
                 return Collections.emptyList();
             }
 

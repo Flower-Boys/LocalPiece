@@ -20,31 +20,27 @@ public class TourController {
 
     private final TourService tourService;
 
-    // 관광정보 조회 API (모든 파라미터 추가)
+    // 관광정보 조회 API (최종 수정본)
     @GetMapping("/area-based")
     public ResponseEntity<List<TourItemDto>> getAreaBasedList(
             @RequestParam(required = false) String sigunguCode,
             @RequestParam(required = false) String contentTypeId,
             @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "12") int numOfRows,
-            @RequestParam(defaultValue = "A") String arrange, // A=제목순, C=수정일순, D=생성일순
-            @RequestParam(required = false) String cat1,
-            @RequestParam(required = false) String cat2,
-            @RequestParam(required = false) String cat3,
+            @RequestParam(defaultValue = "20") int numOfRows,
+            @RequestParam(defaultValue = "O") String arrange,
             @RequestParam(required = false) String lclsSystm1,
             @RequestParam(required = false) String lclsSystm2,
             @RequestParam(required = false) String lclsSystm3,
             @RequestParam(required = false) String modifiedtime) throws JsonProcessingException {
 
-        // 서비스 메소드에 모든 파라미터를 전달
         List<TourItemDto> tourData = tourService.getAreaBasedList(
                 sigunguCode, contentTypeId, pageNo, numOfRows, arrange,
-                cat1, cat2, cat3, lclsSystm1, lclsSystm2, lclsSystm3, modifiedtime);
+                lclsSystm1, lclsSystm2, lclsSystm3, modifiedtime);
 
         return ResponseEntity.ok(tourData);
     }
 
-    // 시군구 코드 조회 API (반환 타입 변경)
+    // 시군구 코드 조회 API (기존 코드 유지)
     @GetMapping("/sigungu-codes")
     public ResponseEntity<List<SigunguCodeDto>> getSigunguCodeList() throws JsonProcessingException {
         List<SigunguCodeDto> sigunguData = tourService.getSigunguCodes();
