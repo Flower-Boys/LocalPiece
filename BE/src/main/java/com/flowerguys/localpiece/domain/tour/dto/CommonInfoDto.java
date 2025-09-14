@@ -10,7 +10,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TourItemDto {
+public class CommonInfoDto {
 
     @JsonProperty("contentid")
     private String contentid;
@@ -21,6 +21,51 @@ public class TourItemDto {
     @JsonProperty("title")
     private String title;
 
+    @JsonProperty("createdtime")
+    private String createdtime;
+
+    @JsonProperty("modifiedtime")
+    private String modifiedtime;
+
+    @JsonProperty("tel")
+    private String tel;
+
+    @JsonProperty("telname")
+    private String telname;
+
+    @JsonProperty("homepage")
+    private String homepage;
+
+    @JsonProperty("firstimage")
+    private String firstimage;
+
+    @JsonProperty("firstimage2")
+    private String firstimage2;
+
+    @JsonProperty("cpyrhtDivCd")
+    private String cpyrhtDivCd;
+
+    @JsonProperty("areacode")
+    private String areacode;
+
+    @JsonProperty("sigungucode")
+    private String sigungucode;
+    
+    @JsonProperty("lDongRegnCd")
+    private String lDongRegnCd;
+
+    @JsonProperty("lDongSignguCd")
+    private String lDongSignguCd;
+
+    @JsonProperty("lclsSystm1")
+    private String lclsSystm1;
+    
+    @JsonProperty("lclsSystm2")
+    private String lclsSystm2;
+
+    @JsonProperty("lclsSystm3")
+    private String lclsSystm3;
+    
     @JsonProperty("addr1")
     private String addr1;
 
@@ -30,48 +75,15 @@ public class TourItemDto {
     @JsonProperty("zipcode")
     private String zipcode;
 
-    @JsonProperty("areacode")
-    private String areacode;
-
-    @JsonProperty("sigungucode")
-    private String sigungucode;
-
-    @JsonProperty("tel")
-    private String tel;
-
-    @JsonProperty("firstimage")
-    private String firstimage;
-
-    @JsonProperty("firstimage2")
-    private String firstimage2;
-
     @JsonProperty("mapx")
     private String mapx;
 
     @JsonProperty("mapy")
     private String mapy;
 
-    @JsonProperty("createdtime")
-    private String createdtime;
+    @JsonProperty("mlevel")
+    private String mlevel;
 
-    @JsonProperty("modifiedtime")
-    private String modifiedtime;
-
-    @JsonProperty("cpyrhtDivCd")
-    private String cpyrhtDivCd;
-    
-    @JsonProperty("lDongRegnCd")
-    private String lDongRegnCd;
-    
-    @JsonProperty("lDongSignguCd")
-    private String lDongSignguCd;
-
-    @JsonProperty("lclsSystm1")
-    private String lclsSystm1;
-
-    @JsonProperty("lclsSystm2")
-    private String lclsSystm2;
-
-    @JsonProperty("lclsSystm3")
-    private String lclsSystm3;
+    @JsonProperty("overview")
+    private String overview;
 }

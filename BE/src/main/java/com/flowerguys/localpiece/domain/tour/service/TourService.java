@@ -2,14 +2,23 @@ package com.flowerguys.localpiece.domain.tour.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flowerguys.localpiece.domain.tour.dto.SigunguCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.CommonInfoDto;
+import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.ImageInfoDto;
+import com.flowerguys.localpiece.domain.tour.dto.IntroductionInfoDto;
+import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.PetTourInfoDto;
+import com.flowerguys.localpiece.domain.tour.dto.RepeatInfoDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -29,29 +38,61 @@ public class TourService {
     private final TourApiProperties apiProperties;
     private final ObjectMapper objectMapper;
 
-    // 경상북도 신규 법정동 시도 코드
     private static final String GYEONGBUK_LDONG_REGN_CD = "47";
 
-    /**
-     * 관광정보 조회 (신규 법정동 코드, 관광타입 필터링)
-     */
-    public List<TourItemDto> getAreaBasedList(String sigunguCode, String contentTypeId, int pageNo) {
-        String jsonString = callTourApi("/areaBasedList2", sigunguCode, contentTypeId, pageNo);
+    public List<TourItemDto> getAreaBasedList(
+            String sigunguCode, String contentTypeId, int pageNo, int numOfRows, String arrange,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3, String modifiedtime) {
+
+        String jsonString = callTourApi("/areaBasedList2", builder -> {
+            builder.queryParam("numOfRows", numOfRows)
+                   .queryParam("pageNo", pageNo)
+                   .queryParam("arrange", arrange)
+                   .queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            if (StringUtils.hasText(sigunguCode)) builder.queryParam("lDongSignguCd", sigunguCode);
+            if (StringUtils.hasText(contentTypeId)) builder.queryParam("contentTypeId", contentTypeId);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+            if (StringUtils.hasText(modifiedtime)) builder.queryParam("modifiedtime", modifiedtime);
+        });
+
         return parseItems(jsonString, TourItemDto.class);
     }
 
     /**
-     * 경상북도 내 시군구 코드 목록 조회
+     * 법정동 코드 조회 (기존 getSigunguCodes -> getLdongCodeList로 변경 및 확장)
      */
-    public List<SigunguCodeDto> getSigunguCodes() {
-        String jsonString = callTourApi("/ldongCode2", null, null, 1);
-        return parseItems(jsonString, SigunguCodeDto.class);
+    public List<LdongCodeDto> getLdongCodeList(String ldongAreaCd, String lDongListYn) {
+        String jsonString = callTourApi("/ldongCode2", builder -> {
+            builder.queryParam("numOfRows", 100); // 충분한 결과 수를 위해 100으로 설정
+            if (StringUtils.hasText(ldongAreaCd)) builder.queryParam("lDongRegnCd", ldongAreaCd);
+            if (StringUtils.hasText(lDongListYn)) builder.queryParam("lDongListYn", lDongListYn);
+        });
+        return parseItems(jsonString, LdongCodeDto.class);
     }
 
     /**
-     * TourAPI 호출 공통 로직
+     * 신규 분류체계 코드 조회
      */
-    private String callTourApi(String path, String sigunguCode, String contentTypeId, int pageNo) {
+    public List<CategoryCodeDto> getCategoryCodeList(String lclsSystm1, String lclsSystm2, String lclsSystmListYn) {
+        String jsonString = callTourApi("/lclsSystmCode2", builder -> {
+            builder.queryParam("numOfRows", 300); // 모든 카테고리를 가져오기 위해 충분히 큰 값 설정
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystmListYn)) builder.queryParam("lclsSystmListYn", lclsSystmListYn);
+        });
+        return parseItems(jsonString, CategoryCodeDto.class);
+    }
+
+
+    @FunctionalInterface
+    private interface UriBuilderCustomizer {
+        void customize(UriComponentsBuilder builder);
+    }
+
+    private String callTourApi(String path, UriBuilderCustomizer customizer) {
         DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory();
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
         restTemplate.setUriTemplateHandler(factory);
@@ -64,17 +105,7 @@ public class TourService {
                 .queryParam("MobileApp", "LocalPiece")
                 .queryParam("_type", "json");
 
-        if ("/areaBasedList2".equals(path)) {
-            builder.queryParam("numOfRows", 12)
-                    .queryParam("pageNo", pageNo)
-                    .queryParam("arrange", "A")
-                    .queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
-            if (sigunguCode != null) builder.queryParam("lDongSignguCd", sigunguCode);
-            if (contentTypeId != null) builder.queryParam("contentTypeId", contentTypeId);
-        } else if ("/ldongCode2".equals(path)) {
-            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD)
-                    .queryParam("numOfRows", 100);
-        }
+        customizer.customize(builder);
 
         URI uri = builder.build(true).toUri();
         log.info("Request URI to TourAPI: {}", uri);
@@ -87,9 +118,6 @@ public class TourService {
         }
     }
 
-    /**
-     * JSON 응답 파싱 및 DTO 변환 공통 로직 (예외 처리 포함)
-     */
     private <T> List<T> parseItems(String jsonString, Class<T> itemClass) {
         try {
             JsonNode root = objectMapper.readTree(jsonString);
@@ -113,5 +141,173 @@ public class TourService {
             log.error("TourAPI 응답 JSON 파싱 중 IOException 발생: {}", e.getMessage());
             throw new BusinessException(ErrorCode.TOUR_API_ERROR);
         }
+    }
+
+    /**
+     * 위치기반 관광정보 조회
+     */
+    public List<TourItemWithDistDto> getLocationBasedList(
+            String mapX, String mapY, int radius, String arrange, String contentTypeId,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3, String modifiedtime) {
+
+        String jsonString = callTourApi("/locationBasedList2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("mapX", mapX)
+                   .queryParam("mapY", mapY)
+                   .queryParam("radius", radius);
+
+            // 옵션 파라미터
+            if (StringUtils.hasText(arrange)) builder.queryParam("arrange", arrange);
+            if (StringUtils.hasText(contentTypeId)) builder.queryParam("contentTypeId", contentTypeId);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+            if (StringUtils.hasText(modifiedtime)) builder.queryParam("modifiedtime", modifiedtime);
+        });
+
+        return parseItems(jsonString, TourItemWithDistDto.class);
+    }
+
+    /**
+     * 키워드 기반 관광정보 조회
+     */
+    public List<TourItemDto> searchKeyword(
+            String keyword, String arrange, String contentTypeId,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3,
+            int pageNo, int numOfRows) {
+
+        String jsonString = callTourApi("/searchKeyword2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("keyword", keyword);
+            
+            // 경북 지역 내에서만 검색하도록 지역 코드 추가
+            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            // 옵션 파라미터
+            builder.queryParam("pageNo", pageNo)
+                   .queryParam("numOfRows", numOfRows);
+            if (StringUtils.hasText(arrange)) builder.queryParam("arrange", arrange);
+            if (StringUtils.hasText(contentTypeId)) builder.queryParam("contentTypeId", contentTypeId);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+        });
+
+        return parseItems(jsonString, TourItemDto.class);
+    }
+
+    /**
+     * 행사정보 조회
+     */
+    public List<EventItemDto> searchFestival(
+            String eventStartDate, String eventEndDate, String arrange,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3,
+            int pageNo, int numOfRows) {
+
+        String jsonString = callTourApi("/searchFestival2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("eventStartDate", eventStartDate);
+
+            // 경북 지역 내에서만 검색하도록 지역 코드 추가
+            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            // 옵션 파라미터
+            builder.queryParam("pageNo", pageNo)
+                   .queryParam("numOfRows", numOfRows);
+            if (StringUtils.hasText(eventEndDate)) builder.queryParam("eventEndDate", eventEndDate);
+            if (StringUtils.hasText(arrange)) builder.queryParam("arrange", arrange);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+        });
+
+        return parseItems(jsonString, EventItemDto.class);
+    }
+
+    /**
+     * 숙박정보 조회
+     */
+    public List<TourItemDto> searchStay(
+            String arrange, String lclsSystm1, String lclsSystm2, String lclsSystm3,
+            int pageNo, int numOfRows) {
+
+        String jsonString = callTourApi("/searchStay2", builder -> {
+            // 경북 지역 내 숙박업소만 조회
+            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            // 옵션 파라미터
+            builder.queryParam("pageNo", pageNo)
+                   .queryParam("numOfRows", numOfRows)
+                   .queryParam("arrange", arrange);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+        });
+
+        return parseItems(jsonString, TourItemDto.class);
+    }
+
+    /**
+     * 반려동물 동반여행 정보 조회
+     */
+    public List<PetTourInfoDto> getPetTourInfo(String contentId) {
+        String jsonString = callTourApi("/detailPetTour2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId);
+        });
+
+        return parseItems(jsonString, PetTourInfoDto.class);
+    }
+
+    /**
+     * 공통정보 조회
+     */
+    public List<CommonInfoDto> getCommonInfo(String contentId) {
+        String jsonString = callTourApi("/detailCommon2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId);
+        });
+
+        return parseItems(jsonString, CommonInfoDto.class);
+    }
+
+    /**
+     * 소개정보 조회
+     */
+    public List<IntroductionInfoDto> getIntroductionInfo(String contentId, String contentTypeId) {
+        String jsonString = callTourApi("/detailIntro2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId)
+                   .queryParam("contentTypeId", contentTypeId);
+        });
+
+        // Object.class -> IntroductionInfoDto.class 로 변경
+        return parseItems(jsonString, IntroductionInfoDto.class);
+    }
+
+    /**
+     * 반복정보 조회
+     */
+    public List<RepeatInfoDto> getRepeatInfo(String contentId, String contentTypeId) {
+        String jsonString = callTourApi("/detailInfo2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId)
+                   .queryParam("contentTypeId", contentTypeId);
+        });
+
+        return parseItems(jsonString, RepeatInfoDto.class);
+    }
+
+    /**
+     * 이미지정보 조회
+     */
+    public List<ImageInfoDto> getImageInfo(String contentId) {
+        String jsonString = callTourApi("/detailImage2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("contentId", contentId)
+                   .queryParam("imageYN", "Y"); // 콘텐츠 이미지 조회
+        });
+
+        return parseItems(jsonString, ImageInfoDto.class);
     }
 }
