@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 /* 필요하면 reset / custom 추가 */
 * {
   margin: 0;
