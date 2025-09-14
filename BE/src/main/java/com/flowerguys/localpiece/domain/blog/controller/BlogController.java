@@ -5,6 +5,7 @@ import com.flowerguys.localpiece.domain.blog.dto.BlogCreateRequest;
 import com.flowerguys.localpiece.domain.blog.dto.BlogResponse;
 import com.flowerguys.localpiece.domain.blog.dto.BlogUpdateRequest;
 import com.flowerguys.localpiece.domain.blog.service.BlogService;
+import com.flowerguys.localpiece.domain.blog.dto.BlogListResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -53,8 +54,9 @@ public class BlogController {
     }
     
     @GetMapping
-    public ResponseEntity<List<BlogResponse>> getBlogList() {
-        return ResponseEntity.ok(blogService.getBlogList());
+    public ResponseEntity<List<BlogListResponseDto>> getBlogList(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(blogService.getBlogList(userDetails));
     }
 
     @GetMapping("/{blogId}")

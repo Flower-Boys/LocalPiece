@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class BlogService {
     private final UserRepository userRepository;
     private final BlogContentRepository blogContentRepository;
     private final ImageUploadService imageUploadService;
+    private final BlogLikeRepository blogLikeRepository;
 
     @Transactional
     public BlogResponse createBlog(String userEmail, BlogCreateRequest request, List<MultipartFile> imageFiles) {
@@ -56,19 +60,45 @@ public class BlogService {
     }
 
     @Transactional(readOnly = true)
-    public List<BlogResponse> getBlogList() {
-        return blogRepository.findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc()
-                .stream()
-                .map(BlogResponse::new)
+    public List<BlogListResponseDto> getBlogList(UserDetails userDetails) {
+        
+        Set<Long> likedBlogIds = Collections.emptySet();
+
+        // 로그인한 사용자라면, 좋아요 누른 블로그 ID 목록을 미리 조회
+        if (userDetails != null) {
+            User user = findUser(userDetails.getUsername());
+            likedBlogIds = blogLikeRepository.findLikedBlogIdsByUserId(user.getId());
+        }
+
+        // DB에서 블로그 목록 조회
+        List<Blog> blogs = blogRepository.findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc();
+
+        // final로 선언하여 람다 내부에서 사용할 수 있도록 함
+        final Set<Long> finalLikedBlogIds = likedBlogIds;
+
+        // DTO로 변환
+        return blogs.stream()
+                .map(blog -> {
+                    boolean isLiked = finalLikedBlogIds.contains(blog.getId());
+                    return new BlogListResponseDto(blog, isLiked);
+                })
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public BlogResponse getBlogAndIncreaseViewCount(Long blogId, UserDetails userDetails) {
-        Blog blog = findBlogWithContents(blogId);
+        Blog blog = findBlogWithContents(blogId); // findById로 변경해도 무방
         checkBlogAccess(blog, userDetails);
         blogRepository.updateViewCount(blogId);
-        return new BlogResponse(blog);
+
+        // ✨ 좋아요 여부 확인 로직 추가
+        boolean isLiked = false;
+        if (userDetails != null) {
+            User user = findUser(userDetails.getUsername());
+            isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
+        }
+
+        return new BlogResponse(blog, isLiked); // 수정된 생성자로 DTO 생성
     }
 
     @Transactional
