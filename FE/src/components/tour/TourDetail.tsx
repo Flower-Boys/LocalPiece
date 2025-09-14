@@ -1,6 +1,12 @@
-import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
+import { useState } from "react";
 import SearchBar from "../../components/home/SearchBar";
+
+const containerStyle = {
+  width: "100%",
+  height: "400px",
+};
 
 const TourDetail = () => {
   const { state } = useLocation() as {
@@ -9,53 +15,20 @@ const TourDetail = () => {
       title: string;
       location: string;
       image: string;
-      mapx: string;
-      mapy: string;
+      mapx: string; // 경도
+      mapy: string; // 위도
     };
   };
 
   if (!state) return <div>잘못된 접근입니다.</div>;
 
-  const { title, location, image, mapx, mapy } = state;
-  const mapRef = useRef<HTMLDivElement>(null);
+  const { id, title, location, image, mapx, mapy } = state;
+  const center = { lat: Number(mapy), lng: Number(mapx) };
 
-  useEffect(() => {
-    if (window.kakao && window.kakao.maps) {
-      // 이미 로드됨
-      initMap();
-      return;
-    }
+  const [selected, setSelected] = useState(false);
 
-    const script = document.createElement("script");
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_JAVASCRIPT_KEY&autoload=false`;
-    script.async = true;
-
-    script.onload = () => {
-      console.log("✅ Kakao SDK 로드 완료");
-      window.kakao.maps.load(() => {
-        initMap();
-      });
-    };
-
-    script.onerror = () => {
-      console.error("❌ Kakao SDK 로드 실패");
-    };
-
-    document.head.appendChild(script);
-
-    function initMap() {
-      if (!mapRef.current) return;
-      const map = new window.kakao.maps.Map(mapRef.current, {
-        center: new window.kakao.maps.LatLng(Number(mapy), Number(mapx)),
-        level: 3,
-      });
-
-      new window.kakao.maps.Marker({
-        map,
-        position: new window.kakao.maps.LatLng(Number(mapy), Number(mapx)),
-      });
-    }
-  }, [mapx, mapy]);
+  // ✅ title + location 기반 구글 지도 검색 URL
+  const googleDetailUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${title} ${location}`)}`;
 
   return (
     <div className="w-full min-h-screen bg-gray-50">
@@ -65,6 +38,7 @@ const TourDetail = () => {
       <div className="border-b border-gray-300"></div>
 
       <div className="max-w-6xl mx-auto py-8 px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* 왼쪽: 이미지 + 정보 */}
         <div>
           <img src={image || "https://placekitten.com/600/400"} alt={title} className="w-full h-80 object-cover rounded-lg mb-6" />
 
@@ -73,7 +47,7 @@ const TourDetail = () => {
             <p className="text-gray-600 mb-4">{location}</p>
             <ul className="text-gray-700 space-y-2">
               <li>
-                <strong>ID:</strong> {state.id}
+                <strong>ID:</strong> {id}
               </li>
               <li>
                 <strong>경도:</strong> {mapx}
@@ -85,8 +59,24 @@ const TourDetail = () => {
           </div>
         </div>
 
+        {/* 오른쪽: 구글 지도 */}
         <div>
-          <div ref={mapRef} className="w-full h-96 rounded-lg shadow" />
+          <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_API_KEY}>
+            <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={14}>
+              <Marker position={center} title={title} onClick={() => setSelected(true)} />
+              {selected && (
+                <InfoWindow position={center} onCloseClick={() => setSelected(false)}>
+                  <div className="text-sm">
+                    <h2 className="font-bold">{title}</h2>
+                    <p>{location}</p>
+                    <a href={googleDetailUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                      구글 지도에서 검색 →
+                    </a>
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
+          </LoadScript>
         </div>
       </div>
     </div>
