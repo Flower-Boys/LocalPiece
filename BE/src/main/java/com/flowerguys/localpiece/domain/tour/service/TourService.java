@@ -3,6 +3,7 @@ package com.flowerguys.localpiece.domain.tour.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
@@ -188,5 +189,33 @@ public class TourService {
         });
 
         return parseItems(jsonString, TourItemDto.class);
+    }
+
+    /**
+     * 행사정보 조회
+     */
+    public List<EventItemDto> searchFestival(
+            String eventStartDate, String eventEndDate, String arrange,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3,
+            int pageNo, int numOfRows) {
+
+        String jsonString = callTourApi("/searchFestival2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("eventStartDate", eventStartDate);
+
+            // 경북 지역 내에서만 검색하도록 지역 코드 추가
+            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            // 옵션 파라미터
+            builder.queryParam("pageNo", pageNo)
+                   .queryParam("numOfRows", numOfRows);
+            if (StringUtils.hasText(eventEndDate)) builder.queryParam("eventEndDate", eventEndDate);
+            if (StringUtils.hasText(arrange)) builder.queryParam("arrange", arrange);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+        });
+
+        return parseItems(jsonString, EventItemDto.class);
     }
 }

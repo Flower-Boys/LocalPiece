@@ -2,6 +2,7 @@ package com.flowerguys.localpiece.domain.tour.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
+import com.flowerguys.localpiece.domain.tour.dto.EventItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
@@ -110,5 +111,27 @@ public class TourController {
                 pageNo, numOfRows);
         
         return ResponseEntity.ok(tourData);
+    }
+
+    /**
+     * 행사정보 조회 Controller
+     */
+    @GetMapping("/events")
+    public ResponseEntity<List<EventItemDto>> searchFestival(
+            @RequestParam String eventStartDate, // YYYYMMDD 형식
+            @RequestParam(required = false) String eventEndDate, // YYYYMMDD 형식
+            @RequestParam(defaultValue = "A") String arrange,
+            @RequestParam(required = false) String lclsSystm1,
+            @RequestParam(required = false) String lclsSystm2,
+            @RequestParam(required = false) String lclsSystm3,
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "12") int numOfRows) throws JsonProcessingException {
+
+        List<EventItemDto> eventData = tourService.searchFestival(
+                eventStartDate, eventEndDate, arrange,
+                lclsSystm1, lclsSystm2, lclsSystm3,
+                pageNo, numOfRows);
+        
+        return ResponseEntity.ok(eventData);
     }
 }
