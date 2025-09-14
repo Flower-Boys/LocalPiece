@@ -89,4 +89,26 @@ public class TourController {
         
         return ResponseEntity.ok(tourData);
     }
+
+    /**
+     * 키워드 검색 조회 Controller
+     */
+    @GetMapping("/keyword-search")
+    public ResponseEntity<List<TourItemDto>> searchKeyword(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "A") String arrange,
+            @RequestParam(required = false) String contentTypeId,
+            @RequestParam(required = false) String lclsSystm1,
+            @RequestParam(required = false) String lclsSystm2,
+            @RequestParam(required = false) String lclsSystm3,
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "12") int numOfRows) throws JsonProcessingException {
+
+        List<TourItemDto> tourData = tourService.searchKeyword(
+                keyword, arrange, contentTypeId,
+                lclsSystm1, lclsSystm2, lclsSystm3,
+                pageNo, numOfRows);
+        
+        return ResponseEntity.ok(tourData);
+    }
 }

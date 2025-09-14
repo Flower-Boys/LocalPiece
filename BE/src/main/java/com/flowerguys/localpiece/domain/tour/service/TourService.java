@@ -161,4 +161,32 @@ public class TourService {
 
         return parseItems(jsonString, TourItemWithDistDto.class);
     }
+
+    /**
+     * 키워드 기반 관광정보 조회
+     */
+    public List<TourItemDto> searchKeyword(
+            String keyword, String arrange, String contentTypeId,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3,
+            int pageNo, int numOfRows) {
+
+        String jsonString = callTourApi("/searchKeyword2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("keyword", keyword);
+            
+            // 경북 지역 내에서만 검색하도록 지역 코드 추가
+            builder.queryParam("lDongRegnCd", GYEONGBUK_LDONG_REGN_CD);
+
+            // 옵션 파라미터
+            builder.queryParam("pageNo", pageNo)
+                   .queryParam("numOfRows", numOfRows);
+            if (StringUtils.hasText(arrange)) builder.queryParam("arrange", arrange);
+            if (StringUtils.hasText(contentTypeId)) builder.queryParam("contentTypeId", contentTypeId);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+        });
+
+        return parseItems(jsonString, TourItemDto.class);
+    }
 }
