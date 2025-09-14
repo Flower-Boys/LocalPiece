@@ -6,6 +6,7 @@ import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourApiProperties;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -134,5 +135,30 @@ public class TourService {
             log.error("TourAPI 응답 JSON 파싱 중 IOException 발생: {}", e.getMessage());
             throw new BusinessException(ErrorCode.TOUR_API_ERROR);
         }
+    }
+
+    /**
+     * 위치기반 관광정보 조회
+     */
+    public List<TourItemWithDistDto> getLocationBasedList(
+            String mapX, String mapY, int radius, String arrange, String contentTypeId,
+            String lclsSystm1, String lclsSystm2, String lclsSystm3, String modifiedtime) {
+
+        String jsonString = callTourApi("/locationBasedList2", builder -> {
+            // 필수 파라미터
+            builder.queryParam("mapX", mapX)
+                   .queryParam("mapY", mapY)
+                   .queryParam("radius", radius);
+
+            // 옵션 파라미터
+            if (StringUtils.hasText(arrange)) builder.queryParam("arrange", arrange);
+            if (StringUtils.hasText(contentTypeId)) builder.queryParam("contentTypeId", contentTypeId);
+            if (StringUtils.hasText(lclsSystm1)) builder.queryParam("lclsSystm1", lclsSystm1);
+            if (StringUtils.hasText(lclsSystm2)) builder.queryParam("lclsSystm2", lclsSystm2);
+            if (StringUtils.hasText(lclsSystm3)) builder.queryParam("lclsSystm3", lclsSystm3);
+            if (StringUtils.hasText(modifiedtime)) builder.queryParam("modifiedtime", modifiedtime);
+        });
+
+        return parseItems(jsonString, TourItemWithDistDto.class);
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.flowerguys.localpiece.domain.tour.dto.CategoryCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.LdongCodeDto;
 import com.flowerguys.localpiece.domain.tour.dto.TourItemDto;
+import com.flowerguys.localpiece.domain.tour.dto.TourItemWithDistDto;
 import com.flowerguys.localpiece.domain.tour.service.TourService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -65,5 +66,27 @@ public class TourController {
             @RequestParam(defaultValue = "N") String lclsSystmListYn) throws JsonProcessingException {
         List<CategoryCodeDto> categoryData = tourService.getCategoryCodeList(lclsSystm1, lclsSystm2, lclsSystmListYn);
         return ResponseEntity.ok(categoryData);
+    }
+
+    /**
+     * 위치기반 관광정보 조회 Controller
+     */
+    @GetMapping("/location-based")
+    public ResponseEntity<List<TourItemWithDistDto>> getLocationBasedList(
+            @RequestParam String mapX,
+            @RequestParam String mapY,
+            @RequestParam(defaultValue = "1000") int radius, // 기본 반경 1km
+            @RequestParam(defaultValue = "E") String arrange, // E=거리순
+            @RequestParam(required = false) String contentTypeId,
+            @RequestParam(required = false) String lclsSystm1,
+            @RequestParam(required = false) String lclsSystm2,
+            @RequestParam(required = false) String lclsSystm3,
+            @RequestParam(required = false) String modifiedtime) throws JsonProcessingException {
+
+        List<TourItemWithDistDto> tourData = tourService.getLocationBasedList(
+                mapX, mapY, radius, arrange, contentTypeId,
+                lclsSystm1, lclsSystm2, lclsSystm3, modifiedtime);
+        
+        return ResponseEntity.ok(tourData);
     }
 }
