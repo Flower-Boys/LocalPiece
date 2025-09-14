@@ -8,6 +8,7 @@ import NotFound from "../pages/errors/NotFound";
 import BlogWrite from "../pages/blogs/BlogWrite";
 import BlogDetail from "@/pages/blogs/BlogDetail";
 import TourDetail from "@/components/tour/TourDetail";
+import { AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
 
 // const isAuthenticated = () => {
 //   return !!localStorage.getItem("token");
@@ -25,6 +26,9 @@ const router = createBrowserRouter([
       { path: "/blog/write", element: <BlogWrite /> },
       { path: "/blog/:id", element: <BlogDetail /> },
       { path: "/tour/:id", element: <TourDetail /> },
+      { path: "/ai/travel", element: <AiTravelLanding /> },
+      { path: "/ai/travel/builder", element: <CategorySelect /> },
+      { path: "/ai/travel/result", element: <AiResultPreview /> },
     ],
   },
   { path: "/login", element: <Login /> },
