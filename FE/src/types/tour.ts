@@ -67,25 +67,60 @@ export interface TourIntroResponse {
   [key: string]: any;
 }
 
-
 // ✅ 반복정보 조회 응답 타입  (3)
 export interface TourInfoResponse {
   contentid: string;
   contenttypeid: string;
-  fldgubun?: string;   // 구분 코드 (ex. 3 = 이용안내)
-  infoname?: string;   // 정보명 (ex. 입장료, 화장실)
-  infotext?: string;   // 정보 내용 (ex. 무료, 있음)
-  serialnum?: string;  // 순번
+  fldgubun?: string; // 구분 코드 (ex. 3 = 이용안내)
+  infoname?: string; // 정보명 (ex. 입장료, 화장실)
+  infotext?: string; // 정보 내용 (ex. 무료, 있음)
+  serialnum?: string; // 순번
   [key: string]: any; // 다른 contentTypeId에서 추가 필드가 있을 수 있음
 }
-
 
 // ✅ 이미지정보 조회 응답 타입  (4)
 export interface TourImageResponse {
   contentid: string;
-  imgname: string;        // 이미지 이름
-  originimgurl: string;   // 원본 이미지 URL
-  serialnum: string;      // 고유 시리얼 번호
-  cpyrhtDivCd: string;    // 저작권 구분 코드
-  smallimageurl: string;  // 썸네일 이미지 URL
+  imgname: string; // 이미지 이름
+  originimgurl: string; // 원본 이미지 URL
+  serialnum: string; // 고유 시리얼 번호
+  cpyrhtDivCd: string; // 저작권 구분 코드
+  smallimageurl: string; // 썸네일 이미지 URL
+}
+
+// ✅ 키워드기반 검색 응답 타입
+export interface KeywordTourItem {
+  contentid: string;
+  contenttypeid: string;
+  title: string;
+  addr1: string;
+  addr2?: string;
+  zipcode?: string;
+  areacode?: string;
+  sigungucode?: string;
+  tel?: string;
+  firstimage?: string;
+  firstimage2?: string;
+  mapx: string;
+  mapy: string;
+  createdtime?: string;
+  modifiedtime?: string;
+  cpyrhtDivCd?: string;
+  lDongRegnCd?: string;
+  lDongSignguCd?: string;
+  lclsSystm1?: string;
+  lclsSystm2?: string;
+  lclsSystm3?: string;
+}
+
+// ✅ 키워드기반 검색 파라미터 타입
+export interface KeywordSearchParams {
+  keyword: string; // 필수
+  arrange?: "A" | "C" | "D";
+  contentTypeId?: string; // 관광타입 ID (12, 14, 15, ...)
+  lclsSystm1?: string;
+  lclsSystm2?: string;
+  lclsSystm3?: string;
+  pageNo?: number;
+  numOfRows?: number;
 }
