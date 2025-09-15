@@ -6,6 +6,7 @@ import SearchBar from "../components/home/SearchBar";
 import TourCard from "../components/tour/TourCard";
 import Loader from "../common/Loader";
 import { CATEGORY_MAP } from "../constants/category";
+import AuthButtons from "../components/share/auth/AuthButtons";
 
 function Home() {
   const [tourItems, setTourItems] = useState<(TourItem | KeywordTourItem)[]>([]);
@@ -88,10 +89,25 @@ function Home() {
     <div className="w-full min-h-screen bg-gray-50">
       {isLoading && <Loader label="관광 데이터를 불러오는 중" />}
 
-      {/* Hero + 검색창 */}
-      <section className="from-pink-500 to-red-500 text-white py-8 px-6 text-center">
-        <SearchBar />
+      <section className="from-pink-500 to-red-500 text-white py-12 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[1fr,2fr,1fr] items-center gap-4">
+          {/* 왼쪽 여백 */}
+          <div></div>
+
+          {/* 검색창 (중앙 고정, 더 넓게) */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <SearchBar />
+            </div>
+          </div>
+
+          {/* 버튼 (오른쪽 끝) */}
+          <div className="flex justify-end">
+            <AuthButtons />
+          </div>
+        </div>
       </section>
+
       <div className="border-b border-gray-300"></div>
 
       {/* 카테고리 버튼 */}

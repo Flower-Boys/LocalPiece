@@ -2,13 +2,13 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
 import Home from "../pages/Home";
 import About from "../pages/About";
-import Login from "../pages/Login";
 import Blog from "../pages/blogs/BlogPage";
 import NotFound from "../pages/errors/NotFound";
 import BlogWrite from "../pages/blogs/BlogWrite";
 import BlogDetail from "@/pages/blogs/BlogDetail";
 import TourDetail from "@/components/tour/TourDetail";
 import { AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
+import MyPage from "@/components/user/MyPage";
 
 // const isAuthenticated = () => {
 //   return !!localStorage.getItem("token");
@@ -29,9 +29,10 @@ const router = createBrowserRouter([
       { path: "/ai/travel", element: <AiTravelLanding /> },
       { path: "/ai/travel/builder", element: <CategorySelect /> },
       { path: "/ai/travel/result", element: <AiResultPreview /> },
+      { path: "/mypage", element: <MyPage /> },
     ],
   },
-  { path: "/login", element: <Login /> },
+  // { path: "/login", element: <Login /> },
   { path: "*", element: <NotFound /> },
 ]);
 
