@@ -15,9 +15,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
-    # DDL(테이블 생성/수정) 옵션. 'none'으로 설정하여 직접 관리하는 것을 권장
-    hibernate:
-      ddl-auto: none
+    # # DDL(테이블 생성/수정) 옵션. 'none'으로 설정하여 직접 관리하는 것을 권장
+    # hibernate:
+    #   ddl-auto: none
   # 서버 포트 설정
   server:
     port: 8080
@@ -82,6 +82,9 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
 
 oci:
   object-storage:
