@@ -1,3 +1,4 @@
+// RegionSelect.tsx
 import { useState } from "react";
 import { MapPin } from "lucide-react";
 import { sigunguCodeLabel } from "./constants";
@@ -24,6 +25,18 @@ const RegionSelect = ({ value, onChange }: Props) => {
       {/* 드롭다운 */}
       {isOpen && (
         <div className="absolute mt-2 w-56 bg-white shadow-lg rounded-xl text-gray-700 border border-gray-200 max-h-64 overflow-y-auto z-10">
+          {/* ✅ 선택안함 옵션 */}
+          <div
+            onClick={() => {
+              onChange("");
+              setIsOpen(false);
+            }}
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-sm"
+          >
+            <MapPin size={14} className="text-gray-400" />
+            선택안함
+          </div>
+
           {Object.entries(sigunguCodeLabel).map(([key, label]) => (
             <div
               key={key}
