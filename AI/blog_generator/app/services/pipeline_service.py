@@ -20,7 +20,6 @@ def create_ai_blog_v2(req: AiGenerationRequestDto):
 
 def create_ai_blog_original(req: AiGenerationRequestDto):
     """v1: 오리지널 버전 파이프라인"""
-    # 오리지널 로직은 시간/GPS를 사용하지 않으므로, 모든 사진을 분석
     analyzed_photos = analysis_service.analyze_photos(req.images)
-    
+    # ✨ 오리지널 서비스는 dict를 반환하므로 그대로 return
     return original_story_service.create_original_blog(req.city, analyzed_photos)

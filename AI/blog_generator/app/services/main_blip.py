@@ -65,7 +65,7 @@ def run_yolo(img_path: Path) -> List[str]:
 def _load_places():
     global _PLACES_MODEL, _PLACES_CLASSES_EN
     if not PLACES_WEIGHT_PATH.exists() or not PLACES_CLASSES_PATH.exists():
-        raise RuntimeError("Places365 weight가 weights/places365/ 아래에 없습니다.")
+        raise RuntimeError(f"Places365 weight가 weights/places365/ 아래에 없습니다.{PLACES_WEIGHT_PATH}, {PLACES_CLASSES_PATH} 경로를 확인하세요.")
     if not _PLACES_CLASSES_EN:
         with open(PLACES_CLASSES_PATH, encoding="utf-8") as f:
             for line in f:

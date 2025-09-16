@@ -1,40 +1,54 @@
-# app/services/location_service.py
 import requests
 from haversine import haversine, Unit
 from typing import List
 from app.models import ImageMetadataDto, Chapter, AnalyzedPhoto
-from app.config import CHAPTER_CLUSTER_DISTANCE_METERS, KAKAO_API_KEY, KAKAO_API_URL, VALID_PLACE_CATEGORIES
+from app.config import CHAPTER_CLUSTER_DISTANCE_METERS, KAKAO_API_KEY, KAKAO_API_URL
 
 def _fetch_place_name_from_kakao(lat: float, lon: float) -> str | None:
     """카카오 API를 호출하여 좌표에 해당하는 장소 이름을 가져옵니다."""
     if not KAKAO_API_KEY:
-        print("WARNING: .env 파일에 KAKAO_API_KEY가 설정되지 않았습니다.")
+        print("CRITICAL ERROR: .env 파일에 KAKAO_API_KEY가 설정되지 않았습니다.")
         return None
+        
     try:
         headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
         params = {"x": lon, "y": lat}
         response = requests.get(KAKAO_API_URL, headers=headers, params=params, timeout=5)
-        response.raise_for_status()
+        response.raise_for_status() 
+        
         data = response.json().get("documents", [])
         if not data:
             return None
 
-        # 건물/상호 이름이 있는 도로명 주소를 최우선으로 사용
+        # --- ✨ 장소 이름 찾기 로직 수정 ---
+        # 1. '도로명 주소'에 '건물 이름'(building_name)이 있으면, 최우선으로 사용합니다.
+        #    이것이 가장 정확한 상호명이나 건물명일 확률이 높습니다.
         road_info = data[0].get("road_address")
-        if road_info and road_info.get("building_name") and road_info.get("category_group_code") in VALID_PLACE_CATEGORIES:
+        if road_info and road_info.get("building_name"):
+            # "무지개아파트" 같은 구체적인 이름을 반환합니다.
             return road_info["building_name"]
         
-        # 없다면 지번 주소의 상호/건물 이름을 사용
+        # 2. 건물 이름이 없다면, '지번 주소'의 전체 주소를 사용합니다.
+        #    '경기 안성시 죽산면 죽산리 343-1' 과 같은 주소에서,
+        #    일반적이지 않은 마지막 부분을 장소 이름으로 간주할 수 있습니다.
         address_info = data[0].get("address")
-        if address_info and address_info.get("category_group_code") in VALID_PLACE_CATEGORIES:
+        if address_info:
+            # 주소의 마지막 부분을 장소 이름으로 사용 (예: '죽산리')
+            # 이렇게 하면 최소한 동네 이름이라도 알 수 있습니다.
             return address_info["address_name"].split()[-1]
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"CRITICAL ERROR: Kakao API 호출 실패! 응답 코드: {http_err.response.status_code}")
+        if http_err.response.status_code == 401:
+            print(" -> 401 Unauthorized: KAKAO_API_KEY가 정확한지, REST API 키가 맞는지 확인해주세요.")
             
     except requests.exceptions.RequestException as e:
-        print(f"ERROR: Kakao API 호출 실패: {e}")
+        print(f"ERROR: 네트워크 연결 또는 타임아웃 문제일 수 있습니다: {e}")
+        
     return None
 
+# 이하 cluster_photos_into_chapters 함수는 이전과 동일합니다.
 def cluster_photos_into_chapters(photos: List[ImageMetadataDto]) -> List[Chapter]:
-    """사진들을 GPS 기반으로 클러스터링하여 챕터 리스트를 생성합니다."""
     if not photos:
         return []
 
@@ -45,24 +59,19 @@ def cluster_photos_into_chapters(photos: List[ImageMetadataDto]) -> List[Chapter
         prev = photos[i-1]
         curr = photos[i]
 
-        # 두 사진 모두 GPS 정보가 있어야 거리 계산 가능
         if prev.latitude and prev.longitude and curr.latitude and curr.longitude:
             distance = haversine((prev.latitude, prev.longitude), (curr.latitude, curr.longitude), unit=Unit.METERS)
-            # 설정된 거리 이내면 같은 챕터로 묶음
             if distance <= CHAPTER_CLUSTER_DISTANCE_METERS:
                 current_chapter_photos.append(curr)
-            # 거리가 멀면 새로운 챕터 시작
             else:
                 chapters.append(Chapter(photos=[AnalyzedPhoto(metadata=p) for p in current_chapter_photos]))
                 current_chapter_photos = [curr]
         else:
-            # GPS 정보가 하나라도 없으면 강제로 챕터 분리
             chapters.append(Chapter(photos=[AnalyzedPhoto(metadata=p) for p in current_chapter_photos]))
             current_chapter_photos = [curr]
 
     chapters.append(Chapter(photos=[AnalyzedPhoto(metadata=p) for p in current_chapter_photos]))
 
-    # 각 챕터의 장소 이름 결정 및 시간 정보 기록
     for chapter in chapters:
         middle_photo_meta = chapter.photos[len(chapter.photos) // 2].metadata
         if middle_photo_meta.latitude and middle_photo_meta.longitude:

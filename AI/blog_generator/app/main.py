@@ -158,4 +158,8 @@ def test_kakao_api(lat: float, lon: float):
 
 #     # 파이프라인 실행
 #     result = main_blip.make_blog_from_paths(paths, city=(req.city or "OO도시"))
-#     return AnalyzeResponse(**result)
+#     blog_text = " ".join([item['text'] for item in result['blog']])
+#     photos = [item['image'] for item in result['blog']]
+
+#     return AnalyzeResponse(blog_text=blog_text, photos=photos)
+#     # return AnalyzeResponse(**result)
