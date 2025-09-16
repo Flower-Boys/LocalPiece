@@ -5,6 +5,10 @@ import TourMap from "../../components/tour/TourMap";
 import { getTourCommon, getTourIntro, getTourInfo, getTourImages } from "../../api/tour";
 import { TourCommonResponse, TourIntroResponse, TourInfoResponse, TourImageResponse } from "../../types/tour";
 import { MapPin, ExternalLink, Phone, Share2, ArrowLeft, Clock4, Landmark, BadgeInfo, Images, ChevronDown, ChevronUp, MapPinned, Link as LinkIcon } from "lucide-react";
+import TourImageModal from "./TourImageModal";
+import { fetchAreaBasedTours } from "../../api/tour";
+import { AreaBasedTourItem } from "../../types/tour";
+import AuthButtons from "../../components/share/auth/AuthButtons";
 
 const kv = (label: string, value?: string | null) => (
   <div className="flex items-start gap-2">
@@ -79,6 +83,19 @@ const renderers: Record<string, (item: TourInfoResponse) => React.ReactNode | nu
   ),
 };
 
+// helper 함수 (TourDetail.tsx 위쪽에 추가하거나 utils로 분리 가능)
+const extractHref = (html?: string | null): string | null => {
+  if (!html) return null;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const link = doc.querySelector("a");
+    return link?.getAttribute("href") || null;
+  } catch {
+    return null;
+  }
+};
+
 const TourDetail = () => {
   const { state } = useLocation() as {
     state: {
@@ -100,6 +117,13 @@ const TourDetail = () => {
   const [images, setImages] = useState<TourImageResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false); // overview 더보기
+  const [searchResults, setSearchResults] = useState<AreaBasedTourItem[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = (params: { sigunguCode: string; contentTypeId: string }) => {
+    // 👉 Home으로 이동하면서 검색 파라미터 전달
+    navigate("/", { state: params });
+  };
 
   useEffect(() => {
     if (!state) return;
@@ -134,7 +158,10 @@ const TourDetail = () => {
   const heroImage = common?.firstimage || image || "https://placehold.co/1200x600/png";
   const prettyType = contentTypeLabel[String(type)] || "정보";
   const phoneText = formatTel(common?.tel);
-  const homepage = common?.homepage?.includes("http") ? common?.homepage : common?.homepage ? `https://${common?.homepage}` : "";
+  const homepage = extractHref(common?.homepage);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [modalImages, setModalImages] = useState<{ url: string; alt?: string }[]>([]);
 
   // 길찾기/공유/복사 등
   const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapy},${mapx}`;
@@ -150,9 +177,22 @@ const TourDetail = () => {
   return (
     <div className="w-full min-h-screen bg-neutral-50">
       {/* 상단 검색바 영역 */}
-      <section className="bg-gradient-to-r  to-rose-500 py-5 px-6">
-        <div className="max-w-6xl mx-auto">
-          <SearchBar />
+      <section className="from-pink-500 to-rose-500 text-white py-6 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[1fr,2fr,1fr] items-center gap-4">
+          {/* 왼쪽 여백 */}
+          <div></div>
+
+          {/* 중앙 검색바 */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <SearchBar onSearch={handleSearch} />
+            </div>
+          </div>
+
+          {/* 오른쪽 버튼 */}
+          <div className="flex justify-end">
+            <AuthButtons />
+          </div>
         </div>
       </section>
 
@@ -211,7 +251,7 @@ const TourDetail = () => {
                 <span className="min-w-20 shrink-0 text-gray-500">홈페이지</span>
                 {homepage ? (
                   <div className="flex items-center gap-3">
-                    <a href={homepage} target="_blank" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                    <a href={homepage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
                       바로가기 <ExternalLink className="w-4 h-4" />
                     </a>
                     <button onClick={() => copyToClipboard(homepage)} className="text-gray-500 hover:text-gray-700" title="링크 복사">
@@ -298,7 +338,19 @@ const TourDetail = () => {
                         {/* 객실 이미지 */}
                         <div className="mt-3 grid grid-cols-2 gap-2">
                           {[item.roomimg1, item.roomimg2, item.roomimg3, item.roomimg4, item.roomimg5].filter(Boolean).map((src, idx) => (
-                            <img key={idx} src={src!} alt={item[`roomimg${idx + 1}alt`] || "객실 이미지"} className="rounded-md h-28 w-full object-cover" />
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setModalImages(
+                                  [item.roomimg1, item.roomimg2, item.roomimg3, item.roomimg4, item.roomimg5].filter(Boolean).map((url, i) => ({ url: url!, alt: item[`roomimg${i + 1}alt`] }))
+                                );
+                                setCurrentIndex(idx);
+                                setIsModalOpen(true);
+                              }}
+                              className="block"
+                            >
+                              <img src={src!} alt={item[`roomimg${idx + 1}alt`] || "객실 이미지"} className="rounded-md h-28 w-full object-cover" />
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -323,14 +375,27 @@ const TourDetail = () => {
 
             {images.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {images.map((img) => (
-                  <a key={img.serialnum} href={img.originimgurl} target="_blank" className="block group" title={img.imgname}>
+                {images.map((img, idx) => (
+                  <button
+                    key={img.serialnum}
+                    onClick={() => {
+                      setModalImages(
+                        images.map((im) => ({
+                          url: im.originimgurl,
+                          alt: im.imgname,
+                        }))
+                      );
+                      setCurrentIndex(idx);
+                      setIsModalOpen(true);
+                    }}
+                    className="block group"
+                  >
                     <img
                       src={img.smallimageurl || img.originimgurl}
                       alt={img.imgname}
                       className="w-full h-40 object-cover rounded-xl ring-1 ring-gray-100 shadow-sm group-hover:opacity-90 transition"
                     />
-                  </a>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -409,6 +474,15 @@ const TourDetail = () => {
           뒤로가기
         </button>
       </div>
+      {isModalOpen && (
+        <TourImageModal
+          images={modalImages}
+          currentIndex={currentIndex}
+          onClose={() => setIsModalOpen(false)}
+          onPrev={() => setCurrentIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length)}
+          onNext={() => setCurrentIndex((prev) => (prev + 1) % modalImages.length)}
+        />
+      )}
 
       {/* 로딩 상태 간단 처리 */}
       {loading && (

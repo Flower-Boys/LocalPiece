@@ -27,9 +27,23 @@ const LoginForm = () => {
     <form onSubmit={handleLogin} className="flex flex-col gap-4">
       <h2 className="text-2xl font-bold text-center text-gray-800">로그인</h2>
 
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="이메일" className="border px-4 py-3 rounded-lg focus:ring-2 focus:ring-rose-400" required />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="이메일"
+        className="border px-4 py-3 rounded-lg focus:ring-2 focus:ring-rose-400 text-gray-800 placeholder-gray-400"
+        required
+      />
 
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="비밀번호" className="border px-4 py-3 rounded-lg focus:ring-2 focus:ring-rose-400" required />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="비밀번호"
+        className="border px-4 py-3 rounded-lg focus:ring-2 focus:ring-rose-400 text-gray-800 placeholder-gray-400"
+        required
+      />
 
       <button type="submit" className="py-3 bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 text-white rounded-lg shadow hover:shadow-lg">
         로그인

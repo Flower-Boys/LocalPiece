@@ -1,5 +1,14 @@
 import apiClient from "./client";
-import { TourCommonResponse, TourIntroResponse, TourInfoResponse, TourImageResponse, KeywordSearchParams, KeywordTourItem } from "../types/tour";
+import {
+  TourCommonResponse,
+  TourIntroResponse,
+  TourInfoResponse,
+  TourImageResponse,
+  KeywordSearchParams,
+  KeywordTourItem,
+  AreaBasedParams,
+  AreaBasedTourItem,
+} from "../types/tour";
 
 /**
  * ✅ 관광지 공통정보 조회
@@ -42,11 +51,22 @@ export const getTourImages = async (contentId: string) => {
 };
 
 /**
- * ✅ 관광지 카테고리검색 조회
+ * ✅ 관광지 키워드검색 조회
  * GET /api/tour/keyword-search
  */
 export const fetchKeywordSearch = async (params: KeywordSearchParams) => {
   const { data } = await apiClient.get<KeywordTourItem[]>("/tour/keyword-search", {
+    params,
+  });
+  return data;
+};
+
+/**
+ * ✅ 관광지 지역기반 검색 조회
+ * GET /api/tour/area-based
+ */
+export const fetchAreaBasedTours = async (params: AreaBasedParams) => {
+  const { data } = await apiClient.get<AreaBasedTourItem[]>("/tour/area-based", {
     params,
   });
   return data;
