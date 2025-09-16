@@ -5,6 +5,7 @@ import TourMap from "../../components/tour/TourMap";
 import { getTourCommon, getTourIntro, getTourInfo, getTourImages } from "../../api/tour";
 import { TourCommonResponse, TourIntroResponse, TourInfoResponse, TourImageResponse } from "../../types/tour";
 import { MapPin, ExternalLink, Phone, Share2, ArrowLeft, Clock4, Landmark, BadgeInfo, Images, ChevronDown, ChevronUp, MapPinned, Link as LinkIcon } from "lucide-react";
+import TourImageModal from "./TourImageModal";
 
 const kv = (label: string, value?: string | null) => (
   <div className="flex items-start gap-2">
@@ -148,6 +149,9 @@ const TourDetail = () => {
   const prettyType = contentTypeLabel[String(type)] || "정보";
   const phoneText = formatTel(common?.tel);
   const homepage = extractHref(common?.homepage);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [modalImages, setModalImages] = useState<{ url: string; alt?: string }[]>([]);
 
   // 길찾기/공유/복사 등
   const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapy},${mapx}`;
@@ -311,7 +315,19 @@ const TourDetail = () => {
                         {/* 객실 이미지 */}
                         <div className="mt-3 grid grid-cols-2 gap-2">
                           {[item.roomimg1, item.roomimg2, item.roomimg3, item.roomimg4, item.roomimg5].filter(Boolean).map((src, idx) => (
-                            <img key={idx} src={src!} alt={item[`roomimg${idx + 1}alt`] || "객실 이미지"} className="rounded-md h-28 w-full object-cover" />
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setModalImages(
+                                  [item.roomimg1, item.roomimg2, item.roomimg3, item.roomimg4, item.roomimg5].filter(Boolean).map((url, i) => ({ url: url!, alt: item[`roomimg${i + 1}alt`] }))
+                                );
+                                setCurrentIndex(idx);
+                                setIsModalOpen(true);
+                              }}
+                              className="block"
+                            >
+                              <img src={src!} alt={item[`roomimg${idx + 1}alt`] || "객실 이미지"} className="rounded-md h-28 w-full object-cover" />
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -336,14 +352,27 @@ const TourDetail = () => {
 
             {images.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {images.map((img) => (
-                  <a key={img.serialnum} href={img.originimgurl} target="_blank" className="block group" title={img.imgname}>
+                {images.map((img, idx) => (
+                  <button
+                    key={img.serialnum}
+                    onClick={() => {
+                      setModalImages(
+                        images.map((im) => ({
+                          url: im.originimgurl,
+                          alt: im.imgname,
+                        }))
+                      );
+                      setCurrentIndex(idx);
+                      setIsModalOpen(true);
+                    }}
+                    className="block group"
+                  >
                     <img
                       src={img.smallimageurl || img.originimgurl}
                       alt={img.imgname}
                       className="w-full h-40 object-cover rounded-xl ring-1 ring-gray-100 shadow-sm group-hover:opacity-90 transition"
                     />
-                  </a>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -422,6 +451,15 @@ const TourDetail = () => {
           뒤로가기
         </button>
       </div>
+      {isModalOpen && (
+        <TourImageModal
+          images={modalImages}
+          currentIndex={currentIndex}
+          onClose={() => setIsModalOpen(false)}
+          onPrev={() => setCurrentIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length)}
+          onNext={() => setCurrentIndex((prev) => (prev + 1) % modalImages.length)}
+        />
+      )}
 
       {/* 로딩 상태 간단 처리 */}
       {loading && (
