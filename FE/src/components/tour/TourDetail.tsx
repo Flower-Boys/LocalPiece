@@ -6,6 +6,9 @@ import { getTourCommon, getTourIntro, getTourInfo, getTourImages } from "../../a
 import { TourCommonResponse, TourIntroResponse, TourInfoResponse, TourImageResponse } from "../../types/tour";
 import { MapPin, ExternalLink, Phone, Share2, ArrowLeft, Clock4, Landmark, BadgeInfo, Images, ChevronDown, ChevronUp, MapPinned, Link as LinkIcon } from "lucide-react";
 import TourImageModal from "./TourImageModal";
+import { fetchAreaBasedTours } from "../../api/tour";
+import { AreaBasedTourItem } from "../../types/tour";
+import AuthButtons from "../../components/share/auth/AuthButtons";
 
 const kv = (label: string, value?: string | null) => (
   <div className="flex items-start gap-2">
@@ -114,6 +117,13 @@ const TourDetail = () => {
   const [images, setImages] = useState<TourImageResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false); // overview 더보기
+  const [searchResults, setSearchResults] = useState<AreaBasedTourItem[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = (params: { sigunguCode: string; contentTypeId: string }) => {
+    // 👉 Home으로 이동하면서 검색 파라미터 전달
+    navigate("/", { state: params });
+  };
 
   useEffect(() => {
     if (!state) return;
@@ -167,9 +177,22 @@ const TourDetail = () => {
   return (
     <div className="w-full min-h-screen bg-neutral-50">
       {/* 상단 검색바 영역 */}
-      <section className="bg-gradient-to-r  to-rose-500 py-5 px-6">
-        <div className="max-w-6xl mx-auto">
-          <SearchBar />
+      <section className="from-pink-500 to-rose-500 text-white py-6 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[1fr,2fr,1fr] items-center gap-4">
+          {/* 왼쪽 여백 */}
+          <div></div>
+
+          {/* 중앙 검색바 */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <SearchBar onSearch={handleSearch} />
+            </div>
+          </div>
+
+          {/* 오른쪽 버튼 */}
+          <div className="flex justify-end">
+            <AuthButtons />
+          </div>
         </div>
       </section>
 
