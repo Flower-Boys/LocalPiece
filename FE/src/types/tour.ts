@@ -130,3 +130,41 @@ export type GalleryImage = {
   url: string;
   alt?: string;
 };
+
+// ✅ 지역 기반 검색 파라미터
+export interface AreaBasedParams {
+  sigunguCode?: string; // 시군구 코드
+  contentTypeId?: string; // 관광타입 ID
+  pageNo?: number;
+  numOfRows?: number;
+  arrange?: "A" | "C" | "D" | "O" | "Q" | "R";
+  lclsSystm1?: string;
+  lclsSystm2?: string;
+  lclsSystm3?: string;
+  modifiedtime?: string; // YYYYMMDD
+}
+
+// ✅ 지역 기반 검색 결과 아이템
+export interface AreaBasedTourItem {
+  contentid: string;
+  contenttypeid: string;
+  title: string;
+  addr1: string;
+  addr2?: string;
+  zipcode?: string;
+  areacode?: string;
+  sigungucode?: string;
+  tel?: string;
+  firstimage?: string;
+  firstimage2?: string;
+  mapx?: string;
+  mapy?: string;
+  createdtime?: string;
+  modifiedtime?: string;
+  cpyrhtDivCd?: string;
+  lDongRegnCd?: string;
+  lDongSignguCd?: string;
+  lclsSystm1?: string;
+  lclsSystm2?: string;
+  lclsSystm3?: string;
+}
