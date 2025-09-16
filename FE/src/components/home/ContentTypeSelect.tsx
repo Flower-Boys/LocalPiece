@@ -1,3 +1,4 @@
+// ContentTypeSelect.tsx
 import { useState } from "react";
 import { Compass } from "lucide-react";
 import { contentTypeLabel } from "./constants";
@@ -24,6 +25,18 @@ const ContentTypeSelect = ({ value, onChange }: Props) => {
       {/* 드롭다운 */}
       {isOpen && (
         <div className="absolute mt-2 w-56 bg-white shadow-lg rounded-xl border text-gray-700 border-gray-200 max-h-64 overflow-y-auto z-10">
+          {/* ✅ 선택안함 옵션 */}
+          <div
+            onClick={() => {
+              onChange("");
+              setIsOpen(false);
+            }}
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-sm"
+          >
+            <Compass size={14} className="text-gray-400" />
+            선택안함
+          </div>
+
           {Object.entries(contentTypeLabel).map(([key, label]) => (
             <div
               key={key}
