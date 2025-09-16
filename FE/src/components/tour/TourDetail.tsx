@@ -79,6 +79,19 @@ const renderers: Record<string, (item: TourInfoResponse) => React.ReactNode | nu
   ),
 };
 
+// helper 함수 (TourDetail.tsx 위쪽에 추가하거나 utils로 분리 가능)
+const extractHref = (html?: string | null): string | null => {
+  if (!html) return null;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const link = doc.querySelector("a");
+    return link?.getAttribute("href") || null;
+  } catch {
+    return null;
+  }
+};
+
 const TourDetail = () => {
   const { state } = useLocation() as {
     state: {
@@ -134,7 +147,7 @@ const TourDetail = () => {
   const heroImage = common?.firstimage || image || "https://placehold.co/1200x600/png";
   const prettyType = contentTypeLabel[String(type)] || "정보";
   const phoneText = formatTel(common?.tel);
-  const homepage = common?.homepage?.includes("http") ? common?.homepage : common?.homepage ? `https://${common?.homepage}` : "";
+  const homepage = extractHref(common?.homepage);
 
   // 길찾기/공유/복사 등
   const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapy},${mapx}`;
@@ -211,7 +224,7 @@ const TourDetail = () => {
                 <span className="min-w-20 shrink-0 text-gray-500">홈페이지</span>
                 {homepage ? (
                   <div className="flex items-center gap-3">
-                    <a href={homepage} target="_blank" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                    <a href={homepage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
                       바로가기 <ExternalLink className="w-4 h-4" />
                     </a>
                     <button onClick={() => copyToClipboard(homepage)} className="text-gray-500 hover:text-gray-700" title="링크 복사">
