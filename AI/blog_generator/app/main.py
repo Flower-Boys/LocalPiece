@@ -91,7 +91,6 @@ def analyze(req: AnalyzeRequest):
 
     if not paths:
         raise HTTPException(status_code=400, detail="다운로드된 이미지가 없습니다.")
-    result["id"] = req.id
 
     # 파이프라인 실행
     result = main_blip.make_blog_from_paths(paths, city=(req.city or "OO도시"))
