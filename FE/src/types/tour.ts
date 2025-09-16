@@ -124,3 +124,9 @@ export interface KeywordSearchParams {
   pageNo?: number;
   numOfRows?: number;
 }
+
+// types/tour.ts
+export type GalleryImage = {
+  url: string;
+  alt?: string;
+};
