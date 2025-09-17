@@ -212,13 +212,24 @@ const TourDetail = () => {
             {common?.addr2 ? ` ${common.addr2}` : ""}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {common?.cpyrhtDivCd && <span className="text-xs px-2 py-1 rounded bg-white/15">저작권: {common.cpyrhtDivCd}</span>}
+            {/* {common?.cpyrhtDivCd && <span className="text-xs px-2 py-1 rounded bg-white/15">저작권: {common.cpyrhtDivCd}</span>} */}
             {(common?.createdtime || common?.modifiedtime) && (
               <span className="text-xs px-2 py-1 rounded bg-white/15 flex items-center gap-1">
                 <Clock4 className="w-3 h-3" />
-                {common?.modifiedtime ? `업데이트 ${common.modifiedtime}` : `생성 ${common?.createdtime}`}
+                {common?.modifiedtime
+                  ? (() => {
+                      const date = common.modifiedtime.slice(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3");
+                      const time = common.modifiedtime.slice(8, 14).replace(/(\d{2})(\d{2})(\d{2})/, "$1:$2:$3");
+                      return `업데이트 ${date} ${time}`;
+                    })()
+                  : (() => {
+                      const date = common.createdtime.slice(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3");
+                      const time = common.createdtime.slice(8, 14).replace(/(\d{2})(\d{2})(\d{2})/, "$1:$2:$3");
+                      return `생성 ${date} ${time}`;
+                    })()}
               </span>
             )}
+
             {intro?.heritage1 === "1" && (
               <span className="text-xs px-2 py-1 rounded bg-amber-500/80 text-black flex items-center gap-1">
                 <Landmark className="w-3 h-3" />
@@ -458,10 +469,13 @@ const TourDetail = () => {
               <div className="text-gray-800">{id}</div>
               <div className="text-gray-500">분류</div>
               <div className="text-gray-800">{prettyType}</div>
-              <div className="text-gray-500">위도</div>
-              <div className="text-gray-800">{mapy}</div>
-              <div className="text-gray-500">경도</div>
-              <div className="text-gray-800">{mapx}</div>
+              <div className="text-gray-500">홈페이지</div>
+              <div className="text-gray-800">
+                {" "}
+                <a href={homepage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                  바로가기 <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
             </div>
           </div>
         </aside>
