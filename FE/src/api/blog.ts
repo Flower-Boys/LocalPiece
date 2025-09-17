@@ -1,6 +1,6 @@
 import apiClient from "./client";
 
-import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse } from "@/types/blog";
+import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse } from "@/types/blog";
 
 // ✅ 블로그 목록 조회
 export const getBlogs = async (): Promise<Blog[]> => {
@@ -34,5 +34,25 @@ export const getBlogDetail = async (id: string, token?: string): Promise<BlogDet
   const { data } = await apiClient.get<BlogDetailResponse>(`/blogs/${id}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {}, // 공개 글이면 토큰 없어도 조회 가능
   });
+  return data;
+};
+
+// ✅ 댓글 작성
+export const createComment = async (
+  blogId: string | number,
+  payload: CommentCreateRequest,
+  token?: string
+): Promise<BlogCommentResponse> => {
+  // 인터셉터가 있다면 token은 생략 가능. 없다면 로컬에서 보강
+  const accessToken = token ?? localStorage.getItem("accessToken") ?? undefined;
+
+  const { data } = await apiClient.post<BlogCommentResponse>(
+    `/blogs/${blogId}/comments`,
+    payload,
+    {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    }
+  );
+
   return data;
 };
