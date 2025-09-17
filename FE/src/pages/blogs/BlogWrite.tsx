@@ -12,9 +12,13 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { lowlight } from "lowlight/lib/core";
 import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Quote, Code, Heading1, Heading2, Heading3, ImagePlus, ArrowLeft } from "lucide-react";
 
+import { createBlog } from "../../api/blog";
+import { BlogCreateRequest, BlogContentRequest } from "../../types/blog";
+
 const BlogWrite = () => {
   const [title, setTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [images, setImages] = useState<File[]>([]); // ✅ 업로드할 이미지들
   const navigate = useNavigate();
 
   const editor = useEditor({
@@ -41,6 +45,11 @@ const BlogWrite = () => {
     input.onchange = async () => {
       if (input.files?.length) {
         const file = input.files[0];
+
+        // ✅ 업로드할 이미지 state에 추가
+        setImages((prev) => [...prev, file]);
+
+        // ✅ 에디터에는 미리보기 (DataURL)
         const reader = new FileReader();
         reader.onload = () => {
           editor
@@ -64,19 +73,47 @@ const BlogWrite = () => {
   };
 
   // 저장
-  const handleSave = () => {
-    const requestData = {
-      title,
+  const handleSave = async () => {
+    // ✅ contents 배열 구성
+    const contents: BlogContentRequest[] = [];
+    let sequence = 1;
+
+    // 1. 에디터 본문 → TEXT 컨텐츠
+    contents.push({
+      sequence: sequence++,
+      contentType: "TEXT",
       content: editor.getHTML(),
+    });
+
+    // 2. 이미지 → IMAGE 컨텐츠 (파일 순서 보장)
+    images.forEach((file, idx) => {
+      contents.push({
+        sequence: sequence++,
+        contentType: "IMAGE",
+        content: file.name, // 서버에서 실제 저장 시 교체됨
+      });
+    });
+
+    const requestData: BlogCreateRequest = {
+      title,
       isPrivate,
+      contents,
     };
 
-    console.log("Request Payload:", requestData);
-    alert("블로그 저장됨! (API 연동 예정)");
+    try {
+      const response = await createBlog(requestData, images);
+      console.log("✅ 저장 성공:", response);
+      alert("블로그 저장 완료!");
+      navigate(`/blog/${response.id}`);
+    } catch (err) {
+      console.error("❌ 저장 실패:", err);
+      alert("블로그 저장 중 오류가 발생했습니다.");
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
+      {/* 제목 + 뒤로가기 */}
       <div className="flex flex-row justify-between items-center">
         <h1 className="text-2xl font-bold mb-6">✍️ 블로그 작성</h1>
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
