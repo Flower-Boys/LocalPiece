@@ -72,3 +72,8 @@ export interface BlogDetailResponse {
   private: boolean;
   tags?: string[]; // 선택적 태그 필드
 }
+
+// 댓글 작성 요청
+export interface CommentCreateRequest {
+  content: string;
+}
