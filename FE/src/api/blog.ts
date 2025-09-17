@@ -38,21 +38,27 @@ export const getBlogDetail = async (id: string, token?: string): Promise<BlogDet
 };
 
 // ✅ 댓글 작성
-export const createComment = async (
-  blogId: string | number,
-  payload: CommentCreateRequest,
-  token?: string
-): Promise<BlogCommentResponse> => {
+export const createComment = async (blogId: string | number, payload: CommentCreateRequest, token?: string): Promise<BlogCommentResponse> => {
   // 인터셉터가 있다면 token은 생략 가능. 없다면 로컬에서 보강
   const accessToken = token ?? localStorage.getItem("accessToken") ?? undefined;
 
-  const { data } = await apiClient.post<BlogCommentResponse>(
-    `/blogs/${blogId}/comments`,
-    payload,
-    {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-    }
-  );
+  const { data } = await apiClient.post<BlogCommentResponse>(`/blogs/${blogId}/comments`, payload, {
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  });
 
   return data;
+};
+// 좋아요 토글
+export const toggleBlogLike = async (blogId: string | number) => {
+  const token = localStorage.getItem("accessToken");
+  const res = await apiClient.post(
+    `/blogs/${blogId}/like`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.data; // { message: "좋아요를 눌렀습니다." }
 };
