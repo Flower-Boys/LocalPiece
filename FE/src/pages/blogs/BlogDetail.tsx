@@ -1,16 +1,50 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getBlogDetail } from "../../api/blog";
+import { getBlogDetail, toggleBlogLike } from "../../api/blog";
 import { BlogDetailResponse } from "../../types/blog";
 import CommentSection from "../../components/blog/CommentSection";
+import { useAuthStore } from "../../store/authStore";
+import toast from "react-hot-toast";
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [blog, setBlog] = useState<BlogDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // ✅ 좋아요 상태
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  // 전역 상태에서 로그인 여부 확인
+  const { isLoggedIn } = useAuthStore();
+
+  const handleLike = async () => {
+    if (!isLoggedIn) {
+      toast("🚫 로그인이 필요합니다.");
+      return;
+    }
+    if (!blog) return;
+
+    try {
+      setLikeLoading(true);
+      const res = await toggleBlogLike(blog.id);
+      console.log(res.message);
+
+      // ✅ 상태 토글 & 개수 업데이트
+      setLiked((prev) => !prev);
+      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    } catch (err: any) {
+      console.error(err);
+      alert("좋아요 처리 중 오류가 발생했습니다.");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -20,6 +54,10 @@ const BlogDetail = () => {
         if (id) {
           const data = await getBlogDetail(id, token);
           setBlog(data);
+
+          // ✅ API 응답으로 초기 상태 설정
+          setLiked(data.likedByCurrentUser);
+          setLikeCount(data.likeCount);
         }
       } catch (err: any) {
         console.error(err);
@@ -62,13 +100,25 @@ const BlogDetail = () => {
           </button>
         </div>
 
-        {/* 작성자 + 날짜 */}
+        {/* 작성자 + 날짜 + 좋아요 */}
         <div className="flex items-center gap-3 mb-6 text-sm text-gray-500">
           <span className="font-medium text-gray-700">✍️ 작성자: {blog.author || "알 수 없음"}</span>
           <span>·</span>
           <span>{blog.createdAt ? new Date(blog.createdAt).toLocaleString() : "날짜 없음"}</span>
+          <span>·</span>
+          <button
+            onClick={handleLike}
+            disabled={likeLoading}
+            className={`flex items-center gap-1 px-3 py-1 rounded-lg transition ${liked ? "bg-rose-100 text-rose-500" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+          >
+            <Heart size={16} fill={liked ? "currentColor" : "none"} />
+            <div className="flex flex-row items-center justify-center">
+              {liked} {likeCount}
+            </div>
+          </button>
         </div>
-        {/* 태그 (API에 없으니 기본값 사용) */}
+
+        {/* 태그 */}
         <div className="flex gap-2 mb-6">
           {(blog.tags && blog.tags.length > 0 ? blog.tags : ["여행", "기록"]).map((tag, idx) => (
             <span key={idx} className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600">
@@ -78,7 +128,7 @@ const BlogDetail = () => {
         </div>
         <hr className="my-8 border-gray-300" />
 
-        {/* 본문 (TEXT/IMAGE 순서대로 출력) */}
+        {/* 본문 출력 */}
         <div className="prose max-w-none">
           {blog.contents && blog.contents.length > 0 ? (
             blog.contents.map((c) =>
@@ -94,7 +144,7 @@ const BlogDetail = () => {
         </div>
 
         <hr className="mt-20 mb-20 border-gray-300" />
-        {/* ✅ 댓글 섹션: 새 댓글 추가 시 상위 state 갱신 */}
+        {/* ✅ 댓글 섹션 */}
         <CommentSection blogId={blog.id} comments={blog.comments || []} onAdd={(newComment) => setBlog((prev) => (prev ? { ...prev, comments: [newComment, ...(prev.comments || [])] } : prev))} />
       </div>
     </div>
