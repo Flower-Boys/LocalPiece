@@ -94,8 +94,8 @@ const BlogDetail = () => {
         </div>
 
         <hr className="mt-20 mb-20 border-gray-300" />
-        {/* 댓글 섹션 */}
-        <CommentSection comments={blog.comments || []} />
+        {/* ✅ 댓글 섹션: 새 댓글 추가 시 상위 state 갱신 */}
+        <CommentSection blogId={blog.id} comments={blog.comments || []} onAdd={(newComment) => setBlog((prev) => (prev ? { ...prev, comments: [newComment, ...(prev.comments || [])] } : prev))} />
       </div>
     </div>
   );
