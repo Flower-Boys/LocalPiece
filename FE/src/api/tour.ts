@@ -1,14 +1,5 @@
 import apiClient from "./client";
-import {
-  TourCommonResponse,
-  TourIntroResponse,
-  TourInfoResponse,
-  TourImageResponse,
-  KeywordSearchParams,
-  KeywordTourItem,
-  AreaBasedParams,
-  AreaBasedTourItem,
-} from "../types/tour";
+import { TourCommonResponse, TourIntroResponse, TourInfoResponse, TourImageResponse, KeywordSearchParams, KeywordTourItem, AreaBasedParams, AreaBasedTourItem } from "../types/tour";
 
 /**
  * ✅ 관광지 공통정보 조회
