@@ -1,63 +1,101 @@
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-
-const dummyBlog = {
-  id: 1,
-  title: "강릉에서의 추억",
-  createdAt: "2025-03-08",
-  tags: ["제주도 여행", "강릉에서 쇼핑"],
-  thumbnail:
-    "data:image/jpeg;base64,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",
-  content: `
-    <h2>여행 시작 ✈️</h2>
-    <p>강릉 바다를 보니 마음이 탁 트였어요.</p>
-    <img src="https://placekitten.com/600/300" alt="강릉 바다" />
-    <p>그리고 유명한 <strong>초당두부집</strong>도 들렀답니다.</p>
-  `,
-};
+import { useEffect, useState } from "react";
+import { getBlogDetail } from "../../api/blog";
+import { BlogDetailResponse } from "../../types/blog";
+import CommentSection from "../../components/blog/CommentSection";
 
 const BlogDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [blog, setBlog] = useState<BlogDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // TODO: 실제 API에서 blog 데이터 불러오기 (id 활용)
-  const blog = dummyBlog;
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("accessToken") || undefined;
+        if (id) {
+          const data = await getBlogDetail(id, token);
+          setBlog(data);
+        }
+      } catch (err: any) {
+        console.error(err);
+        if (err.response?.status === 403) {
+          setError("비공개 블로그입니다. 접근 권한이 없습니다.");
+        } else if (err.response?.status === 404) {
+          setError("블로그를 찾을 수 없습니다.");
+        } else {
+          setError("블로그를 불러오는 중 오류가 발생했습니다.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlog();
+  }, [id]);
+
+  if (loading) return <div className="text-center py-10">로딩 중...</div>;
+  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (!blog) return null;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       {/* 대표 이미지 */}
-      <div className="relative">
-        <img src={blog.thumbnail} alt={blog.title} className="w-full object-cover rounded-t-lg" />
+      {blog.contents?.find((c) => c.contentType === "IMAGE") && (
+        <div className="relative">
+          <img src={blog.contents.find((c) => c.contentType === "IMAGE")?.content || ""} alt={blog.title || "블로그 이미지"} className="w-full h-72 object-cover rounded-t-lg" />
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-white rounded-t-3xl"></div>
+        </div>
+      )}
 
-        {/* 둥근 전환 배경 */}
-        <div className="absolute bottom-0 left-0 right-0 h-10 bg-white rounded-t-3xl"></div>
-      </div>
-
-      {/* 본문 영역 */}
+      {/* 본문 */}
       <div className="bg-white rounded-t-3xl -mt-6 shadow-sm p-6">
         {/* 제목 + 뒤로가기 */}
         <div className="flex justify-between items-center mb-2">
-          <h1 className="text-3xl font-bold">{blog.title}</h1>
+          <h1 className="text-3xl font-bold">{blog.title || "제목 없음"}</h1>
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
             <ArrowLeft size={18} />
             <span className="hidden sm:inline">뒤로가기</span>
           </button>
         </div>
 
-        {/* 날짜 */}
-        <p className="text-gray-500 text-sm mb-4">{blog.createdAt}</p>
-
-        {/* 태그 */}
+        {/* 작성자 + 날짜 */}
+        <div className="flex items-center gap-3 mb-6 text-sm text-gray-500">
+          <span className="font-medium text-gray-700">✍️ 작성자: {blog.author || "알 수 없음"}</span>
+          <span>·</span>
+          <span>{blog.createdAt ? new Date(blog.createdAt).toLocaleString() : "날짜 없음"}</span>
+        </div>
+        {/* 태그 (API에 없으니 기본값 사용) */}
         <div className="flex gap-2 mb-6">
-          {blog.tags.map((tag, idx) => (
+          {(blog.tags && blog.tags.length > 0 ? blog.tags : ["여행", "기록"]).map((tag, idx) => (
             <span key={idx} className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600">
               #{tag}
             </span>
           ))}
         </div>
+        <hr className="my-8 border-gray-300" />
 
-        {/* 본문 (Tiptap → HTML) */}
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: blog.content }} />
+        {/* 본문 (TEXT/IMAGE 순서대로 출력) */}
+        <div className="prose max-w-none">
+          {blog.contents && blog.contents.length > 0 ? (
+            blog.contents.map((c) =>
+              c.contentType === "TEXT" ? (
+                <p key={c.sequence} dangerouslySetInnerHTML={{ __html: c.content || "" }} />
+              ) : (
+                <img key={c.sequence} src={c.content || ""} alt={`image-${c.sequence}`} className="rounded-lg my-4" />
+              )
+            )
+          ) : (
+            <p>내용이 없습니다.</p>
+          )}
+        </div>
+
+        <hr className="mt-20 mb-20 border-gray-300" />
+        {/* 댓글 섹션 */}
+        <CommentSection comments={blog.comments || []} />
       </div>
     </div>
   );
