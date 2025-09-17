@@ -47,3 +47,28 @@ export interface BlogResponse {
   likedByCurrentUser: boolean;
   private: boolean;
 }
+
+// 블로그 상세 조회 댓글 응답 DTO
+export interface BlogCommentResponse {
+  commentId: number;
+  content: string;
+  author: string;
+  createdAt: string;
+  modifiedAt: string;
+}
+
+// 블로그 상세 조회 응답 DTO
+export interface BlogDetailResponse {
+  id: number;
+  title: string;
+  viewCount: number;
+  createdAt: string;
+  modifiedAt: string;
+  author: string;
+  contents: BlogContentResponse[];
+  comments: BlogCommentResponse[];
+  likeCount: number;
+  likedByCurrentUser: boolean;
+  private: boolean;
+  tags?: string[]; // 선택적 태그 필드
+}
