@@ -20,23 +20,11 @@ def _fetch_place_name_from_kakao(lat: float, lon: float) -> str | None:
         if not data:
             return None
 
-        # --- ✨ 장소 이름 찾기 로직 수정 ---
-        # 1. '도로명 주소'에 '건물 이름'(building_name)이 있으면, 최우선으로 사용합니다.
-        #    이것이 가장 정확한 상호명이나 건물명일 확률이 높습니다.
+        # 1. '도로명 주소'에 '건물 이름'(building_name)이 있으면, 최우선으로 사용
         road_info = data[0].get("road_address")
         if road_info and road_info.get("building_name"):
-            # "무지개아파트" 같은 구체적인 이름을 반환합니다.
             return road_info["building_name"]
-        
-        # 2. 건물 이름이 없다면, '지번 주소'의 전체 주소를 사용합니다.
-        #    '경기 안성시 죽산면 죽산리 343-1' 과 같은 주소에서,
-        #    일반적이지 않은 마지막 부분을 장소 이름으로 간주할 수 있습니다.
-        address_info = data[0].get("address")
-        if address_info:
-            # 주소의 마지막 부분을 장소 이름으로 사용 (예: '죽산리')
-            # 이렇게 하면 최소한 동네 이름이라도 알 수 있습니다.
-            return address_info["address_name"].split()[-1]
-
+            
     except requests.exceptions.HTTPError as http_err:
         print(f"CRITICAL ERROR: Kakao API 호출 실패! 응답 코드: {http_err.response.status_code}")
         if http_err.response.status_code == 401:
@@ -47,7 +35,7 @@ def _fetch_place_name_from_kakao(lat: float, lon: float) -> str | None:
         
     return None
 
-# 이하 cluster_photos_into_chapters 함수는 이전과 동일합니다.
+# 이하 cluster_photos_into_chapters 함수는 이전 버전과 동일하게 유지합니다.
 def cluster_photos_into_chapters(photos: List[ImageMetadataDto]) -> List[Chapter]:
     if not photos:
         return []

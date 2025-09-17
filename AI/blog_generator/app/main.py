@@ -2,12 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from app.models import AiGenerationRequestDto, AiResponseDto
-# from app.services.pipeline_service import create_ai_blog
-from app.services.location_service import _fetch_place_name_from_kakao
-from app.models import AiGenerationRequestDto, AiResponseDto, BlogContent
-from app.services.pipeline_service import create_ai_blog_v2, create_ai_blog_original
+from app.services.pipeline_service import create_ai_blog_v2
 
-app = FastAPI(title="AI Blog Generator (V1 vs V2)", version="2.2.0")
+app = FastAPI(title="AI Blog Generator", version="5.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,47 +16,48 @@ def health_check():
     return {"status": "ok", "message": "AI Story Blog Generator is running!"}
 
 
-# ✨ v2: 우리가 설계한 업그레이드 버전 API
-@app.post("/api/blogs/v2", response_model=AiResponseDto, summary="업그레이드된 AI 블로그 생성")
+@app.post("/api/blogs/v2", response_model=AiResponseDto, summary="AI 블로그 생성")
 def generate_upgraded_blog_endpoint(req: AiGenerationRequestDto):
-    """
-    시간/GPS 메타데이터와 팀원의 한글 로직을 결합한 v2 블로그를 생성합니다.
-    """
     try:
         blog_contents, summary_comment = create_ai_blog_v2(req)
         return AiResponseDto(blog=blog_contents, comment=summary_comment)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    
+# @app.get("/api/kakao-test")
+# def test_kakao_api(lat: float, lon: float):
+#     """
+#     주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하는 엔드포인트
+#     """
+#     print(f"카카오 API 테스트 요청: lat={lat}, lon={lon}")
+#     place_name = _fetch_place_name_from_kakao(lat, lon)
+    
+#     if place_name:
+#         return {"status": "success", "latitude": lat, "longitude": lon, "place_name": place_name}
+#     else:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="카카오 API에서 해당 좌표의 장소 이름을 찾지 못했거나, API 키 인증에 실패했습니다."
+#         )
 
-# ✨ v1: 비교를 위한 오리지널 버전 API
-@app.post("/api/blogs/original", summary="오리지널 AI 블로그 생성 (비교용)")
-def generate_original_blog_endpoint(req: AiGenerationRequestDto):
-    """
-    팀원분의 오리지널 로직을 그대로 사용하여 블로그를 생성합니다.
-    """
-    try:
-        # 오리지널 로직은 다른 응답 형식을 가질 수 있으므로 그대로 반환
-        result = create_ai_blog_original(req)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@app.get("/api/kakao-test")
-def test_kakao_api(lat: float, lon: float):
-    """
-    주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하는 엔드포인트
-    """
-    print(f"카카오 API 테스트 요청: lat={lat}, lon={lon}")
-    place_name = _fetch_place_name_from_kakao(lat, lon)
-    
-    if place_name:
-        return {"status": "success", "latitude": lat, "longitude": lon, "place_name": place_name}
-    else:
-        raise HTTPException(
-            status_code=404,
-            detail="카카오 API에서 해당 좌표의 장소 이름을 찾지 못했거나, API 키 인증에 실패했습니다."
-        )
+# @app.post("/api/prompt-test", response_model=PromptTestResponse, summary="KoGPT2 프롬프트 직접 테스트")
+# def prompt_test_endpoint(req: PromptTestRequest):
+#     """
+#     사용자가 입력한 프롬프트를 KoGPT2 모델에 직접 전달하고,
+#     모델이 생성한 원본 텍스트(raw text)를 그대로 반환합니다.
+#     """
+#     if not req.prompt:
+#         raise HTTPException(status_code=400, detail="프롬프트를 입력해주세요.")
+        
+#     try:
+#         # ai_model_service에 있는 한글 작가(KoGPT2)를 직접 호출합니다.
+#         raw_response = ai_models.generate_korean_text_from_keywords(req.prompt)
+        
+#         # 사용자가 보낸 프롬프트와 AI의 응답을 함께 반환합니다.
+#         return PromptTestResponse(prompt=req.prompt, response=raw_response)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"모델 생성 중 오류 발생: {str(e)}")
 
 
 # # main/main.py
