@@ -116,7 +116,7 @@ export interface KeywordTourItem {
 // ✅ 키워드기반 검색 파라미터 타입
 export interface KeywordSearchParams {
   keyword: string; // 필수
-  arrange?: "A" | "C" | "D";
+  arrange?: "A" | "C" | "D" | "R";
   contentTypeId?: string; // 관광타입 ID (12, 14, 15, ...)
   lclsSystm1?: string;
   lclsSystm2?: string;
