@@ -1,6 +1,6 @@
 import apiClient from "./client";
 
-import { Blog, BlogCreateRequest, BlogResponse } from "@/types/blog";
+import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse } from "@/types/blog";
 
 // ✅ 블로그 목록 조회
 export const getBlogs = async (): Promise<Blog[]> => {
@@ -26,5 +26,13 @@ export const createBlog = async (payload: BlogCreateRequest, images: File[]): Pr
     },
   });
 
+  return data;
+};
+
+// 블로그 상세 조회
+export const getBlogDetail = async (id: string, token?: string): Promise<BlogDetailResponse> => {
+  const { data } = await apiClient.get<BlogDetailResponse>(`/blogs/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}, // 공개 글이면 토큰 없어도 조회 가능
+  });
   return data;
 };
