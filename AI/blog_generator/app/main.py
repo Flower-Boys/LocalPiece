@@ -1,8 +1,20 @@
+from app.services.location_service import _fetch_place_name_from_kakao
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from app.models import AiGenerationRequestDto, AiResponseDto
 from app.services.pipeline_service import create_ai_blog_v2
+import os
+import hashlib
+from pathlib import Path
+import requests
+
+from app.services.integrated_service import create_blog_from_integrated_logic
+
+# ------------ 경로 및 FastAPI 앱 설정 ------------
+BASE_DIR = Path(__file__).resolve().parent
+IMAGES_DIR = BASE_DIR / "images"
+IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="AI Blog Generator", version="5.0.0")
 
@@ -24,22 +36,41 @@ def generate_upgraded_blog_endpoint(req: AiGenerationRequestDto):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/blogs", response_model=AiResponseDto, summary="AI 블로그 생성 (통합 최종 버전)")
+def generate_blog(req: AiGenerationRequestDto):
+    """
+    팀원의 빠른 이미지 분석 로직과 카카오 API를 이용한 GPS 메타데이터 처리를
+    하나로 통합한 최종 파이프라인을 실행합니다.
+    """
+    if not req.images:
+        raise HTTPException(status_code=400, detail="이미지 목록이 비어있습니다.")
+
+    try:
+        # 새로 만든 통합 파이프라인 함수를 직접 호출합니다.
+        blog_contents, summary_comment = create_blog_from_integrated_logic(req)
+        
+        return AiResponseDto(blog=blog_contents, comment=summary_comment)
+
+    except Exception as e:
+        # 파이프라인 실행 중 발생하는 모든 에러를 처리합니다.
+        raise HTTPException(status_code=500, detail=f"AI 파이프라인 실행 중 오류 발생: {str(e)}")
     
-# @app.get("/api/kakao-test")
-# def test_kakao_api(lat: float, lon: float):
-#     """
-#     주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하는 엔드포인트
-#     """
-#     print(f"카카오 API 테스트 요청: lat={lat}, lon={lon}")
-#     place_name = _fetch_place_name_from_kakao(lat, lon)
+@app.get("/api/kakao-test", summary="카카오맵 API 좌표 변환 테스트")
+def test_kakao_api(lat: float, lon: float):
+    """
+    주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하여 장소명을 반환합니다.
+    """
+    place_name = _fetch_place_name_from_kakao(lat, lon)
     
-#     if place_name:
-#         return {"status": "success", "latitude": lat, "longitude": lon, "place_name": place_name}
-#     else:
-#         raise HTTPException(
-#             status_code=404,
-#             detail="카카오 API에서 해당 좌표의 장소 이름을 찾지 못했거나, API 키 인증에 실패했습니다."
-#         )
+    if place_name:
+        return {"status": "success", "latitude": lat, "longitude": lon, "place_name": place_name}
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="카카오 API에서 해당 좌표의 장소 이름을 찾지 못했거나 API 키 인증에 실패했습니다."
+        )
+
+
 
 # @app.post("/api/prompt-test", response_model=PromptTestResponse, summary="KoGPT2 프롬프트 직접 테스트")
 # def prompt_test_endpoint(req: PromptTestRequest):
