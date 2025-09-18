@@ -19,7 +19,7 @@ const MainLayout = () => {
         <main className="flex-1 flex justify-center">
           <div
             className={`w-full p-4 pb-20 md:pb-4 ${
-              isHome || location.pathname.startsWith("/tour") || location.pathname.startsWith("/mypage") || location.pathname.startsWith("/blog") // ✅ 블로그 페이지도 전체폭
+              isHome || location.pathname.startsWith("/tour") || location.pathname.startsWith("/mypage") || location.pathname.startsWith("/blog") || location.pathname.startsWith("/ai/travel") // ✅ 블로그 페이지도 전체폭
                 ? ""
                 : "max-w-2xl"
             }`}
