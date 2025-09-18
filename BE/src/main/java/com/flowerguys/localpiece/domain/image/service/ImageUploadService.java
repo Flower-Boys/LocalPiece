@@ -68,7 +68,8 @@ public class ImageUploadService {
 
             objectStorage.putObject(request);
 
-            return "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/" + namespace + "/b/" + bucketName + "/o/" + uniqueFileName;
+            return String.format("https://objectstorage.ap-sydney-1.oraclecloud.com/n/%s/b/%s/o/%s",
+                                 namespace, bucketName, uniqueFileName);
         } catch (IOException e) {
             // BusinessException 등 적절한 예외 처리
             throw new RuntimeException("파일 업로드에 실패했습니다.", e);

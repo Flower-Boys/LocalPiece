@@ -39,7 +39,7 @@ public class AiLogicService {
     private String hfToken;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Long executeAiPipeline(User user, String city, List<SimpleMultipartFile> images) {
+    public Long executeAiPipeline(User user, String city, List<SimpleMultipartFile> images, boolean useV2) {
         log.info("AI 파이프라인 시작. 사용자: {}", user.getEmail());
 
         List<ImageMetadataDto> imageInfos = images.parallelStream().map(file -> {
@@ -56,7 +56,8 @@ public class AiLogicService {
         List<String> sortedImageUrls = imageInfos.stream().map(ImageMetadataDto::getUrl).collect(Collectors.toList());
 
         AiGenerationRequestDto aiRequest = new AiGenerationRequestDto(UUID.randomUUID().toString(), imageInfos, city);
-        String requestUrl = aiServerUrl + "/api/blogs";
+        String requestUrl = aiServerUrl + (useV2 ? "/api/blogs/v2" : "/api/blogs");
+        log.info("AI 서버 요청 URL: {}", requestUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

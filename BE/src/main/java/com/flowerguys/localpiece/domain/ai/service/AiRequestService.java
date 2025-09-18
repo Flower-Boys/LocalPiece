@@ -27,7 +27,7 @@ public class AiRequestService {
     private final AiTaskService aiTaskService;
 
     @Transactional
-    public UUID requestAiBlogGeneration(String userEmail, String city, List<MultipartFile> images) {
+    public UUID requestAiBlogGeneration(String userEmail, String city, List<MultipartFile> images, boolean useV2) {
         User user = userRepository.findByEmailAndIsDeletedFalse(userEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -51,7 +51,7 @@ public class AiRequestService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                aiTaskService.processAiBlogGeneration(newJob.getJobId(), user, city, copiedFiles);
+                aiTaskService.processAiBlogGeneration(newJob.getJobId(), user, city, copiedFiles, useV2);
             }
         });
 
