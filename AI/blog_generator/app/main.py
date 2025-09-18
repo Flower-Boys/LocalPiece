@@ -5,12 +5,15 @@ from typing import List
 from app.models import AiGenerationRequestDto, AiResponseDto
 from app.services.pipeline_service import create_ai_blog_v2
 import os
+import time
 import hashlib
 from pathlib import Path
 import requests
 
 from app.services.integrated_service import create_blog_from_integrated_logic
 
+os.environ['TZ'] = 'Asia/Seoul'
+time.tzset()
 # ------------ 경로 및 FastAPI 앱 설정 ------------
 BASE_DIR = Path(__file__).resolve().parent
 IMAGES_DIR = BASE_DIR / "images"
