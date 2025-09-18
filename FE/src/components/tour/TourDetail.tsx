@@ -84,15 +84,15 @@ const renderers: Record<string, (item: TourInfoResponse) => React.ReactNode | nu
 };
 
 // helper 함수 (TourDetail.tsx 위쪽에 추가하거나 utils로 분리 가능)
-const extractHref = (html?: string | null): string | null => {
-  if (!html) return null;
+const extractHref = (html?: string | null): string | undefined => {
+  if (!html) return undefined;
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     const link = doc.querySelector("a");
-    return link?.getAttribute("href") || null;
+    return link?.getAttribute("href") || undefined;
   } catch {
-    return null;
+    return undefined;
   }
 };
 
