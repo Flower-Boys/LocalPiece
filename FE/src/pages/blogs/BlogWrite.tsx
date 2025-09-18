@@ -14,6 +14,8 @@ import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Quote, Code, Heading
 
 import { createBlog } from "../../api/blog";
 import { BlogCreateRequest, BlogContentRequest } from "../../types/blog";
+import SearchBar from "../../components/home/SearchBar";
+import AuthButtons from "../../components/share/auth/AuthButtons";
 
 const BlogWrite = () => {
   const [title, setTitle] = useState("");
@@ -130,78 +132,106 @@ const BlogWrite = () => {
       alert("블로그 저장 중 오류가 발생했습니다.");
     }
   };
+  const handleSearch = (params: { sigunguCode?: string; contentTypeId?: string; keyword?: string }) => {
+    const nextParams = new URLSearchParams();
+
+    if (params.sigunguCode) nextParams.set("sigunguCode", params.sigunguCode);
+    if (params.contentTypeId) nextParams.set("contentTypeId", params.contentTypeId);
+    if (params.keyword) nextParams.set("keyword", params.keyword);
+
+    nextParams.set("page", "1"); // 검색 시 항상 1페이지부터 시작
+    nextParams.set("arrange", "R"); // ✅ 대표이미지 + 생성일순 정렬
+    navigate({ pathname: "/", search: nextParams.toString() });
+  };
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
-      {/* 제목 + 뒤로가기 */}
-      <div className="flex flex-row justify-between items-center">
-        <h1 className="text-2xl font-bold mb-6">✍️ 블로그 작성</h1>
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
-          <ArrowLeft size={18} />
-          <span className="hidden sm:inline">뒤로가기</span>
+    <div>
+      {/* ✅ 상단 헤더: 전체폭 */}
+      <section className="from-pink-500 to-red-500 text-white py-3 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[1fr,2fr,1fr] items-center gap-4">
+          <div></div>
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <SearchBar onSearch={handleSearch} />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <AuthButtons />
+          </div>
+        </div>
+      </section>
+      <div className="border-b py-2 border-gray-300"></div>
+      <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
+        {/* 제목 + 뒤로가기 */}
+        <div className="flex flex-row justify-between items-center">
+          <h1 className="text-2xl font-bold mb-6">✍️ 블로그 작성</h1>
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
+            <ArrowLeft size={18} />
+            <span className="hidden sm:inline">뒤로가기</span>
+          </button>
+        </div>
+
+        {/* 제목 입력 */}
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="제목을 입력하세요"
+          className="w-full text-xl font-semibold border-b border-gray-300 p-2 mb-6 focus:outline-none"
+        />
+
+        {/* 툴바 */}
+        <div className="flex flex-wrap gap-2 mb-4 border-b pb-2">
+          <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded ${editor.isActive("bold") ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Bold size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded ${editor.isActive("italic") ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Italic size={16} />
+          </button>
+          <button onClick={addLink} className="p-2 rounded bg-gray-100 hover:bg-gray-200">
+            <LinkIcon size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={`p-2 rounded ${editor.isActive("bulletList") ? "bg-gray-300" : "bg-gray-100"}`}>
+            <List size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`p-2 rounded ${editor.isActive("orderedList") ? "bg-gray-300" : "bg-gray-100"}`}>
+            <ListOrdered size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleBlockquote().run()} className={`p-2 rounded ${editor.isActive("blockquote") ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Quote size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={`p-2 rounded ${editor.isActive("codeBlock") ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Code size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={`p-2 rounded ${editor.isActive("heading", { level: 1 }) ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Heading1 size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={`p-2 rounded ${editor.isActive("heading", { level: 2 }) ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Heading2 size={16} />
+          </button>
+          <button onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={`p-2 rounded ${editor.isActive("heading", { level: 3 }) ? "bg-gray-300" : "bg-gray-100"}`}>
+            <Heading3 size={16} />
+          </button>
+          <button onClick={addImage} className="p-2 rounded bg-gray-100 hover:bg-gray-200">
+            <ImagePlus size={16} />
+          </button>
+        </div>
+
+        {/* 본문 */}
+        <div className="border rounded-lg p-3 min-h-[600px] prose prose-lg max-w-none">
+          <EditorContent editor={editor} className="min-h-[500px]" />
+        </div>
+
+        {/* 공개 여부 */}
+        <div className="flex items-center gap-2 mt-4">
+          <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+          <label className="text-gray-700">비공개로 설정</label>
+        </div>
+
+        {/* 저장 버튼 */}
+        <button onClick={handleSave} className="mt-6 w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600">
+          저장하기
         </button>
       </div>
-
-      {/* 제목 입력 */}
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="제목을 입력하세요"
-        className="w-full text-xl font-semibold border-b border-gray-300 p-2 mb-6 focus:outline-none"
-      />
-
-      {/* 툴바 */}
-      <div className="flex flex-wrap gap-2 mb-4 border-b pb-2">
-        <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded ${editor.isActive("bold") ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Bold size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded ${editor.isActive("italic") ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Italic size={16} />
-        </button>
-        <button onClick={addLink} className="p-2 rounded bg-gray-100 hover:bg-gray-200">
-          <LinkIcon size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={`p-2 rounded ${editor.isActive("bulletList") ? "bg-gray-300" : "bg-gray-100"}`}>
-          <List size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`p-2 rounded ${editor.isActive("orderedList") ? "bg-gray-300" : "bg-gray-100"}`}>
-          <ListOrdered size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleBlockquote().run()} className={`p-2 rounded ${editor.isActive("blockquote") ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Quote size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={`p-2 rounded ${editor.isActive("codeBlock") ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Code size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={`p-2 rounded ${editor.isActive("heading", { level: 1 }) ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Heading1 size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={`p-2 rounded ${editor.isActive("heading", { level: 2 }) ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Heading2 size={16} />
-        </button>
-        <button onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={`p-2 rounded ${editor.isActive("heading", { level: 3 }) ? "bg-gray-300" : "bg-gray-100"}`}>
-          <Heading3 size={16} />
-        </button>
-        <button onClick={addImage} className="p-2 rounded bg-gray-100 hover:bg-gray-200">
-          <ImagePlus size={16} />
-        </button>
-      </div>
-
-      {/* 본문 */}
-      <div className="border rounded-lg p-3 min-h-[600px] prose prose-lg max-w-none">
-        <EditorContent editor={editor} className="min-h-[500px]" />
-      </div>
-
-      {/* 공개 여부 */}
-      <div className="flex items-center gap-2 mt-4">
-        <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-        <label className="text-gray-700">비공개로 설정</label>
-      </div>
-
-      {/* 저장 버튼 */}
-      <button onClick={handleSave} className="mt-6 w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600">
-        저장하기
-      </button>
     </div>
   );
 };
