@@ -65,7 +65,7 @@ const BlogPage = () => {
           </div>
         </div>
       </section>
-      <div className="border-b border-gray-300"></div>
+      <div className="border-b py-2 border-gray-300"></div>
       <section className="max-w-7xl mx-auto px-6 py-10">
         {/* 헤더 */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
