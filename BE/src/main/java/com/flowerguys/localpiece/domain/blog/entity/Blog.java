@@ -45,6 +45,9 @@ public class Blog extends BaseTimeEntity {
     @Builder.Default
     private int viewCount = 0;
 
+    @Setter
+    private String thumbnail; 
+
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
