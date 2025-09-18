@@ -4,10 +4,13 @@ import CancelAccountConfirm from "@/components/share/auth/CancelAccountConfirm";
 import Modal from "../share/auth/Modal";
 import { UserCircle, MapPin, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getBlogs } from "@/api/blog";
 import type { Blog } from "@/types/blog";
+import defaultThumbnail from "@/assets/default-thumbnail.png";
 
 const MyPage = () => {
+  const navigate = useNavigate();
   const { openModal, setOpenModal } = useModalStore();
 
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -92,10 +95,14 @@ const MyPage = () => {
           ) : blogs.length === 0 ? (
             <p className="text-gray-500">작성한 블로그가 없습니다.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {blogs.map((blog) => (
-                <div key={blog.id} className="bg-white rounded-xl shadow hover:shadow-md transition overflow-hidden">
-                  <img src={defaultBlogImage} alt={blog.title} className="h-40 w-full object-cover" />
+                <div
+                  key={blog.id}
+                  onClick={() => navigate(`/blog/${blog.id}`)} // ✅ 블로그 디테일 이동
+                  className="cursor-pointer bg-white rounded-xl shadow hover:shadow-md transition overflow-hidden"
+                >
+                  <img src={blog.thumbnail && blog.thumbnail.trim() !== "" ? blog.thumbnail : defaultThumbnail} alt={blog.title} className="w-full h-44 object-cover" />
                   <div className="p-4">
                     <h3 className="font-semibold text-lg">{blog.title}</h3>
                     <p className="text-sm text-gray-500 mb-2">
