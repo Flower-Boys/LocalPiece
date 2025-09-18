@@ -19,11 +19,4 @@ public class LocalpieceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(LocalpieceApplication.class, args);
 	}
-
-	@Bean
-    public CommandLineRunner run(BlogService blogService) {
-        return args -> {
-            blogService.backfillThumbnails();
-        };
-    }
 }

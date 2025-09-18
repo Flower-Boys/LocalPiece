@@ -215,28 +215,4 @@ public class BlogService {
             }
         }
     }
-
-    @Transactional
-    public void backfillThumbnails() {
-        System.out.println("썸네일 백필 작업을 시작합니다...");
-
-        // 1. 썸네일이 null인 모든 블로그를 contents와 함께 조회합니다.
-        List<Blog> blogsToUpdate = blogRepository.findAllByThumbnailIsNull();
-
-        int updatedCount = 0;
-        for (Blog blog : blogsToUpdate) {
-            // 2. 각 블로그의 콘텐츠 목록에서 첫 번째 이미지를 찾습니다.
-            blog.getContents().stream()
-                .filter(content -> content.getContentType() == ContentType.IMAGE)
-                .findFirst()
-                .ifPresent(firstImage -> {
-                    // 3. 이미지를 찾으면 블로그의 썸네일을 업데이트합니다.
-                    blog.setThumbnail(firstImage.getContent());
-                });
-            updatedCount++;
-        }
-
-        System.out.println("총 " + blogsToUpdate.size() + "개의 블로그 중 " + updatedCount + "개를 처리했습니다.");
-        System.out.println("썸네일 백필 작업을 완료했습니다.");
-    }
 }
