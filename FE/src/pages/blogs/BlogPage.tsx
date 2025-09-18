@@ -4,12 +4,25 @@ import { getBlogs } from "@/api/blog";
 import { Blog } from "@/types/blog";
 import { Eye, Heart, MessageCircle, User } from "lucide-react";
 import defaultThumbnail from "@/assets/default-thumbnail.png";
+import AuthButtons from "@/components/share/auth/AuthButtons";
+import SearchBar from "@/components/home/SearchBar";
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigate = useNavigate();
+  const handleSearch = (params: { sigunguCode?: string; contentTypeId?: string; keyword?: string }) => {
+    const nextParams = new URLSearchParams();
+
+    if (params.sigunguCode) nextParams.set("sigunguCode", params.sigunguCode);
+    if (params.contentTypeId) nextParams.set("contentTypeId", params.contentTypeId);
+    if (params.keyword) nextParams.set("keyword", params.keyword);
+
+    nextParams.set("page", "1"); // 검색 시 항상 1페이지부터 시작
+    nextParams.set("arrange", "R"); // ✅ 대표이미지 + 생성일순 정렬
+    navigate({ pathname: "/", search: nextParams.toString() });
+  };
 
   // ✅ 블로그 목록 불러오기
   useEffect(() => {
@@ -38,7 +51,21 @@ const BlogPage = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
+    <div className="w-full min-h-screen bg-gray-50 relative">
+      <section className="from-pink-500 to-red-500 text-white py-3 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[1fr,2fr,1fr] items-center gap-4">
+          <div></div>
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <SearchBar onSearch={handleSearch} />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <AuthButtons />
+          </div>
+        </div>
+      </section>
+      <div className="border-b border-gray-300"></div>
       <section className="max-w-7xl mx-auto px-6 py-10">
         {/* 헤더 */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
