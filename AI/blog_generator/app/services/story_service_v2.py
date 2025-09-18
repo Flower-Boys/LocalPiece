@@ -62,17 +62,20 @@ def write_story(city: str, timed_photos: List[AnalyzedPhoto], untimed_photos: Li
 
         blog_contents.append(BlogContent(image=photo.metadata.url, text=final_text))
 
-    summary_comment = "AI가 생성한 여행의 순간들"
-    pg_photos = [
-        {
-            "yolo": photo.analysis.get("yolo_objects", []),
-            "places": photo.analysis.get("place_type", []),
-            "caption": photo.analysis.get("blip_keywords", [])
-        }
-        for photo in all_photos_in_order
-    ]
-    if blog_contents:
-        logging.getLogger("uvicorn.info").info(pg_photos)
-        summary_comment = make_summary_comment(pg_photos, city=city)
+    # 1. 사진 메타데이터에서 장소 이름들을 추출합니다.
+    # (중복을 제거하고, None이나 빈 문자열은 제외합니다)
+    place_names = sorted(list(set([photo.place_name for photo in all_photos_in_order if photo.place_name])))
+
+    # 2. 장소 이름 유무에 따라 다른 코멘트를 생성합니다.
+    if place_names:
+        # 장소 이름들을 쉼표로 연결합니다. (예: "경복궁, 남산타워")
+        places_str = ", ".join(place_names)
+        
+        # 조합된 장소 이름을 기반으로 감성적인 문장을 만듭니다.
+        summary_comment = f"{places_str}에서 담아온 소중한 추억들 ✨ AI가 당신의 여행을 이야기로 만들었어요."
+    
+    # 3. 장소 이름이 하나도 없는 경우, 도시 이름을 사용한 기본 코멘트를 사용합니다.
+    else:
+        summary_comment = f"{city}에서의 특별한 순간들, AI가 이야기로 담아봤어요."
 
     return blog_contents, summary_comment
