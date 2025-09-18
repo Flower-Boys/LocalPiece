@@ -19,3 +19,4 @@ CHAPTER_CLUSTER_DISTANCE_METERS = 150
 # --- 카카오 API 설정 ---
 KAKAO_API_KEY = os.getenv("KAKAO_API_KEY")
 KAKAO_API_URL = "https://dapi.kakao.com/v2/local/geo/coord2address.json"
+VALID_PLACE_CATEGORIES = ["FD6", "CE7", "AT4", "CT1", "AD5"]

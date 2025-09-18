@@ -1,3 +1,4 @@
+import re
 from app.services.location_service import _fetch_place_name_from_kakao
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +10,7 @@ import time
 import hashlib
 from pathlib import Path
 import requests
-
+from app.config import CHAPTER_CLUSTER_DISTANCE_METERS, KAKAO_API_KEY, KAKAO_API_URL
 from app.services.integrated_service import create_blog_from_integrated_logic
 
 os.environ['TZ'] = 'Asia/Seoul'
@@ -58,7 +59,7 @@ def generate_blog(req: AiGenerationRequestDto):
         # 파이프라인 실행 중 발생하는 모든 에러를 처리합니다.
         raise HTTPException(status_code=500, detail=f"AI 파이프라인 실행 중 오류 발생: {str(e)}")
     
-@app.get("/api/kakao-test", summary="카카오맵 API 좌표 변환 테스트")
+@app.get("/api/kakao", summary="카카오맵 API 좌표 변환 테스트")
 def test_kakao_api(lat: float, lon: float):
     """
     주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하여 장소명을 반환합니다.
@@ -72,7 +73,36 @@ def test_kakao_api(lat: float, lon: float):
             status_code=404,
             detail="카카오 API에서 해당 좌표의 장소 이름을 찾지 못했거나 API 키 인증에 실패했습니다."
         )
+    
+@app.get("/api/kakao-test", summary="카카오맵 API 좌표 변환 테스트")
+def test_kakao_api(lat: float, lon: float):
+    """
+    주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하여 장소명을 반환합니다.
+    """
 
+    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    params = {"x": lon, "y": lat}
+    response = requests.get(KAKAO_API_URL, headers=headers, params=params, timeout=5)
+    response.raise_for_status() 
+    
+    data = response.json().get("documents", [])
+
+    return {"data": data}
+
+@app.get("/api/kakao-test1", summary="카카오맵 API 좌표 변환 테스트")
+def test_kakao_api(lat: float, lon: float, query: str = "카페", category_group_code: str = "CE7"):
+    """
+    주어진 위도(lat)와 경도(lon)로 카카오 API를 테스트하여 장소명을 반환합니다.
+    """
+
+    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    params = {"x": lon, "y": lat, "query": query, "category_group_code": category_group_code}
+    response = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params, timeout=5)
+    response.raise_for_status() 
+    
+    data = response.json().get("documents", [])
+
+    return {"data": data}
 
 
 # @app.post("/api/prompt-test", response_model=PromptTestResponse, summary="KoGPT2 프롬프트 직접 테스트")
