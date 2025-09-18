@@ -62,3 +62,15 @@ export const toggleBlogLike = async (blogId: string | number) => {
   );
   return res.data; // { message: "좋아요를 눌렀습니다." }
 };
+
+export const deleteComment = async (blogId: string | number, commentId: string | number) => {
+  const token = localStorage.getItem("accessToken");
+  const res = await apiClient.delete(`/blogs/${blogId}/comments/${commentId}`);
+  return res.data;
+};
+
+export const deleteBlog = async (blogId: string | number) => {
+  const token = localStorage.getItem("accessToken");
+  const res = await apiClient.delete(`/blogs/${blogId}`);
+  return res.data;
+}
