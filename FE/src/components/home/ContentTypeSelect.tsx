@@ -37,19 +37,21 @@ const ContentTypeSelect = ({ value, onChange }: Props) => {
             선택안함
           </div>
 
-          {Object.entries(contentTypeLabel).map(([key, label]) => (
-            <div
-              key={key}
-              onClick={() => {
-                onChange(key);
-                setIsOpen(false);
-              }}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-sm"
-            >
-              <Compass size={14} className="text-rose-400" />
-              {label}
-            </div>
-          ))}
+          {Object.entries(contentTypeLabel)
+            .sort(([, a], [, b]) => a.localeCompare(b, "ko")) // 한글 가나다순 정렬
+            .map(([key, label]) => (
+              <div
+                key={key}
+                onClick={() => {
+                  onChange(key);
+                  setIsOpen(false);
+                }}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-sm"
+              >
+                <Compass size={14} className="text-rose-400" />
+                {label}
+              </div>
+            ))}
         </div>
       )}
     </div>

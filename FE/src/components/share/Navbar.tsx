@@ -26,13 +26,6 @@ const Navbar = () => {
       </div>
 
       <div>
-        <NavLink to="/about" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"}`}>
-          <Info size={20} />
-          <span className="hidden md:inline">About</span>
-        </NavLink>
-      </div>
-
-      <div>
         <NavLink to="/blog" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"}`}>
           <FileText size={20} />
           <span className="hidden md:inline">Blog</span>
@@ -43,6 +36,12 @@ const Navbar = () => {
         <NavLink to="/ai/travel" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"}`}>
           <Sparkles size={20} />
           <span className="hidden md:inline">AI 여행지 추천</span>
+        </NavLink>
+      </div>
+      <div>
+        <NavLink to="/about" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"}`}>
+          <Info size={20} />
+          <span className="hidden md:inline">About</span>
         </NavLink>
       </div>
     </nav>

@@ -1,8 +1,8 @@
-import ListingCard from "../../components/home/ListingCard";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getBlogs } from "@/api/blog";
 import { Blog } from "@/types/blog";
+import { Eye, Heart, MessageCircle, User } from "lucide-react";
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -10,7 +10,7 @@ const BlogPage = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigate = useNavigate();
 
-  // ✅ 내 블로그 목록 불러오기
+  // ✅ 블로그 목록 불러오기
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -30,8 +30,6 @@ const BlogPage = () => {
   const handleAcceptAI = () => {
     setShowModal(false);
     setLoading(true);
-
-    // TODO: AI 생성 API 연결 예정
     setTimeout(() => {
       setLoading(false);
       alert("AI 생성 완료! (API 연결 예정)");
@@ -40,30 +38,56 @@ const BlogPage = () => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50">
-      <section className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">🌍 여행 블로그</h1>
-
-        {/* 버튼 영역 */}
-        <div className="flex gap-3 mb-8">
-          <button onClick={() => setShowModal(true)} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-semibold">
-            AI로 생성하기
-          </button>
-          <button onClick={() => navigate("/blog/write")} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-semibold">
-            추억 기록하기
-          </button>
+      <section className="max-w-7xl mx-auto px-6 py-10">
+        {/* 헤더 */}
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
+          <h1 className="text-3xl font-bold">🌍 여행 블로그</h1>
+          <div className="flex gap-3">
+            <button onClick={() => setShowModal(true)} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-semibold">
+              AI로 생성하기
+            </button>
+            <button onClick={() => navigate("/blog/write")} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-semibold">
+              추억 기록하기
+            </button>
+          </div>
         </div>
+        <hr className="py-5" />
 
-        {/* 블로그 카드 리스트 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* 블로그 카드 그리드 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {blogs.map((blog) => (
-            <ListingCard
+            <div
               key={blog.id}
-              id={blog.id}
-              title={blog.title}
-              location={""} // location이 API 응답에 없으니 필요하면 수정
-              price={new Date(blog.createdAt).toLocaleDateString()}
-              image={"https://placekitten.com/600/400"} // 이미지 없으면 placeholder
-            />
+              onClick={() => navigate(`/blog/${blog.id}`)}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.01] transition cursor-pointer flex flex-col"
+            >
+              {/* 이미지 */}
+              <img src={"https://placekitten.com/600/400"} alt={blog.title} className="w-full h-44 object-cover" />
+
+              {/* 본문 */}
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">{blog.title}</h3>
+                  <p className="text-sm text-gray-500 flex items-center gap-1 mb-3">
+                    <User size={14} className="text-gray-400" />
+                    {blog.author} · {new Date(blog.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                {/* 메타 정보 (칩 스타일) */}
+                <div className="flex flex-wrap gap-3 text-xs text-gray-600 mt-auto">
+                  <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                    <Eye size={12} /> {blog.viewCount}
+                  </span>
+                  <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                    <Heart size={12} /> {blog.likeCount}
+                  </span>
+                  <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                    <MessageCircle size={12} /> {blog.commentCount}
+                  </span>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </section>
