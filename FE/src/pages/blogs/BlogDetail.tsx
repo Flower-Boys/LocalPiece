@@ -70,22 +70,26 @@ const BlogDetail = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("accessToken") || undefined;
-
         if (!id) return;
 
-        // ✅ 블로그 상세 + 내 정보 병렬 호출
-        const [blogData, userData] = await Promise.all([
-          getBlogDetail(id, token),
-          getUserInfo(), // 우리가 만든 /api/users/me
-        ]);
+        const token = localStorage.getItem("accessToken") || undefined;
 
+        // 블로그 먼저
+        const blogData = await getBlogDetail(id, token);
         setBlog(blogData);
-        setUserInfo(userData); // ✅ 유저 정보 저장
-
-        // 초기 상태 세팅
         setLiked(blogData.likedByCurrentUser);
         setLikeCount(blogData.likeCount);
+
+        // 로그인된 경우에만 내 정보 요청
+        if (isLoggedIn) {
+          try {
+            const userData = await getUserInfo();
+            setUserInfo(userData);
+          } catch (err) {
+            console.warn("유저 정보 불러오기 실패:", err);
+            setUserInfo(null);
+          }
+        }
       } catch (err: any) {
         console.error(err);
         if (err.response?.status === 403) {
