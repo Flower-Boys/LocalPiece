@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -18,8 +18,12 @@ import { BlogCreateRequest, BlogContentRequest } from "../../types/blog";
 const BlogWrite = () => {
   const [title, setTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
-  const [images, setImages] = useState<File[]>([]); // ✅ 업로드할 이미지들
+  const [images, setImages] = useState<File[]>([]); // 업로드할 이미지 파일 목록
   const navigate = useNavigate();
+
+  // ✅ 파일객체(File) → 에디터에 삽입한 미리보기 src(dataURL) 매핑
+  //    File을 key로 쓰면 중복 파일명 충돌도 방지됨
+  const previewSrcMap = useRef<Map<File, string>>(new Map());
 
   const editor = useEditor({
     extensions: [
@@ -33,6 +37,21 @@ const BlogWrite = () => {
       CodeBlockLowlight.configure({ lowlight }),
     ],
     content: "<p>여행의 추억을 기록해보세요 ✈️</p>",
+    onUpdate: ({ editor }) => {
+      // 에디터에 현재 남아 있는 img src 수집
+      const html = editor.getHTML();
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = html;
+      const liveSrcSet = new Set(Array.from(tempDiv.querySelectorAll("img")).map((img) => (img as HTMLImageElement).src));
+
+      // ✅ images를 "해당 파일의 dataURL이 에디터에 실제로 남아있는가"로 필터
+      setImages((prev) =>
+        prev.filter((file) => {
+          const src = previewSrcMap.current.get(file);
+          return !!src && liveSrcSet.has(src);
+        })
+      );
+    },
   });
 
   if (!editor) return null;
@@ -45,18 +64,18 @@ const BlogWrite = () => {
     input.onchange = async () => {
       if (input.files?.length) {
         const file = input.files[0];
-
-        // ✅ 업로드할 이미지 state에 추가
-        setImages((prev) => [...prev, file]);
-
-        // ✅ 에디터에는 미리보기 (DataURL)
         const reader = new FileReader();
         reader.onload = () => {
-          editor
-            .chain()
-            .focus()
-            .setImage({ src: reader.result as string })
-            .run();
+          const dataUrl = reader.result as string;
+
+          // ✅ 매핑 먼저 저장
+          previewSrcMap.current.set(file, dataUrl);
+
+          // ✅ state에 파일 추가 (onUpdate에서 정확히 걸러짐)
+          setImages((prev) => [...prev, file]);
+
+          // ✅ 에디터에는 방금 생성한 dataURL로 삽입
+          editor.chain().focus().setImage({ src: dataUrl }).run();
         };
         reader.readAsDataURL(file);
       }
@@ -67,30 +86,32 @@ const BlogWrite = () => {
   // 링크 삽입
   const addLink = () => {
     const url = window.prompt("링크 주소를 입력하세요");
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
-    }
+    if (url) editor.chain().focus().setLink({ href: url }).run();
   };
 
   // 저장
   const handleSave = async () => {
-    // ✅ contents 배열 구성
     const contents: BlogContentRequest[] = [];
     let sequence = 1;
 
-    // 1. 에디터 본문 → TEXT 컨텐츠
-    contents.push({
-      sequence: sequence++,
-      contentType: "TEXT",
-      content: editor.getHTML(),
-    });
+    // 1) 본문 TEXT: (명세가 TEXT/IMAGE 배열 요구하므로 img 태그 제거 후 텍스트만)
+    const htmlContent = editor.getHTML();
+    const cleanHtml = htmlContent.replace(/<img[^>]*>/g, "");
+    if (cleanHtml.trim()) {
+      contents.push({
+        sequence: sequence++,
+        contentType: "TEXT",
+        content: cleanHtml,
+      });
+    }
 
-    // 2. 이미지 → IMAGE 컨텐츠 (파일 순서 보장)
-    images.forEach((file, idx) => {
+    // 2) IMAGE: 현재 state(images)에 남은 파일만 그대로 추가
+    //    (onUpdate에서 이미 '실제로 남은 것'만 유지되므로, 여기서는 그대로 쓰면 됨)
+    images.forEach((file) => {
       contents.push({
         sequence: sequence++,
         contentType: "IMAGE",
-        content: file.name, // 서버에서 실제 저장 시 교체됨
+        content: file.name,
       });
     });
 
@@ -102,7 +123,6 @@ const BlogWrite = () => {
 
     try {
       const response = await createBlog(requestData, images);
-      console.log("✅ 저장 성공:", response);
       alert("블로그 저장 완료!");
       navigate(`/blog/${response.id}`);
     } catch (err) {
@@ -110,7 +130,6 @@ const BlogWrite = () => {
       alert("블로그 저장 중 오류가 발생했습니다.");
     }
   };
-
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
       {/* 제목 + 뒤로가기 */}
