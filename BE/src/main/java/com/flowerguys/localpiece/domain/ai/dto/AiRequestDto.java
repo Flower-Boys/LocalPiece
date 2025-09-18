@@ -12,4 +12,5 @@ public class AiRequestDto {
     @JsonProperty("image_urls")
     private List<String> imageUrls;
     private String city;
+    private boolean useV2;
 }

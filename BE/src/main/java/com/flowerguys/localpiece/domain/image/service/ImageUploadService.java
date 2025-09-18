@@ -9,7 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+
 import com.flowerguys.localpiece.global.common.ErrorCode;
 import com.flowerguys.localpiece.global.common.exception.BusinessException;
 import java.util.UUID;
@@ -46,6 +50,29 @@ public class ImageUploadService {
         } catch (IOException e) {
             // ⬇️ IOException 발생 시, BusinessException으로 변환하여 던짐
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+    }
+
+    public String uploadImage(byte[] imageBytes, String originalFilename, String contentType) {
+        String uniqueFileName = UUID.randomUUID() + "_" + originalFilename;
+
+        try (InputStream inputStream = new ByteArrayInputStream(imageBytes)) {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucketName(bucketName)
+                    .namespaceName(namespace)
+                    .objectName(uniqueFileName)
+                    .contentType(contentType)
+                    .contentLength((long) imageBytes.length)
+                    .putObjectBody(inputStream)
+                    .build();
+
+            objectStorage.putObject(request);
+
+            return String.format("https://objectstorage.ap-sydney-1.oraclecloud.com/n/%s/b/%s/o/%s",
+                                 namespace, bucketName, uniqueFileName);
+        } catch (IOException e) {
+            // BusinessException 등 적절한 예외 처리
+            throw new RuntimeException("파일 업로드에 실패했습니다.", e);
         }
     }
 

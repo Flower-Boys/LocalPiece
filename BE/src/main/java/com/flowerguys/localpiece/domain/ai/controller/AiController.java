@@ -1,5 +1,7 @@
 package com.flowerguys.localpiece.domain.ai.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flowerguys.localpiece.domain.ai.dto.AiRequestDto;
 import com.flowerguys.localpiece.domain.ai.entity.AiJob;
 import com.flowerguys.localpiece.domain.ai.repository.AiJobRepository;
 import com.flowerguys.localpiece.domain.ai.service.AiRequestService;
@@ -25,16 +27,21 @@ public class AiController {
 
     private final AiRequestService aiRequestService;
     private final AiJobRepository aiJobRepository;
+    private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/generate-blog", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, UUID>> generateAiBlog(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("city") String city,
-            @RequestPart("images") List<MultipartFile> images) {
+            @RequestPart("request") String requestJson, // 4. 파라미터 이름을 requestJson으로 변경
+            @RequestPart("images") List<MultipartFile> images) throws Exception { // 5. 예외 처리 추가
+
+        // 6. String으로 받은 JSON을 DTO 객체로 직접 변환
+        AiRequestDto request = objectMapper.readValue(requestJson, AiRequestDto.class);
 
         String userEmail = userDetails.getUsername();
-        // 이제 서비스는 즉시 jobId를 반환합니다.
-        UUID jobId = aiRequestService.requestAiBlogGeneration(userEmail, city, images);
+
+        // 7. 이제 DTO 객체의 getter 메소드를 안전하게 사용
+        UUID jobId = aiRequestService.requestAiBlogGeneration(userEmail, request.getCity(), images, request.isUseV2());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("jobId", jobId));
     }
