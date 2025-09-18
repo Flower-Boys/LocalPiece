@@ -56,6 +56,7 @@ export interface BlogCommentResponse {
   author: string;
   createdAt: string;
   modifiedAt: string;
+  userId: number;
 }
 
 // 블로그 상세 조회 응답 DTO
