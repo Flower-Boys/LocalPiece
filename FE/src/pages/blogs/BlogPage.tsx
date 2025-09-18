@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getBlogs } from "@/api/blog";
 import { Blog } from "@/types/blog";
 import { Eye, Heart, MessageCircle, User } from "lucide-react";
+import defaultThumbnail from "@/assets/default-thumbnail.png";
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -62,7 +63,7 @@ const BlogPage = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.01] transition cursor-pointer flex flex-col"
             >
               {/* 이미지 */}
-              <img src={"https://placekitten.com/600/400"} alt={blog.title} className="w-full h-44 object-cover" />
+              <img src={blog.thumbnail && blog.thumbnail.trim() !== "" ? blog.thumbnail : defaultThumbnail} alt={blog.title} className="w-full h-44 object-cover" />
 
               {/* 본문 */}
               <div className="p-5 flex-1 flex flex-col justify-between">
