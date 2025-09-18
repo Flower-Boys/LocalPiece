@@ -8,7 +8,7 @@ import BlogWrite from "../pages/blogs/BlogWrite";
 import BlogDetail from "@/pages/blogs/BlogDetail";
 import TourDetail from "@/components/tour/TourDetail";
 import { AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
-import MyPage from "@/components/user/MyPage";
+import MyPage from "@/components/mypage/MyPage";
 
 // const isAuthenticated = () => {
 //   return !!localStorage.getItem("token");
