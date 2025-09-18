@@ -7,6 +7,14 @@ import RouteCardSkeleton from "@/components/aiTravel/RouteCardSkeleton";
 import { ALL_TAGS, MOCK_ROUTES } from "@/data/mockRoutes";
 import type { AllTag } from "@/types/aiTravel";
 
+// ✅ 이미지 임포트
+import campingImg from "@/assets/camping.png";
+import oceanImg from "@/assets/ocean.png";
+import cityImg from "@/assets/city.png";
+import foodImg from "@/assets/food.png";
+import healingImg from "@/assets/healing.png";
+import mountImg from "@/assets/mount.png";
+
 const AiTravelLanding: React.FC = () => {
   const navigate = useNavigate();
   const [activeTag, setActiveTag] = useState<AllTag>("전체");
@@ -22,6 +30,16 @@ const AiTravelLanding: React.FC = () => {
     const t = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(t);
   }, [activeTag]);
+
+  // ✅ 이미지 매핑
+  const categoryImages = [
+    { label: "산", src: mountImg },
+    { label: "바다", src: oceanImg },
+    { label: "캠핑", src: campingImg },
+    { label: "힐링", src: healingImg },
+    { label: "먹거리", src: foodImg },
+    { label: "도심", src: cityImg },
+  ];
 
   return (
     <main className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
@@ -63,16 +81,14 @@ const AiTravelLanding: React.FC = () => {
             </div>
           </div>
 
+          {/* ✅ 이미지 그리드 */}
           <div className="relative isolate">
             <div className="rounded-2xl border border-white/30 bg-white/10 p-6 backdrop-blur-md shadow-lg">
               <div className="grid grid-cols-3 gap-3">
-                {["산", "바다", "캠핑", "힐링", "먹거리", "도심"].map((k) => (
-                  <div
-                    key={k}
-                    className="aspect-[4/3] rounded-xl bg-gradient-to-tr from-white/40 to-white/20 
-              text-center text-sm font-semibold leading-[3.8rem] text-white shadow-sm"
-                  >
-                    {k}
+                {categoryImages.map((c) => (
+                  <div key={c.label} className="aspect-[4/3] rounded-xl overflow-hidden shadow-sm relative">
+                    <img src={c.src} alt={c.label} className="h-full w-full object-cover" />
+                    <span className="absolute bottom-1 left-1 rounded bg-black/50 px-2 py-0.5 text-xs text-white">{c.label}</span>
                   </div>
                 ))}
               </div>
