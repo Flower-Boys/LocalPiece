@@ -49,7 +49,7 @@ public class AiLogicService {
         List<String> sortedImageUrls = imageInfos.stream().map(ImageMetadataDto::getUrl).collect(Collectors.toList());
 
         AiGenerationRequestDto aiRequest = new AiGenerationRequestDto(UUID.randomUUID().toString(), imageInfos, city);
-        String requestUrl = aiServerUrl + "/api/blogs";
+        String requestUrl = aiServerUrl + "/api/blogs/v2";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
