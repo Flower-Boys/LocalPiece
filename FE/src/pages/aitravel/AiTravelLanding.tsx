@@ -26,50 +26,62 @@ const AiTravelLanding: React.FC = () => {
   return (
     <main className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-gray-100 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 text-white shadow-lg dark:border-gray-800 dark:from-gray-100 dark:via-white dark:to-gray-200 dark:text-gray-900">
-        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl dark:bg-black/10" />
-        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-white/10 blur-2xl dark:bg-black/10" />
+      <section
+        className="relative overflow-hidden rounded-3xl border border-gray-100 
+  bg-gradient-to-br from-sky-500 via-indigo-500 to-purple-500 
+  text-white shadow-lg dark:from-indigo-200 dark:via-purple-200 dark:to-pink-200 dark:text-gray-900"
+      >
+        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-white/20 blur-3xl" />
 
-        <div className="relative z-10 grid grid-cols-1 items-center gap-6 p-8 md:grid-cols-2 md:p-12">
-          <div className="space-y-5">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm backdrop-blur-md dark:bg-black/10">
+        <div className="relative z-10 grid grid-cols-1 items-center gap-6 p-10 md:grid-cols-2">
+          <div className="space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur-md">
               <Sparkles className="h-4 w-4" /> AI 자동 여행지 추천
             </span>
-            <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">
-              몇 번의 선택만으로 <span className="underline decoration-amber-400 decoration-4 underline-offset-4">내 취향 루트</span> 완성
+            <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
+              몇 번의 선택만으로 <span className="underline decoration-amber-300 decoration-4 underline-offset-4">내 취향 루트</span> 완성
             </h1>
-            <p className="text-base opacity-90">산·바다·캠핑·힐링·먹거리… 원하는 분위기를 고르면 AI가 일정, 동선, 이동수단까지 고려한 루트를 제안해요.</p>
-            <div className="flex flex-wrap gap-3">
+            <p className="text-base opacity-90 max-w-xl">산·바다·캠핑·힐링·먹거리… 원하는 분위기를 고르면 AI가 일정, 동선, 이동수단까지 고려한 루트를 제안해요.</p>
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => navigate("/ai/travel/builder")}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 font-semibold text-gray-900 shadow-sm ring-1 ring-black/5 transition hover:translate-y-[1px] hover:shadow-md dark:bg-gray-900 dark:text-white dark:ring-white/10"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl 
+          bg-amber-400 px-6 font-semibold text-gray-900 shadow-md 
+          transition hover:bg-amber-300 hover:shadow-lg"
               >
                 <Sparkles className="h-5 w-5" /> AI로 내 루트 만들기
               </button>
               <a
                 href="#popular"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/30 px-5 font-medium text-white backdrop-blur-sm transition hover:bg-white/10"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl 
+          border border-white/40 px-6 font-medium text-white 
+          backdrop-blur-sm transition hover:bg-white/20"
               >
-                <Filter className="h-5 w-5" /> 인기 추천 먼저 보기
+                <Filter className="h-5 w-5" /> 인기 추천 보기
               </a>
             </div>
           </div>
 
           <div className="relative isolate">
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md dark:border-black/10 dark:bg-black/5">
-              <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-2xl border border-white/30 bg-white/10 p-6 backdrop-blur-md shadow-lg">
+              <div className="grid grid-cols-3 gap-3">
                 {["산", "바다", "캠핑", "힐링", "먹거리", "도심"].map((k) => (
-                  <div key={k} className="aspect-[4/3] rounded-xl bg-white/20 text-center text-sm font-medium leading-[3.8rem] text-white dark:bg-black/10 dark:text-gray-800">
+                  <div
+                    key={k}
+                    className="aspect-[4/3] rounded-xl bg-gradient-to-tr from-white/40 to-white/20 
+              text-center text-sm font-semibold leading-[3.8rem] text-white shadow-sm"
+                  >
                     {k}
                   </div>
                 ))}
               </div>
-              <div className="mt-3 flex items-center justify-between text-xs text-white/80 dark:text-gray-700">
+              <div className="mt-4 flex items-center justify-between text-xs text-white/80">
                 <span className="inline-flex items-center gap-1">
-                  <MapIcon className="h-3.5 w-3.5" /> 동선 최적화
+                  <MapIcon className="h-4 w-4" /> 동선 최적화
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <Clock4 className="h-3.5 w-3.5" /> 이동시간 고려
+                  <Clock4 className="h-4 w-4" /> 이동시간 고려
                 </span>
               </div>
             </div>

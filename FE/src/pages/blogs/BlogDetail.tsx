@@ -1,8 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getBlogDetail, toggleBlogLike } from "../../api/blog";
+import { getBlogDetail, toggleBlogLike, deleteBlog } from "../../api/blog";
+import { getUserInfo } from "@/api/auth";
 import { BlogDetailResponse } from "../../types/blog";
+import { User } from "@/types/users";
 import CommentSection from "../../components/blog/CommentSection";
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
@@ -22,8 +24,24 @@ const BlogDetail = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
 
+  const [userInfo, setUserInfo] = useState<User | null>(null);
+
   // 전역 상태에서 로그인 여부 확인
   const { isLoggedIn } = useAuthStore();
+
+  const handleDeleteBlog = async () => {
+    if (!blog) return;
+    if (!window.confirm("정말 블로그를 삭제하시겠습니까?")) return;
+
+    try {
+      await deleteBlog(blog.id);
+      toast.success("블로그가 삭제되었습니다.");
+      navigate("/blog"); // ✅ 삭제 후 블로그 목록으로 이동
+    } catch (err) {
+      console.error(err);
+      toast.error("블로그 삭제 중 오류가 발생했습니다.");
+    }
+  };
 
   const handleLike = async () => {
     if (!isLoggedIn) {
@@ -49,18 +67,25 @@ const BlogDetail = () => {
   };
 
   useEffect(() => {
-    const fetchBlog = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("accessToken") || undefined;
-        if (id) {
-          const data = await getBlogDetail(id, token);
-          setBlog(data);
 
-          // ✅ API 응답으로 초기 상태 설정
-          setLiked(data.likedByCurrentUser);
-          setLikeCount(data.likeCount);
-        }
+        if (!id) return;
+
+        // ✅ 블로그 상세 + 내 정보 병렬 호출
+        const [blogData, userData] = await Promise.all([
+          getBlogDetail(id, token),
+          getUserInfo(), // 우리가 만든 /api/users/me
+        ]);
+
+        setBlog(blogData);
+        setUserInfo(userData); // ✅ 유저 정보 저장
+
+        // 초기 상태 세팅
+        setLiked(blogData.likedByCurrentUser);
+        setLikeCount(blogData.likeCount);
       } catch (err: any) {
         console.error(err);
         if (err.response?.status === 403) {
@@ -68,13 +93,14 @@ const BlogDetail = () => {
         } else if (err.response?.status === 404) {
           setError("블로그를 찾을 수 없습니다.");
         } else {
-          setError("블로그를 불러오는 중 오류가 발생했습니다.");
+          setError("데이터 불러오는 중 오류가 발생했습니다.");
         }
       } finally {
         setLoading(false);
       }
     };
-    fetchBlog();
+
+    fetchData();
   }, [id]);
 
   if (loading) return <div className="text-center py-10">로딩 중...</div>;
@@ -136,7 +162,17 @@ const BlogDetail = () => {
           <div className="flex items-center gap-3 mb-6 text-sm text-gray-500">
             <span className="font-medium text-gray-700">✍️ 작성자: {blog.author || "알 수 없음"}</span>
             <span>·</span>
-            <span>{blog.createdAt ? new Date(blog.createdAt).toLocaleString() : "날짜 없음"}</span>
+            <span>
+              {blog.createdAt
+                ? new Date(blog.createdAt).toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    timeZone: "Asia/Seoul",
+                  })
+                : "날짜 없음"}
+            </span>
+
             <span>·</span>
             <button
               onClick={handleLike}
@@ -177,9 +213,23 @@ const BlogDetail = () => {
           </div>
 
           <hr className="mt-20 mb-20 border-gray-300" />
+          <div className="flex justify-end">
+            {/* ✅ 내가 쓴 글일 때만 삭제 버튼 */}
+            {userInfo?.nickname === blog.author && (
+              <button onClick={handleDeleteBlog} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm">
+                글 삭제
+              </button>
+            )}
+          </div>
 
           {/* ✅ 댓글 섹션 */}
-          <CommentSection blogId={blog.id} comments={blog.comments || []} onAdd={(newComment) => setBlog((prev) => (prev ? { ...prev, comments: [newComment, ...(prev.comments || [])] } : prev))} />
+          <CommentSection
+            blogId={blog.id}
+            userId={userInfo?.id ?? null}
+            comments={blog.comments || []}
+            onAdd={(newComment) => setBlog((prev) => (prev ? { ...prev, comments: [newComment, ...(prev.comments || [])] } : prev))}
+            onDelete={(commentId) => setBlog((prev) => (prev ? { ...prev, comments: prev.comments?.filter((c) => c.commentId !== commentId) } : prev))}
+          />
         </div>
       </div>
     </div>

@@ -98,7 +98,15 @@ const BlogPage = () => {
                   <h3 className="text-lg font-semibold mb-2 line-clamp-2">{blog.title}</h3>
                   <p className="text-sm text-gray-500 flex items-center gap-1 mb-3">
                     <User size={14} className="text-gray-400" />
-                    {blog.author} · {new Date(blog.createdAt).toLocaleDateString()}
+                    {blog.author} ·{" "}
+                    {blog.createdAt
+                      ? new Date(blog.createdAt).toLocaleDateString("ko-KR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          timeZone: "Asia/Seoul",
+                        })
+                      : "날짜 없음"}
                   </p>
                 </div>
 
