@@ -37,19 +37,21 @@ const RegionSelect = ({ value, onChange }: Props) => {
             선택안함
           </div>
 
-          {Object.entries(sigunguCodeLabel).map(([key, label]) => (
-            <div
-              key={key}
-              onClick={() => {
-                onChange(key);
-                setIsOpen(false);
-              }}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-sm"
-            >
-              <MapPin size={14} className="text-rose-400" />
-              {label}
-            </div>
-          ))}
+          {Object.entries(sigunguCodeLabel)
+            .sort(([, a], [, b]) => a.localeCompare(b, "ko")) // 한글 가나다 정렬
+            .map(([key, label]) => (
+              <div
+                key={key}
+                onClick={() => {
+                  onChange(key);
+                  setIsOpen(false);
+                }}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-sm"
+              >
+                <MapPin size={14} className="text-rose-400" />
+                {label}
+              </div>
+            ))}
         </div>
       )}
     </div>
