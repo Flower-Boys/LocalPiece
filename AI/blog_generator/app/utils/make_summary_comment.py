@@ -10,7 +10,7 @@ def make_summary_comment(photo_infos: List[dict], city: str = "이 도시") -> s
     """
 
     # 모든 caption을 긴 문장으로 이어 붙이기
-    captions = [p["caption"] for p in photo_infos if "caption" in p]
+    captions = [" ".join(p["caption"]) for p in photo_infos if "caption" in p and isinstance(p["caption"], list)]
     full_text = " ".join(captions).lower()
 
     # 키워드 기반 감성 문장 생성

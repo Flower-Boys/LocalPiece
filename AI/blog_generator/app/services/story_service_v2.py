@@ -2,6 +2,9 @@ import re
 from typing import List, Tuple, Dict
 from app.models import BlogContent, AnalyzedPhoto
 from app.services.ai_model_service import ai_models
+from app.utils.make_summary_comment import make_summary_comment
+import logging
+
 
 def _create_exaone_prompt(city: str, analysis_keywords: Dict, place_name: str = None) -> str:
     """
@@ -60,7 +63,16 @@ def write_story(city: str, timed_photos: List[AnalyzedPhoto], untimed_photos: Li
         blog_contents.append(BlogContent(image=photo.metadata.url, text=final_text))
 
     summary_comment = "AI가 생성한 여행의 순간들"
+    pg_photos = [
+        {
+            "yolo": photo.analysis.get("yolo_objects", []),
+            "places": photo.analysis.get("place_type", []),
+            "caption": photo.analysis.get("blip_keywords", [])
+        }
+        for photo in all_photos_in_order
+    ]
     if blog_contents:
-        summary_comment = blog_contents[0].text.split('\n\n')[-1].split('.')[0] + '.'
+        logging.getLogger("uvicorn.info").info(pg_photos)
+        summary_comment = make_summary_comment(pg_photos, city=city)
 
     return blog_contents, summary_comment

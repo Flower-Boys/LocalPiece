@@ -50,44 +50,40 @@ def _process_single_photo_v2(photo_meta: ImageMetadataDto, city: str) -> Optiona
         print(f"ERROR: 병렬 처리 중 사진({photo_meta.url}) 처리 실패: {e}")
         return None
 
-def create_ai_blog_v2(req: AiGenerationRequestDto) -> (List[BlogContent], str):
+def create_ai_blog_v2(req: AiGenerationRequestDto):
     """
-    [V2 최종 버전] 원래의 순차 파이프라인을 병렬 처리 방식으로 변경하여 속도를 개선합니다.
+    [V2 원본] 가장 안정적이고 빠른 순차 처리 파이프라인
     """
-    # 1단계: 데이터 준비 (시간순 정렬) - 원래 로직과 동일
+    # 1단계: 데이터 준비 (시간순 정렬)
     timed_photos_meta, untimed_photos_meta = preprocessor_service.prepare_data(req.images)
-    all_photos_in_order = timed_photos_meta + untimed_photos_meta
-    
-    # 2단계 ~ 4단계를 병렬로 처리
-    blog_contents_dict = {}
-    
-    # 허깅페이스 2코어 환경에 맞춰 max_workers=2로 설정하여 CPU 과부하를 방지합니다.
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        # 정렬된 사진 목록을 병렬 처리 작업으로 제출합니다.
-        future_to_url = {executor.submit(_process_single_photo_v2, meta, req.city): meta.url for meta in all_photos_in_order}
+
+    # 2단계: 위치 정보 분석 (카카오맵 API)
+    # 시간 정보가 있는 사진들에 대해서만 위치 분석을 수행합니다.
+    timed_photos = []
+    for photo_meta in timed_photos_meta:
+        place_name = None
+        if photo_meta.latitude and photo_meta.longitude:
+            place_name = location_service._fetch_place_name_from_kakao(photo_meta.latitude, photo_meta.longitude)
         
-        # 작업이 끝나는 순서대로 결과를 딕셔너리에 저장합니다.
-        for future in as_completed(future_to_url):
-            url = future_to_url[future]
-            result = future.result()
-            if result:
-                blog_contents_dict[url] = result
+        timed_photos.append(AnalyzedPhoto(metadata=photo_meta, place_name=place_name))
+
+    # 시간 정보가 없는 사진들은 AnalyzedPhoto 객체로만 변환합니다.
+    untimed_photos = [AnalyzedPhoto(metadata=p) for p in untimed_photos_meta]
     
-    # 3단계: 최종 결과물을 원래의 시간 순서대로 재정렬합니다.
-    final_blog_contents = []
-    for meta in all_photos_in_order:
-        if meta.url in blog_contents_dict:
-            final_blog_contents.append(blog_contents_dict[meta.url])
+    # 3단계: 시각 정보 분석 (AI 키워드 추출)
+    # 각 사진 목록에 대해 순차적으로 AI 분석을 실행합니다.
+    analyzed_timed_photos = analysis_service.analyze_photos(timed_photos)
+    analyzed_untimed_photos = analysis_service.analyze_photos(untimed_photos)
 
-    if not final_blog_contents:
-        return [], "분석 가능한 이미지가 없거나 처리 중 오류가 발생했습니다."
+    # 4단계: 블로그 글 생성
+    # 분석된 결과를 story_service_v2에 전달하여 최종 글을 생성합니다.
+    blog_contents, summary_comment = story_service_v2.write_story(
+        city=req.city,
+        timed_photos=analyzed_timed_photos,
+        untimed_photos=analyzed_untimed_photos
+    )
 
-    # 4단계: 요약 코멘트 생성 (시간상 가장 첫 번째 블로그 내용 기반)
-    summary_comment = "AI가 생성한 여행의 순간들"
-    if final_blog_contents:
-        summary_comment = final_blog_contents[0].text.split('\n\n')[-1].split('.')[0] + '.'
-
-    return final_blog_contents, summary_comment
+    return blog_contents, summary_comment
 
 # ------------ 경로 설정 및 이미지 다운로더 ------------
 BASE_DIR = Path(__file__).resolve().parent.parent
