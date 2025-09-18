@@ -162,7 +162,17 @@ const BlogDetail = () => {
           <div className="flex items-center gap-3 mb-6 text-sm text-gray-500">
             <span className="font-medium text-gray-700">✍️ 작성자: {blog.author || "알 수 없음"}</span>
             <span>·</span>
-            <span>{blog.createdAt ? new Date(blog.createdAt).toLocaleString() : "날짜 없음"}</span>
+            <span>
+              {blog.createdAt
+                ? new Date(blog.createdAt).toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    timeZone: "Asia/Seoul",
+                  })
+                : "날짜 없음"}
+            </span>
+
             <span>·</span>
             <button
               onClick={handleLike}
