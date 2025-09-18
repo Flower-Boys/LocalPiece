@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
+import com.flowerguys.localpiece.domain.ai.dto.SimpleMultipartFile;
 
 @Slf4j
 @Service
@@ -22,7 +23,7 @@ public class AiTaskService {
 
     @Async // 이 메소드는 별도의 스레드에서 비동기적으로 실행됩니다.
     @Transactional // 이 메소드 역시 자체적인 트랜잭션을 가집니다.
-    public void processAiBlogGeneration(UUID jobId, User user, String city, List<MultipartFile> images) {
+    public void processAiBlogGeneration(UUID jobId, User user, String city, List<SimpleMultipartFile> images) {
         // 💡 중요: @Async 메소드는 public이어야 합니다.
         log.info("비동기 AI 작업 시작. Job ID: {}", jobId);
         

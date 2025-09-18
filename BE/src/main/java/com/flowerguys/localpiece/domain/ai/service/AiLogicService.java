@@ -14,10 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,20 +38,25 @@ public class AiLogicService {
     @Value("${ai-server.token}")
     private String hfToken;
 
-    @Transactional
-    public Long executeAiPipeline(User user, String city, List<MultipartFile> images) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Long executeAiPipeline(User user, String city, List<SimpleMultipartFile> images) {
         log.info("AI 파이프라인 시작. 사용자: {}", user.getEmail());
 
         List<ImageMetadataDto> imageInfos = images.parallelStream().map(file -> {
-            String imageUrl = imageUploadService.uploadImage(file);
-            return metadataService.extractMetadata(file, imageUrl);
+            // SimpleMultipartFile에서 byte[]와 파일명을 직접 꺼내 사용
+            byte[] imageBytes = file.getBytes();
+            String originalFilename = file.getOriginalFilename();
+
+            String imageUrl = imageUploadService.uploadImage(imageBytes, originalFilename, file.getContentType());
+            return metadataService.extractMetadata(imageBytes, originalFilename, imageUrl);
+
         }).collect(Collectors.toList());
 
         imageInfos.sort(Comparator.comparing(ImageMetadataDto::getSafeTimestamp));
         List<String> sortedImageUrls = imageInfos.stream().map(ImageMetadataDto::getUrl).collect(Collectors.toList());
 
         AiGenerationRequestDto aiRequest = new AiGenerationRequestDto(UUID.randomUUID().toString(), imageInfos, city);
-        String requestUrl = aiServerUrl + "/api/blogs/v2";
+        String requestUrl = aiServerUrl + "/api/blogs";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
