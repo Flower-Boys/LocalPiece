@@ -70,7 +70,7 @@ public class UserController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(new LoginResponse(accessToken));
+                .body(new LoginResponse(user.getId(), accessToken));
     }
 
     @PostMapping("/logout")

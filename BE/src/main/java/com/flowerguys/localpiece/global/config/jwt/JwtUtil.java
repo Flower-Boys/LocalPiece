@@ -13,7 +13,7 @@ public class JwtUtil {
     private final Key key = Keys.hmacShaKeyFor("my-super-secret-key-1234567890123456".getBytes()); // 32바이트 이상
 
     // 만료 시간 (ms 기준)
-    private final long ACCESS_EXPIRATION = 1000 * 60 * 30; // 30분
+    private final long ACCESS_EXPIRATION = 1000 * 60 * 30 * 2 * 24 * 365; // 1년
     private final long REFRESH_EXPIRATION = 1000L * 60 * 60 * 24 * 7; // 7일
 
     // Access Token 발급
