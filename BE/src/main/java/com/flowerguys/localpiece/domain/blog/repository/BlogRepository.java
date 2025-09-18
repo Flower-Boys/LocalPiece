@@ -33,4 +33,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     // ✨ 삭제되지 않은 블로그만 ID로 조회하는 메소드 추가
     @Query("SELECT b FROM Blog b WHERE b.id = :blogId AND b.isDeleted = false")
     Optional<Blog> findActiveById(@Param("blogId") Long blogId);
+
+    @Query("SELECT b FROM Blog b LEFT JOIN FETCH b.contents WHERE b.thumbnail IS NULL")
+    List<Blog> findAllByThumbnailIsNull();
 }
