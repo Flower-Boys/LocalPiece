@@ -18,6 +18,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 import java.util.HashMap;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +33,29 @@ public class UserController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtUtil jwtUtil;
+
+    @GetMapping("/me")
+    public String getMyInfo(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization 헤더가 없습니다.");
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다.");
+        }
+
+        String email = jwtUtil.extractEmail(token);
+
+        User user = userRepository.findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
+
+        // 원하는 정보만 반환 (예: 이메일, 닉네임)
+        return "이메일: " + user.getEmail() + ", 닉네임: " + user.getNickname() + ", 유저 ID: " + user.getId();
+    }
+    
+    
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody UserSignupRequest request) {
