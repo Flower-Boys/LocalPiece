@@ -25,6 +25,7 @@ public class BlogResponse {
     private List<CommentResponseDto> comments;
     private int likeCount;
     private boolean isLikedByCurrentUser;
+    private List<String> hashtags;
 
     public BlogResponse(Blog blog) {
         this(blog, false); // 내부적으로 두 번째 생성자를 호출하며 isLiked는 false로 고정
@@ -55,5 +56,8 @@ public class BlogResponse {
         
         this.likeCount = blog.getLikes().size();
         this.isLikedByCurrentUser = isLiked;
+        this.hashtags = blog.getHashtags().stream()
+                .map(blogHashtag -> blogHashtag.getHashtag().getName())
+                .collect(Collectors.toList());
     }
 }
