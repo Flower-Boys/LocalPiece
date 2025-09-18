@@ -6,6 +6,8 @@ import com.flowerguys.localpiece.domain.blog.entity.BlogContent;
 import com.flowerguys.localpiece.domain.blog.entity.ContentType;
 import com.flowerguys.localpiece.domain.blog.repository.BlogContentRepository;
 import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
+import com.flowerguys.localpiece.domain.hashtag.repository.BlogHashtagRepository;
+import com.flowerguys.localpiece.domain.hashtag.repository.HashtagRepository;
 import com.flowerguys.localpiece.domain.image.service.ImageUploadService;
 import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.domain.user.repository.UserRepository;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
+import com.flowerguys.localpiece.domain.hashtag.entity.BlogHashtag;
+import com.flowerguys.localpiece.domain.hashtag.entity.Hashtag;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -36,6 +40,8 @@ public class BlogService {
     private final BlogContentRepository blogContentRepository;
     private final ImageUploadService imageUploadService;
     private final BlogLikeRepository blogLikeRepository;
+    private final HashtagRepository hashtagRepository;
+    private final BlogHashtagRepository blogHashtagRepository;
 
     @Transactional
     public BlogResponse createBlog(String userEmail, BlogCreateRequest request, List<MultipartFile> imageFiles) {
@@ -60,6 +66,10 @@ public class BlogService {
                 .findFirst()
                 .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
 
+         if (request.getHashtags() != null) {
+            manageHashtags(blog, request.getHashtags());
+        }
+   
         Blog savedBlog = blogRepository.save(blog);
         return new BlogResponse(savedBlog);
     }
@@ -136,13 +146,16 @@ public class BlogService {
         // 3. 비워진 기존 컬렉션에 새로운 내용들을 모두 추가합니다.
         blog.getContents().addAll(newContents);
 
+        manageHashtags(blog, request.getHashtags());
+
         blog.setThumbnail(null); // 기존 썸네일 초기화
         newContents.stream()
                 .filter(bc -> bc.getContentType() == ContentType.IMAGE)
                 .findFirst()
                 .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
         
-        return new BlogResponse(blog);
+        boolean isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
+        return new BlogResponse(blog, isLiked);
     }
 
     @Transactional
@@ -213,6 +226,31 @@ public class BlogService {
             if (!blog.getUser().getEmail().equals(loggedInUserEmail)) {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);
             }
+        }
+    }
+
+    private void manageHashtags(Blog blog, List<String> tagNameList) {
+        // 기존 해시태그 연결 모두 삭제
+        blog.getHashtags().clear();
+
+        if (tagNameList == null || tagNameList.isEmpty()) {
+            return;
+        }
+
+        for (String tagName : tagNameList) {
+            // 1. 해시태그 이름으로 DB에서 조회
+            Hashtag hashtag = hashtagRepository.findByName(tagName)
+                    // 2. 없으면 새로 생성하여 저장
+                    .orElseGet(() -> hashtagRepository.save(Hashtag.builder().name(tagName).build()));
+
+            // 3. Blog와 Hashtag를 연결하는 BlogHashtag 생성
+            BlogHashtag blogHashtag = BlogHashtag.builder()
+                    .blog(blog)
+                    .hashtag(hashtag)
+                    .build();
+            
+            // 4. Blog 엔티티의 hashtags Set에 추가 (연관관계 편의 메소드 역할)
+            blog.getHashtags().add(blogHashtag);
         }
     }
 }

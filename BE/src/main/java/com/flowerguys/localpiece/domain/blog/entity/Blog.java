@@ -4,6 +4,7 @@ import com.flowerguys.localpiece.domain.like.entity.BlogLike;
 import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.global.common.BaseTimeEntity;
 import com.flowerguys.localpiece.domain.comment.entity.Comment;
+import com.flowerguys.localpiece.domain.hashtag.entity.BlogHashtag;
 import com.flowerguys.localpiece.domain.like.entity.BlogLike;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,6 +48,10 @@ public class Blog extends BaseTimeEntity {
 
     @Setter
     private String thumbnail; 
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<BlogHashtag> hashtags = new HashSet<>();
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
