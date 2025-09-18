@@ -1,46 +1,43 @@
 import ListingCard from "../../components/home/ListingCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const blogs = [
-  {
-    id: 1,
-    title: "제주도 한 달 살기",
-    location: "제주 · 한국",
-    price: "2025-09-01",
-    image: "https://placekitten.com/600/400",
-  },
-  {
-    id: 2,
-    title: "파리 카페 투어",
-    location: "파리 · 프랑스",
-    price: "2025-08-21",
-    image: "https://placekitten.com/601/400",
-  },
-  {
-    id: 3,
-    title: "방콕 야시장 탐방",
-    location: "방콕 · 태국",
-    price: "2025-08-05",
-    image: "https://placekitten.com/602/400",
-  },
-];
+import { getBlogs } from "@/api/blog";
+import { Blog } from "@/types/blog";
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigate = useNavigate();
+
+  // ✅ 내 블로그 목록 불러오기
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        const data = await getBlogs();
+        setBlogs(data);
+      } catch (err) {
+        console.error("블로그 목록 조회 실패", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   const handleAcceptAI = () => {
     setShowModal(false);
     setLoading(true);
 
-    // TODO: API 호출 부분
+    // TODO: AI 생성 API 연결 예정
     setTimeout(() => {
       setLoading(false);
       alert("AI 생성 완료! (API 연결 예정)");
     }, 2000);
   };
+
   return (
     <div className="w-full min-h-screen bg-gray-50">
       <section className="max-w-3xl mx-auto px-4 py-8">
@@ -48,12 +45,9 @@ const BlogPage = () => {
 
         {/* 버튼 영역 */}
         <div className="flex gap-3 mb-8">
-          {/* AI 생성 버튼 */}
           <button onClick={() => setShowModal(true)} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-semibold">
             AI로 생성하기
           </button>
-
-          {/* 추억 기록 버튼 */}
           <button onClick={() => navigate("/blog/write")} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-semibold">
             추억 기록하기
           </button>
@@ -62,7 +56,14 @@ const BlogPage = () => {
         {/* 블로그 카드 리스트 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {blogs.map((blog) => (
-            <ListingCard key={blog.id} {...blog} />
+            <ListingCard
+              key={blog.id}
+              id={blog.id}
+              title={blog.title}
+              location={""} // location이 API 응답에 없으니 필요하면 수정
+              price={new Date(blog.createdAt).toLocaleDateString()}
+              image={"https://placekitten.com/600/400"} // 이미지 없으면 placeholder
+            />
           ))}
         </div>
       </section>

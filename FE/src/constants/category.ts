@@ -1,5 +1,6 @@
 // src/constants/category.ts
 export const CATEGORY_MAP = [
+  { id: "", label: "전체 조회" },
   { id: "12", label: "관광지" },
   { id: "14", label: "문화시설" },
   { id: "15", label: "축제/행사" },
