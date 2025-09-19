@@ -20,7 +20,7 @@ const About = () => {
           <p className="mt-4 text-gray-600 leading-relaxed">
             LocalPiece는 사용자가 고른 한 곳에서 출발해, 관광지·맛집·카페를
             <br className="hidden sm:block" />
-            AI가 자연스럽게 이어주는 **하루 여행 코스**를 제안합니다.
+            AI가 자연스럽게 이어주는 하루 여행 코스를 제안합니다.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <button onClick={() => navigate("/ai/travel")} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white font-medium shadow hover:bg-blue-700 transition">
