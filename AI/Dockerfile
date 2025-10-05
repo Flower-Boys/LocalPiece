@@ -27,5 +27,5 @@ WORKDIR /app/blog_generator
 # 8. 의존성을 설치합니다.
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# 9. 서버를 실행합니다. Hugging Face가 요구하는 7860번 포트를 사용합니다.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# 9. 서버를 실행합니다.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

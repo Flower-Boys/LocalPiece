@@ -1,0 +1,17 @@
+version: '3.8' # 도커 컴포즈 파일 버전
+
+services:
+  # 서비스의 이름을 ai-server로 지정합니다.
+  ai-server:
+    # 컨테이너의 이름을 ai-server로 고정합니다.
+    container_name: ai-server
+    
+    # Dockerfile을 사용하여 이미지를 빌드합니다.
+    build: ./AI
+    
+    # 로컬 PC의 8000번 포트와 컨테이너의 8000번 포트를 연결합니다.
+    ports:
+      - "8000:8000"
+      
+    # 서버가 다운되면 자동으로 다시 시작하도록 설정합니다.
+    restart: always
