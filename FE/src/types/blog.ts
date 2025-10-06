@@ -79,3 +79,14 @@ export interface BlogDetailResponse {
 export interface CommentCreateRequest {
   content: string;
 }
+
+// 블로그 AI 생성 요청
+export interface BlogAiCreateRequest {
+  city: string;
+  useV2: boolean; // v2 API 사용 여부
+}
+
+// 블로그 AI 생성 응답
+export interface BlogAiCreateResponse {
+  jobId: string; // AI 생성 작업 ID
+}
