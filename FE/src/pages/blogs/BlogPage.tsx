@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getBlogs } from "@/api/blog";
+import { getBlogs, createAiBlog } from "@/api/blog";
 import { Blog } from "@/types/blog";
 import { Eye, Heart, MessageCircle, User } from "lucide-react";
 import defaultThumbnail from "@/assets/default-thumbnail.png";
 import AuthButtons from "@/components/share/auth/AuthButtons";
 import SearchBar from "@/components/home/SearchBar";
+import toast from "react-hot-toast"; // ✅ 알림 추가
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -25,29 +26,46 @@ const BlogPage = () => {
   };
 
   // ✅ 블로그 목록 불러오기
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        setLoading(true);
-        const data = await getBlogs();
-        setBlogs(data);
-      } catch (err) {
-        console.error("블로그 목록 조회 실패", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      const data = await getBlogs();
+      setBlogs(data);
+    } catch (err) {
+      console.error("블로그 목록 조회 실패", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBlogs();
   }, []);
 
-  const handleAcceptAI = () => {
+  // ✅ AI 블로그 생성 API 연결
+  const handleAcceptAI = async () => {
     setShowModal(false);
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      // 예시 payload — 백엔드에서 요구하는 구조에 맞게 수정 가능
+      const payload = {
+        city: "경상북도",
+        useV2: false,
+      };
+
+      const response = await createAiBlog(payload);
+      console.log("AI 생성 결과:", response);
+
+      // 성공 알림 및 목록 새로고침
+      toast.success("AI 블로그 생성이 완료되었습니다!");
+      await fetchBlogs();
+    } catch (err: any) {
+      console.error("AI 블로그 생성 실패:", err);
+      toast.error("AI 블로그 생성 중 오류가 발생했습니다.");
+    } finally {
       setLoading(false);
-      alert("AI 생성 완료! (API 연결 예정)");
-    }, 2000);
+    }
   };
 
   return (
