@@ -1,6 +1,6 @@
 import apiClient from "./client";
 
-import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse } from "@/types/blog";
+import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateRequest, BlogAiCreateResponse } from "@/types/blog";
 
 // ✅ 블로그 목록 조회
 export const getBlogs = async (): Promise<Blog[]> => {
@@ -73,4 +73,13 @@ export const deleteBlog = async (blogId: string | number) => {
   const token = localStorage.getItem("accessToken");
   const res = await apiClient.delete(`/blogs/${blogId}`);
   return res.data;
+}
+
+// AI 블로그 생성
+export const createAiBlog = async (payload: BlogAiCreateRequest): Promise<BlogAiCreateResponse> => {
+  const token = localStorage.getItem("accessToken");
+  const { data } = await apiClient.post<BlogAiCreateResponse>("/ai/generate-blog", { payload }, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return data;
 }
