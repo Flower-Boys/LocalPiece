@@ -100,4 +100,4 @@ jobs:
 
 
             # Docker Compose로 서비스 재시작 
-            docker-compose up -d --build
+            docker compose up -d --build
