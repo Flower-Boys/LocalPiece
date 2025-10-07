@@ -22,7 +22,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.OCI_HOST }}
-          username: ${{ secrets.OCI_USERNAME }}
+          username: ${{ secrets.OCI_SERVER_USERNAME }}
           key: ${{ secrets.OCI_PRIVATE_KEY }}
           script: |
             cd LocalPiece
