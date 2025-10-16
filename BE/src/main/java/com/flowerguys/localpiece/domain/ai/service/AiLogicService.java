@@ -35,8 +35,6 @@ public class AiLogicService {
 
     @Value("${ai-server.url}")
     private String aiServerUrl;
-    @Value("${ai-server.token}")
-    private String hfToken;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long executeAiPipeline(User user, String city, List<SimpleMultipartFile> images, boolean useV2) {
@@ -59,10 +57,7 @@ public class AiLogicService {
         String requestUrl = aiServerUrl + (useV2 ? "/api/blogs/v2" : "/api/blogs");
         log.info("AI 서버 요청 URL: {}", requestUrl);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(hfToken);
-        HttpEntity<AiGenerationRequestDto> entity = new HttpEntity<>(aiRequest, headers);
+        HttpEntity<AiGenerationRequestDto> entity = new HttpEntity<>(aiRequest);
 
         try {
             ResponseEntity<AiResponseDto> response = restTemplate.exchange(requestUrl, HttpMethod.POST, entity, AiResponseDto.class);
