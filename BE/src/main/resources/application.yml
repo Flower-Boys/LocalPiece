@@ -37,7 +37,7 @@ tour-api:
   service-key: ${TOUR_API_SERVICE_KEY}
 
 ai-server:
-  url: ${AI_SERVER_URL}
+  url: ${AI_NEW_SERVER_URL}
   token: ${HF_TOKEN}
 
 
