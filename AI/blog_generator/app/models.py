@@ -75,3 +75,13 @@ class CourseResponse(BaseModel):
     """여행 코스 생성 응답 모델"""
     trip_title: str
     days: List[DailyCourse]
+
+class CourseOption(BaseModel):
+    """하나의 추천 코스 대안 모델"""
+    theme_title: str
+    days: List[DailyCourse]
+
+class CourseResponse(BaseModel):
+    """여행 코스 생성 최종 응답 모델 (여러 대안 포함)"""
+    trip_title: str
+    courses: List[CourseOption]
