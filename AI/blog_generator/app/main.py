@@ -13,6 +13,9 @@ import requests
 from app.config import CHAPTER_CLUSTER_DISTANCE_METERS, KAKAO_API_KEY, KAKAO_API_URL
 from app.services.integrated_service import create_blog_from_integrated_logic
 
+from app.services.course_service import course_service
+from app.models import CourseRequest, CourseResponse
+
 os.environ['TZ'] = 'Asia/Seoul'
 time.tzset()
 # ------------ 경로 및 FastAPI 앱 설정 ------------
@@ -103,6 +106,21 @@ def test_kakao_api(lat: float, lon: float, query: str = "카페", category_group
     data = response.json().get("documents", [])
 
     return {"data": data}
+
+# --- 여행 코스 생성 라우트 추가 ---
+
+@app.post("/api/courses/generate", response_model=CourseResponse, summary="여행 코스 생성")
+async def generate_travel_course(request: CourseRequest):
+    """
+    사용자 요청에 따라 최적의 여행 코스를 생성하여 반환합니다.
+    """
+    try:
+        # course_service를 호출하여 코스 생성 로직을 실행합니다.
+        result = course_service.generate_course(request)
+        return result
+    except Exception as e:
+        # 에러 발생 시 500 에러를 반환합니다.
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # @app.post("/api/prompt-test", response_model=PromptTestResponse, summary="KoGPT2 프롬프트 직접 테스트")
