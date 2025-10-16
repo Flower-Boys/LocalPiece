@@ -1,7 +1,7 @@
 # AI/blog_generator/app/services/course_service.py
 
 import sqlite3
-from app.models import CourseRequest, CourseResponse, DailyCourse, Place, CourseOption
+from app.models import CourseRequest, CourseResponse, DailyCourse, Place, CourseOption, ReplacePlaceRequest, CourseOption
 from datetime import datetime, timedelta, time
 from typing import List, Dict, Any
 import math
@@ -184,6 +184,126 @@ class CourseService:
         
         return all_days_courses
 
+    def replace_place(self, request: ReplacePlaceRequest) -> CourseOption | None:
+        course = request.course_option
+        day_index = request.day_number - 1
+        order_to_replace = request.place_order_to_replace
+
+        if day_index >= len(course.days):
+            return None
+
+        original_route = course.days[day_index].route
+        
+        # 1. 교체할 장소와 현재 코스에 포함된 모든 장소 ID 찾기
+        place_to_replace = next((p for p in original_route if p.order == order_to_replace), None)
+        if not place_to_replace:
+            return None
+
+        # DB에서 place_to_replace의 상세 정보(tourism_id, lat, lon) 가져오기
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT tourism_id, lat, lon FROM tourism WHERE title = ?", (place_to_replace.name,))
+        place_details = cursor.fetchone()
+        if not place_details: return None
+        
+        place_to_replace_id = place_details['tourism_id']
+        
+        # 현재 코스에 있는 모든 장소의 ID를 미리 수집
+        current_place_names = {p.name for p in original_route}
+        cursor.execute(f"SELECT tourism_id FROM tourism WHERE title IN ({','.join('?' for _ in current_place_names)})", tuple(current_place_names))
+        existing_ids = {row['tourism_id'] for row in cursor.fetchall()}
+        existing_ids.add(place_to_replace_id)
+
+
+        # 2. 교체할 장소와 비슷한 카테고리의 후보군 찾기
+        #    - 현재 코스에 없는 장소여야 함
+        #    - 교체될 장소와 비슷한 테마(카테고리)를 가져야 함
+        query = """
+            SELECT t.tourism_id, t.title, t.addr1, t.lat, t.lon, c.name as category_name, IFNULL(r.avg_overall_rate, 3.0) as avg_rate
+            FROM tourism t
+            LEFT JOIN category c ON t.category_id = c.category_id
+            LEFT JOIN (SELECT tourism_id, AVG(overall_rate) as avg_overall_rate FROM review GROUP BY tourism_id) r ON t.tourism_id = r.tourism_id
+            WHERE c.name = ? AND t.tourism_id NOT IN ({','.join('?' for _ in existing_ids)})
+            ORDER BY avg_rate DESC
+            LIMIT 20;
+        """
+        params = (place_to_replace.category,) + tuple(existing_ids)
+        cursor.execute(query, params)
+        candidates = [dict(row) for row in cursor.fetchall()]
+
+        if not candidates:
+            return None # 대체 후보가 없음
+
+        # 3. 최적의 대체 장소 선택 (교체될 장소와 가장 가까운 후보)
+        best_replacement = self._find_closest_place(place_details, candidates)
+        if not best_replacement: return None
+
+        # 4. 새로운 경로 생성 및 시간 재계산
+        new_route_details = []
+        # 교체 지점 전까지는 기존 경로 유지
+        for i in range(order_to_replace - 1):
+            new_route_details.append(original_route[i])
+
+        # 새로운 장소 추가
+        prev_place_departure_time_str = "09:00" if order_to_replace == 1 else new_route_details[-1].departure_time
+        prev_place_departure_time = datetime.strptime(prev_place_departure_time_str, "%H:%M")
+        
+        # 이전 장소의 상세 정보 가져오기
+        prev_place_name = "START" if order_to_replace == 1 else new_route_details[-1].name
+        cursor.execute("SELECT lat, lon FROM tourism WHERE title = ?", (prev_place_name,))
+        prev_place_details = cursor.fetchone()
+        
+        # 시작점일 경우, 도시의 중심 좌표를 임의로 사용 (또는 첫 장소 좌표)
+        if order_to_replace == 1:
+             prev_place_details = {'lat': best_replacement['lat'], 'lon': best_replacement['lon']}
+
+
+        # 이동 시간 계산 및 도착/출발 시간 업데이트
+        travel_time = self._estimate_travel_time(self._haversine_distance(prev_place_details['lat'], prev_place_details['lon'], best_replacement['lat'], best_replacement['lon']))
+        arrival_time = prev_place_departure_time + timedelta(minutes=travel_time)
+        stay_time = CATEGORY_STAY_TIME.get(best_replacement['category_name'], 90)
+        departure_time = arrival_time + timedelta(minutes=stay_time)
+
+        new_place = Place(
+            order=order_to_replace,
+            type="spot", # meal/spot 구분 로직 추가 필요
+            name=best_replacement['title'],
+            category=best_replacement['category_name'],
+            address=best_replacement['addr1'],
+            arrival_time=arrival_time.strftime("%H:%M"),
+            departure_time=departure_time.strftime("%H:%M"),
+            duration_minutes=stay_time
+        )
+        new_route_details.append(new_place)
+        
+        # 교체 지점 이후의 모든 장소 시간 재계산
+        current_location_details = best_replacement
+        last_departure_time = departure_time
+
+        for i in range(order_to_replace, len(original_route)):
+            next_original_place_name = original_route[i].name
+            cursor.execute("SELECT * FROM tourism t LEFT JOIN category c ON t.category_id = c.category_id WHERE t.title = ?", (next_original_place_name,))
+            next_place_details = dict(cursor.fetchone())
+
+            travel_time = self._estimate_travel_time(self._haversine_distance(current_location_details['lat'], current_location_details['lon'], next_place_details['lat'], next_place_details['lon']))
+            arrival_time = last_departure_time + timedelta(minutes=travel_time)
+            stay_time = CATEGORY_STAY_TIME.get(next_place_details['category_name'], 90)
+            departure_time = arrival_time + timedelta(minutes=stay_time)
+            
+            new_route_details.append(Place(
+                order=i + 1,
+                type=original_route[i].type,
+                name=next_place_details['title'],
+                category=next_place_details['category_name'],
+                address=next_place_details['addr1'],
+                arrival_time=arrival_time.strftime("%H:%M"),
+                departure_time=departure_time.strftime("%H:%M"),
+                duration_minutes=stay_time
+            ))
+            current_location_details = next_place_details
+            last_departure_time = departure_time
+
+        course.days[day_index].route = new_route_details
+        return course
 
     def generate_course(self, request: CourseRequest) -> CourseResponse:
         # ★★★★★ [수정] 여러 코스 대안을 생성하는 메인 로직 ★★★★★
@@ -210,7 +330,6 @@ class CourseService:
             trip_title=f"당신만을 위한 경상북도 {duration-1}박 {duration}일 추천 코스",
             courses=[option1, option2, option3]
         )
-
     def __del__(self):
         if self.conn:
             self.conn.close()

@@ -85,3 +85,9 @@ class CourseResponse(BaseModel):
     """여행 코스 생성 최종 응답 모델 (여러 대안 포함)"""
     trip_title: str
     courses: List[CourseOption]
+    
+class ReplacePlaceRequest(BaseModel):
+    """장소 교체 요청 모델"""
+    course_option: CourseOption = Field(..., description="현재 사용자가 보고 있는 코스 원본")
+    day_number: int = Field(..., description="교체할 장소가 있는 날짜 (예: 1 for day 1)")
+    place_order_to_replace: int = Field(..., description="교체될 장소의 순서 (order)")

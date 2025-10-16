@@ -14,7 +14,7 @@ from app.config import CHAPTER_CLUSTER_DISTANCE_METERS, KAKAO_API_KEY, KAKAO_API
 from app.services.integrated_service import create_blog_from_integrated_logic
 
 from app.services.course_service import course_service
-from app.models import CourseRequest, CourseResponse
+from app.models import CourseRequest, CourseResponse, ReplacePlaceRequest, CourseOption
 
 os.environ['TZ'] = 'Asia/Seoul'
 time.tzset()
@@ -120,6 +120,21 @@ async def generate_travel_course(request: CourseRequest):
         return result
     except Exception as e:
         # 에러 발생 시 500 에러를 반환합니다.
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/courses/replace-place", response_model=CourseOption, summary="코스 내 특정 장소 교체")
+async def replace_place_in_course(request: ReplacePlaceRequest):
+    """
+    기존 코스에서 특정 장소를 다른 장소로 교체하고,
+    전체 동선과 시간을 재계산하여 새로운 코스를 반환합니다.
+    """
+    try:
+        # course_service에 새로운 메서드를 호출합니다.
+        updated_course = course_service.replace_place(request)
+        if not updated_course:
+            raise HTTPException(status_code=404, detail="대체할 장소를 찾을 수 없거나 요청이 잘못되었습니다.")
+        return updated_course
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
