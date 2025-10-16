@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 
 # --- API 통신 모델 --- (기존과 동일)
@@ -41,3 +41,37 @@ class Chapter:
     place_name: str = "기억에 남는 장소"
     start_time: str | None = None
     end_time: str | None = None
+    
+# --- 여행 코스 생성 모델 ---
+
+class CourseRequest(BaseModel):
+    """여행 코스 생성 요청 모델"""
+    cities: List[int] = Field(..., description="도시 ID 리스트 (city_county_id)", example=[1, 5])
+    start_date: str = Field(..., description="여행 시작일", example="2025-10-26")
+    end_date: str = Field(..., description="여행 종료일", example="2025-10-27")
+    keywords: List[str] = Field(..., description="여행 키워드 (대분류)", example=["자연", "맛집"])
+    companions: str = Field(..., description="여행 멤버", example="커플/친구")
+    pacing: str = Field(..., description="여행 속도", example="보통")
+    must_visit_spots: Optional[List[int]] = Field(None, description="꼭 방문하고 싶은 장소 ID 리스트 (tourism_id)", example=[12345, 67890])
+
+class Place(BaseModel):
+    """코스에 포함된 장소 모델"""
+    order: int
+    type: str  # "spot", "meal", "accommodation"
+    name: str
+    category: Optional[str] = None
+    address: Optional[str] = None
+    arrival_time: str
+    departure_time: str
+    duration_minutes: int
+
+class DailyCourse(BaseModel):
+    """일차별 코스 모델"""
+    day: int
+    date: str
+    route: List[Place]
+
+class CourseResponse(BaseModel):
+    """여행 코스 생성 응답 모델"""
+    trip_title: str
+    days: List[DailyCourse]
