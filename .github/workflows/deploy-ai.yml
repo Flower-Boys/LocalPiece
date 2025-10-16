@@ -27,6 +27,9 @@ jobs:
           script: |
             cd LocalPiece
             git pull origin ${{ github.ref_name }}
+
+            echo "KAKAO_API_KEY=${{ secrets.KAKAO_API_KEY }}" > .env
+            
             docker-compose up -d --build
 
      

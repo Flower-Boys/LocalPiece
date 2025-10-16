@@ -1,5 +1,3 @@
-# AI/blog_generator/app/services/course_service.py
-
 import sqlite3
 from app.models import CourseRequest, CourseResponse, DailyCourse, Place
 from datetime import datetime, timedelta
