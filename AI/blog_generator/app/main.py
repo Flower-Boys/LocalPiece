@@ -122,7 +122,7 @@ async def generate_travel_course(request: CourseRequest):
         # 에러 발생 시 500 에러를 반환합니다.
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/courses/replace-place", response_model=CourseOption, summary="코스 내 특정 장소 교체")
+@app.post("/api/courses/replace-place", response_model=CourseOption, summary="코스 내 특정 장소 교체")
 async def replace_place_in_course(request: ReplacePlaceRequest):
     """
     기존 코스에서 특정 장소를 다른 장소로 교체하고,
