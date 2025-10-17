@@ -13,8 +13,7 @@ services:
     env_file:
       - ./.env
     # 다중 워커 실행으로 병목 현상을 방지합니다.
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
-    restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
 
   # Nginx 리버스 프록시
   nginx:
