@@ -33,8 +33,8 @@ public class AiLogicService {
     private final MetadataService metadataService;
     private final BlogRepository blogRepository;
 
-    @Value("${ai-server.url}")
-    private String aiServerUrl;
+    @Value("${ai-new-server.url}")
+    private String aiNewServerUrl;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long executeAiPipeline(User user, String city, List<SimpleMultipartFile> images, boolean useV2) {
@@ -54,7 +54,7 @@ public class AiLogicService {
         List<String> sortedImageUrls = imageInfos.stream().map(ImageMetadataDto::getUrl).collect(Collectors.toList());
 
         AiGenerationRequestDto aiRequest = new AiGenerationRequestDto(UUID.randomUUID().toString(), imageInfos, city);
-        String requestUrl = aiServerUrl + (useV2 ? "/api/blogs/v2" : "/api/blogs");
+        String requestUrl = aiNewServerUrl + (useV2 ? "/api/blogs/v2" : "/api/blogs");
         log.info("AI 서버 요청 URL: {}", requestUrl);
 
         HttpEntity<AiGenerationRequestDto> entity = new HttpEntity<>(aiRequest);
