@@ -52,12 +52,13 @@ class CourseRequest(BaseModel):
     keywords: List[str] = Field(..., description="여행 키워드 (대분류)", example=["자연", "맛집"])
     companions: str = Field(..., description="여행 멤버", example="커플/친구")
     pacing: str = Field(..., description="여행 속도", example="보통")
-    must_visit_spots: Optional[List[int]] = Field(None, description="꼭 방문하고 싶은 장소 ID 리스트 (tourism_id)", example=[12345, 67890])
+    must_visit_spots: Optional[List[int]] = Field(None, description="꼭 방문하고 싶은 장소 ID 리스트 (content_id)", example=[12345, 67890])
 
 class Place(BaseModel):
     """코스에 포함된 장소 모델"""
     order: int
-    type: str  # "spot", "meal", "accommodation"
+    content_id: int
+    type: str
     name: str
     category: Optional[str] = None
     address: Optional[str] = None
