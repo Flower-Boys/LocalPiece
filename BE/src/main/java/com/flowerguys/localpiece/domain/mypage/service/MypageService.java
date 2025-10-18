@@ -1,16 +1,13 @@
 package com.flowerguys.localpiece.domain.mypage.service;
 
 import com.flowerguys.localpiece.domain.blog.dto.BlogListResponseDto;
+import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
-import com.flowerguys.localpiece.domain.course.dto.DailyCourseDto;
-import com.flowerguys.localpiece.domain.course.dto.PlaceDto;
 import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
 import com.flowerguys.localpiece.domain.mypage.dto.MyInfoResponseDto;
-import com.flowerguys.localpiece.domain.mypage.dto.PieceResponseDto;
+import com.flowerguys.localpiece.domain.mypage.dto.PieceListResponseDto;
 import com.flowerguys.localpiece.domain.mypage.dto.PieceSaveRequestDto;
 import com.flowerguys.localpiece.domain.piece.entity.Piece;
-import com.flowerguys.localpiece.domain.piece.entity.PieceDay;
-import com.flowerguys.localpiece.domain.piece.entity.PiecePlace;
 import com.flowerguys.localpiece.domain.piece.repository.PieceRepository;
 import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.domain.user.repository.UserRepository;
@@ -20,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,6 +35,7 @@ public class MypageService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
+    // --- 내 정보 및 내가 쓴 블로그 (기존과 동일) ---
     @Transactional(readOnly = true)
     public MyInfoResponseDto getMyInfo(String email) {
         User user = findUser(email);
@@ -55,61 +52,37 @@ public class MypageService {
                 .collect(Collectors.toList());
     }
 
+    // --- 여행 조각(Piece) 관련 로직 (수정) ---
     @Transactional
     public Long savePiece(String email, PieceSaveRequestDto requestDto) {
         User user = findUser(email);
 
-        Piece piece = Piece.builder()
-                .user(user)
-                .tripTitle(requestDto.getTripTitle())
-                .themeTitle(requestDto.getCourseOption().getThemeTitle())
-                .build();
+        Blog blog = blogRepository.findActiveById(requestDto.getBlogId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOG_NOT_FOUND));
 
-        for (DailyCourseDto dayDto : requestDto.getCourseOption().getDays()) {
-            PieceDay pieceDay = PieceDay.builder()
-                    .day(dayDto.getDay())
-                    .date(dayDto.getDate())
-                    .build();
-
-            for (PlaceDto placeDto : dayDto.getRoute()) {
-                PiecePlace piecePlace = PiecePlace.builder()
-                        .orderNum(placeDto.getOrder())
-                        .contentId(placeDto.getContentId())
-                        .type(placeDto.getType())
-                        .name(placeDto.getName())
-                        .category(placeDto.getCategory())
-                        .address(placeDto.getAddress())
-                        .arrivalTime(placeDto.getArrivalTime())
-                        .departureTime(placeDto.getDepartureTime())
-                        .durationMinutes(placeDto.getDurationMinutes())
-                        .build();
-                pieceDay.addPlace(piecePlace);
-            }
-            piece.addDay(pieceDay);
+        if (pieceRepository.existsByUserAndBlogId(user, blog.getId())) {
+            throw new BusinessException(ErrorCode.INVALID_ARGUMENT, "이미 조각으로 저장된 블로그입니다.");
         }
 
-        Piece savedPiece = pieceRepository.save(piece);
-        return savedPiece.getId();
+        Piece piece = Piece.builder()
+                .user(user)
+                .blog(blog)
+                .build();
+
+        return pieceRepository.save(piece).getId();
     }
 
     @Transactional(readOnly = true)
-    public List<PieceResponseDto> getMyPieces(String email) {
-        return pieceRepository.findAllByUserEmailOrderByCreatedAtDesc(email).stream()
-                .map(PieceResponseDto::new)
+    public List<PieceListResponseDto> getMyPieces(String email) {
+        return pieceRepository.findAllByUserEmailWithBlog(email).stream()
+                .map(PieceListResponseDto::new)
                 .collect(Collectors.toList());
     }
-    
-    @Transactional(readOnly = true)
-    public PieceResponseDto getPieceDetails(Long pieceId, String email) {
-        return pieceRepository.findByIdAndUserEmail(pieceId, email)
-                .map(PieceResponseDto::new)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED, "해당 조각에 대한 접근 권한이 없습니다."));
-    }
-    
+
     @Transactional
     public void deletePiece(Long pieceId, String email) {
         Piece piece = pieceRepository.findByIdAndUserEmail(pieceId, email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED, "해당 조각에 대한 접근 권한이 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED, "해당 조각을 삭제할 권한이 없습니다."));
         pieceRepository.delete(piece);
     }
 }

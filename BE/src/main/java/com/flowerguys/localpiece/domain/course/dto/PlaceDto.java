@@ -1,7 +1,6 @@
 package com.flowerguys.localpiece.domain.course.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.flowerguys.localpiece.domain.piece.entity.PiecePlace;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,16 +26,4 @@ public class PlaceDto {
 
     @JsonProperty("duration_minutes")
     private int durationMinutes;
-
-    public PlaceDto(PiecePlace place) {
-        this.order = place.getOrderNum();
-        this.contentId = place.getContentId();
-        this.type = place.getType();
-        this.name = place.getName();
-        this.category = place.getCategory();
-        this.address = place.getAddress();
-        this.arrivalTime = place.getArrivalTime();
-        this.departureTime = place.getDepartureTime();
-        this.durationMinutes = place.getDurationMinutes();
-    }
 }

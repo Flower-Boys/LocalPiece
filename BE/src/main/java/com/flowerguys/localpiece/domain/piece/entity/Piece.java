@@ -1,5 +1,6 @@
 package com.flowerguys.localpiece.domain.piece.entity;
 
+import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import com.flowerguys.localpiece.domain.user.entity.User;
 import com.flowerguys.localpiece.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -8,12 +9,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "blog_id"}) // 한 유저가 같은 블로그를 중복 저장할 수 없도록 설정
+})
 public class Piece extends BaseTimeEntity {
 
     @Id
@@ -25,25 +26,13 @@ public class Piece extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private String tripTitle; // "당신만을 위한 경상북도..."
-
-    @Column(nullable = false)
-    private String themeTitle; // "👍 인기만점! 베스트 코스"
-
-    @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("day ASC")
-    private List<PieceDay> days = new ArrayList<>();
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blog_id", nullable = false)
+    private Blog blog;
 
     @Builder
-    public Piece(User user, String tripTitle, String themeTitle) {
+    public Piece(User user, Blog blog) {
         this.user = user;
-        this.tripTitle = tripTitle;
-        this.themeTitle = themeTitle;
-    }
-
-    public void addDay(PieceDay day) {
-        this.days.add(day);
-        day.setPiece(this);
+        this.blog = blog;
     }
 }
