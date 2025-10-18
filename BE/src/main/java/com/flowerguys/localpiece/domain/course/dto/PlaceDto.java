@@ -9,11 +9,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PlaceDto {
     private int order;
+
+    @JsonProperty("content_id")
+    private int contentId;
+
     private String type;
     private String name;
     private String category;
     private String address;
-    
+
     @JsonProperty("arrival_time")
     private String arrivalTime;
 
