@@ -13,6 +13,8 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     
     List<Blog> findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc();
 
+    List<Blog> findAllByUserEmailAndIsDeletedFalseOrderByCreatedAtDesc(String email);
+
     // ✨ 1. 이 메소드는 수정/삭제 로직을 위해 그대로 유지합니다.
     @Query("SELECT b FROM Blog b LEFT JOIN FETCH b.contents WHERE b.id = :blogId AND b.isDeleted = false")
     Optional<Blog> findWithContentsById(@Param("blogId") Long blogId);
