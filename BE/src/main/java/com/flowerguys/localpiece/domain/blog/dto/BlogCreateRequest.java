@@ -17,6 +17,8 @@ public class BlogCreateRequest {
 
     private boolean isPrivate;
 
+    private String thumbnail;
+
     @NotEmpty(message = "블로그 내용은 최소 하나 이상의 블록이 있어야 합니다.")
     @Valid // 내부 DTO의 validation 규칙도 검사하도록 설정
     private List<BlogContentDto> contents;

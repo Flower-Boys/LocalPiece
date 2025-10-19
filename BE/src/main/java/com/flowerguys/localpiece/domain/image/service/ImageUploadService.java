@@ -45,7 +45,7 @@ public class ImageUploadService {
 
             objectStorage.putObject(request);
 
-            return String.format("https://objectstorage.ap-sydney-1.oraclecloud.com/n/%s/b/%s/o/%s",
+            return String.format("https://objectstorage.ap-osaka-1.oraclecloud.com/n/%s/b/%s/o/%s",
                                  namespace, bucketName, uniqueFileName);
         } catch (IOException e) {
             // ⬇️ IOException 발생 시, BusinessException으로 변환하여 던짐
@@ -68,7 +68,7 @@ public class ImageUploadService {
 
             objectStorage.putObject(request);
 
-            return String.format("https://objectstorage.ap-sydney-1.oraclecloud.com/n/%s/b/%s/o/%s",
+            return String.format("https://objectstorage.ap-osaka-1.oraclecloud.com/n/%s/b/%s/o/%s",
                                  namespace, bucketName, uniqueFileName);
         } catch (IOException e) {
             // BusinessException 등 적절한 예외 처리

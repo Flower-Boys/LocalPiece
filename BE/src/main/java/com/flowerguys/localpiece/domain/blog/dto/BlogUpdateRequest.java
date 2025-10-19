@@ -16,6 +16,8 @@ public class BlogUpdateRequest {
     private String title;
 
     private Boolean isPrivate;
+    
+    private String thumbnail;
 
     @NotEmpty(message = "블로그 내용은 최소 하나 이상의 블록이 있어야 합니다.")
     @Valid

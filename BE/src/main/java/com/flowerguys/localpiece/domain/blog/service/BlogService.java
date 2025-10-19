@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
 import com.flowerguys.localpiece.domain.hashtag.entity.BlogHashtag;
 import com.flowerguys.localpiece.domain.hashtag.entity.Hashtag;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -54,17 +55,19 @@ public class BlogService {
                 .build();
 
         Queue<MultipartFile> imageFilesQueue = (imageFiles != null) ? new LinkedList<>(imageFiles) : new LinkedList<>();
-
-        
         List<BlogContent> contents = processBlogContents(blog, request.getContents(), imageFilesQueue);
 
         contents.forEach(content -> content.setBlog(blog));
         blog.setContents(contents);
 
-        contents.stream()
-                .filter(bc -> bc.getContentType() == ContentType.IMAGE)
-                .findFirst()
-                .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
+        if (StringUtils.hasText(request.getThumbnail())) {
+            blog.setThumbnail(request.getThumbnail());
+        } else {
+            contents.stream()
+                    .filter(bc -> bc.getContentType() == ContentType.IMAGE)
+                    .findFirst()
+                    .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
+        }
 
          if (request.getHashtags() != null) {
             manageHashtags(blog, request.getHashtags());
@@ -148,11 +151,15 @@ public class BlogService {
 
         manageHashtags(blog, request.getHashtags());
 
-        blog.setThumbnail(null); // 기존 썸네일 초기화
-        newContents.stream()
-                .filter(bc -> bc.getContentType() == ContentType.IMAGE)
-                .findFirst()
-                .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
+        if (StringUtils.hasText(request.getThumbnail())) {
+            blog.setThumbnail(request.getThumbnail());
+        } else {
+            blog.setThumbnail(null);
+            newContents.stream()
+                    .filter(bc -> bc.getContentType() == ContentType.IMAGE)
+                    .findFirst()
+                    .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
+        }
         
         boolean isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
         return new BlogResponse(blog, isLiked);

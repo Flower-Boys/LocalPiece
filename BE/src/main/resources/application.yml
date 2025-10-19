@@ -40,7 +40,8 @@ ai-server:
   url: ${AI_SERVER_URL}
   token: ${HF_TOKEN}
 
-
+ai-new-server:
+  url: ${AI_NEW_SERVER_URL}
 
 
 # --- 는 프로파일을 나누는 구분선입니다.
@@ -69,7 +70,7 @@ spring:
 
 oci:
   object-storage:
-    config-path: "/Users/mingyu/.oci/config" # ⬅️ 내 컴퓨터의 OCI config 파일 경로
+    config-path: "/Users/mingyu/.oci/config_osaka" # ⬅️ 내 컴퓨터의 OCI config 파일 경로
 
 ---
 # ==================================

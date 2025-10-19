@@ -97,6 +97,7 @@ jobs:
             echo "TOUR_API_SERVICE_KEY=${{ secrets.TOUR_API_SERVICE_KEY }}" >> .env
             echo "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" >> .env
             echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
+            echo "AI_NEW_SERVER_URL=${{ secrets.AI_NEW_SERVER_URL }}" >> .env
 
 
             # Docker Compose로 서비스 재시작 
