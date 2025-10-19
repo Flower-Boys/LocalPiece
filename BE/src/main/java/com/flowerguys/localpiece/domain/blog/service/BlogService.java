@@ -54,8 +54,6 @@ public class BlogService {
                 .build();
 
         Queue<MultipartFile> imageFilesQueue = (imageFiles != null) ? new LinkedList<>(imageFiles) : new LinkedList<>();
-
-        
         List<BlogContent> contents = processBlogContents(blog, request.getContents(), imageFilesQueue);
 
         contents.forEach(content -> content.setBlog(blog));

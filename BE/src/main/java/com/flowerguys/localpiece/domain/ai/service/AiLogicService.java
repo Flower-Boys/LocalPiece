@@ -76,6 +76,11 @@ public class AiLogicService {
             blogContents.forEach(bc -> bc.setBlog(newBlog));
             newBlog.setContents(blogContents);
 
+            blogContents.stream()
+                    .filter(bc -> bc.getContentType() == ContentType.IMAGE)
+                    .findFirst()
+                    .ifPresent(bc -> newBlog.setThumbnail(bc.getContent()));
+
             Blog savedBlog = blogRepository.save(newBlog);
             log.info("AI 블로그 생성 완료. 블로그 ID: {}", savedBlog.getId());
             return savedBlog.getId();
