@@ -6,5 +6,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PieceSaveRequestDto {
-    private Long blogId; // 저장할 블로그의 ID만 받음
+    private Long blogId; 
+    private String city;
 }

@@ -10,6 +10,7 @@ public class PieceListResponseDto {
     private Long blogId;
     private String title;
     private String thumbnail;
+    private String city;
     private LocalDateTime createdAt; // 조각으로 저장한 날짜
 
     public PieceListResponseDto(Piece piece) {
@@ -17,6 +18,7 @@ public class PieceListResponseDto {
         this.blogId = piece.getBlog().getId();
         this.title = piece.getBlog().getTitle();
         this.thumbnail = piece.getBlog().getThumbnail();
+        this.city = piece.getCity();
         this.createdAt = piece.getCreatedAt();
     }
 }

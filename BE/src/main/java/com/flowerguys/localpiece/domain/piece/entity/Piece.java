@@ -30,9 +30,13 @@ public class Piece extends BaseTimeEntity {
     @JoinColumn(name = "blog_id", nullable = false)
     private Blog blog;
 
+    @Column(nullable = false) // ⬅️ city 필드 추가
+    private String city;
+
     @Builder
-    public Piece(User user, Blog blog) {
+    public Piece(User user, Blog blog, String city) {
         this.user = user;
         this.blog = blog;
+        this.city = city;
     }
 }

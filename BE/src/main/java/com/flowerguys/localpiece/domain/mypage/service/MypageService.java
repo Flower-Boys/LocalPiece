@@ -69,6 +69,7 @@ public class MypageService {
         Piece piece = Piece.builder()
                 .user(user)
                 .blog(blog)
+                .city(requestDto.getCity())
                 .build();
 
         return pieceRepository.save(piece).getId();
