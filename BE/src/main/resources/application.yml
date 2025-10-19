@@ -70,7 +70,7 @@ spring:
 
 oci:
   object-storage:
-    config-path: "/Users/mingyu/.oci/config" # ⬅️ 내 컴퓨터의 OCI config 파일 경로
+    config-path: "/Users/mingyu/.oci/config_osaka" # ⬅️ 내 컴퓨터의 OCI config 파일 경로
 
 ---
 # ==================================

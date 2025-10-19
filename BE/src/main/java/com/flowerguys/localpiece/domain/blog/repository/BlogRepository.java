@@ -1,6 +1,8 @@
 package com.flowerguys.localpiece.domain.blog.repository;
 
 import com.flowerguys.localpiece.domain.blog.entity.Blog;
+import com.flowerguys.localpiece.domain.user.entity.User;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +16,8 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     List<Blog> findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc();
 
     List<Blog> findAllByUserEmailAndIsDeletedFalseOrderByCreatedAtDesc(String email);
+
+    List<Blog> findAllByUserAndIsDeletedFalseOrderByCreatedAtDesc(User user);
 
     // ✨ 1. 이 메소드는 수정/삭제 로직을 위해 그대로 유지합니다.
     @Query("SELECT b FROM Blog b LEFT JOIN FETCH b.contents WHERE b.id = :blogId AND b.isDeleted = false")

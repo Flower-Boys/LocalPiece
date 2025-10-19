@@ -35,7 +35,7 @@ public class MypageService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // --- 내 정보 및 내가 쓴 블로그 (기존과 동일) ---
+    // --- 내 정보 및 내가 쓴 블로그 ---
     @Transactional(readOnly = true)
     public MyInfoResponseDto getMyInfo(String email) {
         User user = findUser(email);
@@ -47,12 +47,14 @@ public class MypageService {
         User user = findUser(email);
         Set<Long> likedBlogIds = blogLikeRepository.findLikedBlogIdsByUserId(user.getId());
 
-        return blogRepository.findAllByUserEmailAndIsDeletedFalseOrderByCreatedAtDesc(email).stream()
+        List<Blog> myBlogs = blogRepository.findAllByUserAndIsDeletedFalseOrderByCreatedAtDesc(user);
+
+        return myBlogs.stream()
                 .map(blog -> new BlogListResponseDto(blog, likedBlogIds.contains(blog.getId())))
                 .collect(Collectors.toList());
     }
 
-    // --- 여행 조각(Piece) 관련 로직 (수정) ---
+    // --- 여행 조각(Piece) 관련 로직 ---
     @Transactional
     public Long savePiece(String email, PieceSaveRequestDto requestDto) {
         User user = findUser(email);

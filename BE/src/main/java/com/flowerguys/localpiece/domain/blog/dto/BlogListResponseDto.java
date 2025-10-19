@@ -17,6 +17,7 @@ public class BlogListResponseDto {
     private int likeCount;
     private int commentCount;
     private boolean isLikedByCurrentUser;
+    private boolean isPrivate;
 
     public BlogListResponseDto(Blog blog, boolean isLiked) {
         this.id = blog.getId();
@@ -28,5 +29,6 @@ public class BlogListResponseDto {
         this.likeCount = blog.getLikes().size();
         this.commentCount = blog.getComments().size();
         this.isLikedByCurrentUser = isLiked;
+        this.isPrivate = blog.isPrivate();
     }
 }
