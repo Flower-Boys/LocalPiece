@@ -6,6 +6,7 @@ import Blog from "../pages/blogs/BlogPage";
 import NotFound from "../pages/errors/NotFound";
 import BlogWrite from "../pages/blogs/BlogWrite";
 import BlogDetail from "@/pages/blogs/BlogDetail";
+import BlogEditPage from "@/pages/blogs/BlogEditPage";
 import TourDetail from "@/components/tour/TourDetail";
 import { AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
 import MyPage from "@/components/mypage/MyPage";
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: "/ai/travel/builder", element: <CategorySelect /> },
       { path: "/ai/travel/result", element: <AiResultPreview /> },
       { path: "/mypage", element: <MyPage /> },
+      { path: "/blog/:id/edit", element: <BlogEditPage /> },
     ],
   },
   // { path: "/login", element: <Login /> },
