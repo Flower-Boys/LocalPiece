@@ -6,22 +6,24 @@ import { Eye, Heart, MessageCircle, User } from "lucide-react";
 import defaultThumbnail from "@/assets/default-thumbnail.png";
 import AuthButtons from "@/components/share/auth/AuthButtons";
 import SearchBar from "@/components/home/SearchBar";
-import toast from "react-hot-toast"; // ✅ 알림 추가
+import toast from "react-hot-toast";
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [files, setFiles] = useState<File[]>([]); // ✅ 선택된 이미지들
+  const [city, setCity] = useState("경북"); // ✅ request.city
+  const [useV2, setUseV2] = useState(false); // ✅ request.useV2
   const navigate = useNavigate();
+
   const handleSearch = (params: { sigunguCode?: string; contentTypeId?: string; keyword?: string }) => {
     const nextParams = new URLSearchParams();
-
     if (params.sigunguCode) nextParams.set("sigunguCode", params.sigunguCode);
     if (params.contentTypeId) nextParams.set("contentTypeId", params.contentTypeId);
     if (params.keyword) nextParams.set("keyword", params.keyword);
-
-    nextParams.set("page", "1"); // 검색 시 항상 1페이지부터 시작
-    nextParams.set("arrange", "R"); // ✅ 대표이미지 + 생성일순 정렬
+    nextParams.set("page", "1");
+    nextParams.set("arrange", "R");
     navigate({ pathname: "/", search: nextParams.toString() });
   };
 
@@ -42,25 +44,33 @@ const BlogPage = () => {
     fetchBlogs();
   }, []);
 
-  // ✅ AI 블로그 생성 API 연결
+  // ✅ 파일 선택 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = Array.from(e.target.files ?? []);
+    setFiles(list);
+  };
+
+  // ✅ AI 블로그 생성 API 연결 (FormData + request + images)
   const handleAcceptAI = async () => {
-    setShowModal(false);
+    if (files.length === 0) {
+      toast.error("이미지를 1장 이상 선택해 주세요.");
+      return;
+    }
+
     setLoading(true);
+    setShowModal(false);
 
     try {
-      // 예시 payload — 백엔드에서 요구하는 구조에 맞게 수정 가능
       const payload = {
-        city: "경북",
-        useV2: false,
+        request: { city, useV2 },
+        images: files,
       };
 
       const response = await createAiBlog(payload);
       console.log("AI 생성 결과:", response);
-
-      // 성공 알림 및 목록 새로고침
       toast.success("AI 블로그 생성이 완료되었습니다!");
       await fetchBlogs();
-    } catch (err: any) {
+    } catch (err) {
       console.error("AI 블로그 생성 실패:", err);
       toast.error("AI 블로그 생성 중 오류가 발생했습니다.");
     } finally {
@@ -84,6 +94,7 @@ const BlogPage = () => {
         </div>
       </section>
       <div className="border-b py-2 border-gray-300"></div>
+
       <section className="max-w-7xl mx-auto px-6 py-10">
         {/* 헤더 */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
@@ -149,14 +160,46 @@ const BlogPage = () => {
       {/* 모달 */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
-            <h2 className="text-lg font-semibold mb-4">AI로 블로그를 생성하시겠습니까?</h2>
-            <div className="flex justify-center gap-4">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-[420px]">
+            <h2 className="text-lg font-semibold mb-4 text-center">AI로 블로그를 생성하시겠습니까?</h2>
+
+            {/* 도시/옵션 */}
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">도시(시/도)</label>
+                <input value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-red-400" placeholder="예: 경북" />
+              </div>
+
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={useV2} onChange={(e) => setUseV2(e.target.checked)} className="h-4 w-4" />
+                <span>정확도 우선 (느리지만 정확)</span>
+              </label>
+            </div>
+
+            {/* 파일 선택 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">이미지 선택 (여러 장 가능)</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-red-50 file:text-red-600 hover:file:bg-red-100"
+              />
+              {files.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  선택된 파일: <span className="font-medium">{files.length}</span>개
+                </p>
+              )}
+            </div>
+
+            {/* 버튼 */}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300" disabled={loading}>
                 취소
               </button>
-              <button onClick={handleAcceptAI} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                수락
+              <button onClick={handleAcceptAI} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-60" disabled={loading}>
+                생성하기
               </button>
             </div>
           </div>
