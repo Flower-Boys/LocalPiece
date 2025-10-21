@@ -50,7 +50,7 @@ const BlogPage = () => {
     try {
       // 예시 payload — 백엔드에서 요구하는 구조에 맞게 수정 가능
       const payload = {
-        city: "경상북도",
+        city: "경북",
         useV2: false,
       };
 
