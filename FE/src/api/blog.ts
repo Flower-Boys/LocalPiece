@@ -1,6 +1,6 @@
 import apiClient from "./client";
 
-import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateRequest, BlogAiCreateResponse, BlogAiCreatePayload } from "@/types/blog";
+import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateResponse, BlogAiCreatePayload, JobStatusResponse } from "@/types/blog";
 
 // ✅ 블로그 목록 조회
 export const getBlogs = async (): Promise<Blog[]> => {
@@ -81,11 +81,25 @@ export const createAiBlog = async (payload: BlogAiCreatePayload): Promise<BlogAi
   form.append("request", JSON.stringify(payload.request)); // ← JSON 문자열
   payload.images.forEach((f) => form.append("images", f)); // ← 'images' 반복 append (배열 키 아님)
 
-  // 디버깅: 실제 전송 필드 확인
-  for (const [k, v] of form.entries()) console.log(k, v);
   const { data } = await apiClient.post<BlogAiCreateResponse>(
     "/ai/generate-blog", // ← 포스트맨과 동일 경로로 통일
     form
   );
+  return data;
+};
+
+// ✅ Job 상태 조회 API
+export const getJobStatus = async (jobId: string): Promise<JobStatusResponse> => {
+  const { data } = await apiClient.get<JobStatusResponse>(`/ai/jobs/${jobId}`);
+  return data;
+};
+
+// ✅ 수정 (멀티파트: request JSON + newImages[])
+// request에는 { title, isPrivate, contents, hashtags, deletedImageIds } 포함
+export const updateBlog = async (id: number, payload: BlogCreateRequest & { hashtags: string[]; deletedImageIds?: string[] }, newImages: File[]) => {
+  const fd = new FormData();
+  fd.append("request", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  newImages.forEach((f) => fd.append("newImages", f));
+  const { data } = await apiClient.put(`/blogs/${id}`, fd);
   return data;
 };
