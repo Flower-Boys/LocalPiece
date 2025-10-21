@@ -90,3 +90,9 @@ export interface BlogAiCreateRequest {
 export interface BlogAiCreateResponse {
   jobId: string; // AI 생성 작업 ID
 }
+
+// ✅ FormData 버전도 함께 정의해두면 좋음
+export interface BlogAiCreatePayload {
+  request: BlogAiCreateRequest;
+  images: File[];
+}
