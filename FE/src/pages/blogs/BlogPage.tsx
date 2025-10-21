@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getBlogs, createAiBlog } from "@/api/blog";
+import { getBlogs, createAiBlog, getJobStatus } from "@/api/blog";
 import { Blog } from "@/types/blog";
 import { Eye, Heart, MessageCircle, User } from "lucide-react";
 import defaultThumbnail from "@/assets/default-thumbnail.png";
 import AuthButtons from "@/components/share/auth/AuthButtons";
 import SearchBar from "@/components/home/SearchBar";
 import toast from "react-hot-toast";
+import AiJobModal from "@/components/blog/AiJobModal";
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,6 +16,9 @@ const BlogPage = () => {
   const [files, setFiles] = useState<File[]>([]); // ✅ 선택된 이미지들
   const [city, setCity] = useState("경북"); // ✅ request.city
   const [useV2, setUseV2] = useState(false); // ✅ request.useV2
+
+  const [jobModalOpen, setJobModalOpen] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSearch = (params: { sigunguCode?: string; contentTypeId?: string; keyword?: string }) => {
@@ -57,25 +61,34 @@ const BlogPage = () => {
       return;
     }
 
-    setLoading(true);
     setShowModal(false);
+    setLoading(true);
 
     try {
-      const payload = {
-        request: { city, useV2 },
-        images: files,
-      };
-
-      const response = await createAiBlog(payload);
-      console.log("AI 생성 결과:", response);
-      toast.success("AI 블로그 생성이 완료되었습니다!");
-      await fetchBlogs();
+      const payload = { request: { city, useV2 }, images: files };
+      const res = await createAiBlog(payload); // { jobId: string }
+      setCurrentJobId(res.jobId);
+      setJobModalOpen(true);
+      // 필요 시 files 초기화
+      setFiles([]);
     } catch (err) {
       console.error("AI 블로그 생성 실패:", err);
       toast.error("AI 블로그 생성 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // 완료/실패 콜백
+  const handleCompleted = async (blogId: number) => {
+    setJobModalOpen(false);
+    await fetchBlogs();
+    navigate(`/blog/${blogId}`);
+  };
+
+  const handleFailed = (message?: string) => {
+    setJobModalOpen(false);
+    toast.error(message || "AI 블로그 생성에 실패했습니다.");
   };
 
   return (
@@ -204,6 +217,18 @@ const BlogPage = () => {
             </div>
           </div>
         </div>
+      )}
+      {/* 진행 모달 */}
+      {currentJobId && (
+        <AiJobModal
+          jobId={currentJobId}
+          open={jobModalOpen}
+          onCompleted={handleCompleted}
+          onFailed={handleFailed}
+          onClose={() => setJobModalOpen(false)}
+          pollIntervalMs={3000}
+          maxWaitMs={2 * 60 * 1000}
+        />
       )}
 
       {/* 로딩 스피너 */}
