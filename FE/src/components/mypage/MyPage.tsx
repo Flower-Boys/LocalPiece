@@ -1,11 +1,10 @@
-import { useAuthStore } from "@/store/authStore";
 import { useModalStore } from "@/store/modalStore";
 import CancelAccountConfirm from "@/components/share/auth/CancelAccountConfirm";
 import Modal from "../share/auth/Modal";
 import { UserCircle, MapPin, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getBlogs } from "@/api/blog";
+import { getMyBlogs } from "@/api/blog";
 import type { Blog } from "@/types/blog";
 import defaultThumbnail from "@/assets/default-thumbnail.png";
 import MapPuzzle from "./MapPuzzle";
@@ -24,7 +23,7 @@ const MyPage = () => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        const data = await getBlogs();
+        const data = await getMyBlogs();
         setBlogs(data);
       } catch (err) {
         console.error("블로그 불러오기 실패:", err);
@@ -35,16 +34,6 @@ const MyPage = () => {
 
     fetchBlogs();
   }, []);
-
-  // ✅ 더미 여행 기록 (추후 API 연동 가능)
-  const travelHistory = [
-    { id: 1, title: "제주도 여행", date: "2025-08-10", image: "/sample/jeju.jpg" },
-    { id: 2, title: "부산 해운대", date: "2025-07-22", image: "/sample/busan.jpg" },
-    { id: 3, title: "강릉 커피거리", date: "2025-06-15", image: "" }, // 기본이미지 테스트
-  ];
-
-  // ✅ 블로그 카드 기본 이미지
-  const defaultTripImage = "/sample/default-trip.jpg";
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -81,28 +70,6 @@ const MyPage = () => {
         ) : (
           // ✅ 기본 모드 (기존 여행 기록 + 블로그)
           <>
-            {/* 여행 기록 */}
-            {/* <section>
-              <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
-                <MapPin className="text-rose-500" /> 나의 여행 기록
-              </h2>
-              {travelHistory.length === 0 ? (
-                <p className="text-gray-500">등록된 여행 기록이 없습니다.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {travelHistory.map((trip) => (
-                    <div key={trip.id} className="bg-white rounded-xl shadow hover:shadow-md transition overflow-hidden">
-                      <img src={trip.image || defaultTripImage} alt={trip.title} className="h-40 w-full object-cover" />
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg">{trip.title}</h3>
-                        <p className="text-sm text-gray-500">{trip.date}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section> */}
-
             {/* 내가 작성한 블로그 */}
             <section>
               <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
