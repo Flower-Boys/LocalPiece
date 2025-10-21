@@ -9,6 +9,7 @@ export interface Blog {
   commentCount: number;
   likedByCurrentUser: boolean;
   thumbnail: string | null;
+  private?: boolean;
 }
 
 // 블로그 콘텐츠 타입
