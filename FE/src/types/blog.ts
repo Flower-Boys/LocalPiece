@@ -23,8 +23,10 @@ export interface BlogContentRequest {
 // 블로그 생성 요청 DTO
 export interface BlogCreateRequest {
   title: string;
-  isPrivate: boolean;
+  private?: boolean;
   contents: BlogContentRequest[];
+  hashtags: string[];
+  isPrivate?: boolean; // 수정 시 사용
 }
 
 // 블로그 콘텐츠 응답
@@ -72,7 +74,7 @@ export interface BlogDetailResponse {
   likeCount: number;
   likedByCurrentUser: boolean;
   private: boolean;
-  tags?: string[]; // 선택적 태그 필드
+  hashtags?: string[]; // 선택적 태그 필드
 }
 
 // 댓글 작성 요청
@@ -96,3 +98,30 @@ export interface BlogAiCreatePayload {
   request: BlogAiCreateRequest;
   images: File[];
 }
+
+// AI 작업 상태 응답
+export interface JobStatusResponse {
+  createdAt: string;
+  modifiedAt: string;
+  jobId: string;
+  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  resultBlogId: number | null;
+  errorMessage: string | null;
+}
+
+export type JobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+// 수정 초기 데이터(상세)
+export type BlogDetail = {
+  id: number;
+  title: string;
+  private: boolean;
+  hashtags: string[];
+  contents: Array<{
+    sequence: number;
+    contentType: "TEXT" | "IMAGE";
+    content: string; // TEXT html or IMAGE filename
+    imageId?: string; // IMAGE일 때 서버 이미지 id
+    imageUrl?: string; // IMAGE일 때 표시용 url
+  }>;
+};
