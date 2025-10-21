@@ -1,6 +1,6 @@
 import apiClient from "./client";
 
-import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateRequest, BlogAiCreateResponse } from "@/types/blog";
+import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateRequest, BlogAiCreateResponse, BlogAiCreatePayload } from "@/types/blog";
 
 // ✅ 블로그 목록 조회
 export const getBlogs = async (): Promise<Blog[]> => {
@@ -73,13 +73,19 @@ export const deleteBlog = async (blogId: string | number) => {
   const token = localStorage.getItem("accessToken");
   const res = await apiClient.delete(`/blogs/${blogId}`);
   return res.data;
-}
+};
 
 // AI 블로그 생성
-export const createAiBlog = async (payload: BlogAiCreateRequest): Promise<BlogAiCreateResponse> => {
-  const token = localStorage.getItem("accessToken");
-  const { data } = await apiClient.post<BlogAiCreateResponse>("/ai/generate-blog", { payload }, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+export const createAiBlog = async (payload: BlogAiCreatePayload): Promise<BlogAiCreateResponse> => {
+  const form = new FormData();
+  form.append("request", JSON.stringify(payload.request)); // ← JSON 문자열
+  payload.images.forEach((f) => form.append("images", f)); // ← 'images' 반복 append (배열 키 아님)
+
+  // 디버깅: 실제 전송 필드 확인
+  for (const [k, v] of form.entries()) console.log(k, v);
+  const { data } = await apiClient.post<BlogAiCreateResponse>(
+    "/ai/generate-blog", // ← 포스트맨과 동일 경로로 통일
+    form
+  );
   return data;
-}
+};
