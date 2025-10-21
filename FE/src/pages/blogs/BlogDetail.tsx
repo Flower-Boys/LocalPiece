@@ -10,6 +10,7 @@ import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
 import SearchBar from "../../components/home/SearchBar";
 import AuthButtons from "../../components/share/auth/AuthButtons";
+import { Pencil } from "lucide-react";
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +54,6 @@ const BlogDetail = () => {
     try {
       setLikeLoading(true);
       const res = await toggleBlogLike(blog.id);
-      console.log(res.message);
 
       // ✅ 상태 토글 & 개수 업데이트
       setLiked((prev) => !prev);
@@ -122,6 +122,11 @@ const BlogDetail = () => {
     nextParams.set("arrange", "R"); // ✅ 대표이미지 + 생성일순 정렬
     navigate({ pathname: "/", search: nextParams.toString() });
   };
+  // ✅ 블로그 수정 페이지로 이동
+  const handleEditBlog = () => {
+    if (!blog) return;
+    navigate(`/blog/${blog.id}/edit`);
+  };
 
   return (
     <div className="w-full">
@@ -156,7 +161,7 @@ const BlogDetail = () => {
           {/* 제목 + 뒤로가기 */}
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-3xl font-bold">{blog.title || "제목 없음"}</h1>
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
+            <button onClick={() => navigate("/blog")} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
               <ArrowLeft size={18} />
               <span className="hidden sm:inline">뒤로가기</span>
             </button>
@@ -192,7 +197,7 @@ const BlogDetail = () => {
 
           {/* 태그 */}
           <div className="flex gap-2 mb-6">
-            {(blog.tags && blog.tags.length > 0 ? blog.tags : ["여행", "기록"]).map((tag, idx) => (
+            {(blog.hashtags && blog.hashtags.length > 0 ? blog.hashtags : ["여행", "기록"]).map((tag, idx) => (
               <span key={idx} className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600">
                 #{tag}
               </span>
@@ -217,12 +222,22 @@ const BlogDetail = () => {
           </div>
 
           <hr className="mt-20 mb-20 border-gray-300" />
-          <div className="flex justify-end">
-            {/* ✅ 내가 쓴 글일 때만 삭제 버튼 */}
+          <div className="flex justify-end gap-2">
             {userInfo?.nickname === blog.author && (
-              <button onClick={handleDeleteBlog} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm">
-                글 삭제
-              </button>
+              <>
+                {/* ✏️ 수정 버튼 */}
+                <button onClick={handleEditBlog} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm">
+                  <span className="inline-flex items-center gap-1">
+                    <Pencil size={16} />
+                    수정
+                  </span>
+                </button>
+
+                {/* 🗑 삭제 버튼 (기존) */}
+                <button onClick={handleDeleteBlog} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm">
+                  글 삭제
+                </button>
+              </>
             )}
           </div>
 
