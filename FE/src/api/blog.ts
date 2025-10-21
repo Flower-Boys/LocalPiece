@@ -8,6 +8,11 @@ export const getBlogs = async (): Promise<Blog[]> => {
   return res.data;
 };
 
+export const getMyBlogs = async (): Promise<Blog[]> => {
+  const res = await apiClient.get("/mypage/blogs");
+  return res.data;
+}
+
 // ✅ 블로그 생성 (multipart/form-data)
 export const createBlog = async (payload: BlogCreateRequest, images: File[]): Promise<BlogResponse> => {
   const formData = new FormData();
