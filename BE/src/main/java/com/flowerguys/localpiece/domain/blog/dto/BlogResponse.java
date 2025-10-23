@@ -4,12 +4,14 @@ import com.flowerguys.localpiece.domain.blog.entity.Blog;
 import lombok.Getter;
 import com.flowerguys.localpiece.domain.comment.dto.CommentResponseDto;
 import com.flowerguys.localpiece.domain.comment.entity.Comment;
+import com.flowerguys.localpiece.domain.piece.entity.Piece;
 
 import java.util.Comparator;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Getter
 public class BlogResponse {
@@ -25,13 +27,14 @@ public class BlogResponse {
     private int likeCount;
     private boolean isLikedByCurrentUser;
     private boolean isSavedAsPiece;
+    private Long pieceId;
     private List<String> hashtags;
 
     public BlogResponse(Blog blog) {
-        this(blog, false, false); // 내부적으로 두 번째 생성자를 호출하며 isLiked는 false로 고정
+        this(blog, false, Optional.empty()); 
     }
 
-    public BlogResponse(Blog blog, boolean isLiked, boolean isSavedAsPiece) {
+    public BlogResponse(Blog blog, boolean isLiked, Optional<Piece> pieceOptional) {
         this.id = blog.getId();
         this.title = blog.getTitle();
         this.isPrivate = blog.isPrivate();
@@ -56,7 +59,8 @@ public class BlogResponse {
         
         this.likeCount = blog.getLikes().size();
         this.isLikedByCurrentUser = isLiked;
-        this.isSavedAsPiece = isSavedAsPiece;
+        this.isSavedAsPiece = pieceOptional.isPresent();
+        this.pieceId = pieceOptional.map(Piece::getId).orElse(null);
         this.hashtags = blog.getHashtags().stream()
                 .map(blogHashtag -> blogHashtag.getHashtag().getName())
                 .collect(Collectors.toList());

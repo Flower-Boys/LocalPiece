@@ -19,11 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
+import com.flowerguys.localpiece.domain.piece.entity.Piece;
 import com.flowerguys.localpiece.domain.piece.repository.PieceRepository;
 import com.flowerguys.localpiece.domain.hashtag.entity.BlogHashtag;
 import com.flowerguys.localpiece.domain.hashtag.entity.Hashtag;
 import org.springframework.util.StringUtils;
-
+import com.flowerguys.localpiece.domain.piece.entity.Piece;
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -111,15 +113,15 @@ public class BlogService {
 
         // ✨ 좋아요 여부 확인 로직 추가
         boolean isLiked = false;
-        boolean isSavedAsPiece = false;
+        Optional<Piece> pieceOptional = Optional.empty();
 
         if (userDetails != null) {
             User user = findUser(userDetails.getUsername());
             isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
-            isSavedAsPiece = pieceRepository.existsByUserAndBlogId(user, blogId);
+            pieceOptional = pieceRepository.findByUserAndBlogId(user, blogId);
         }
 
-        return new BlogResponse(blog, isLiked, isSavedAsPiece); // 수정된 생성자로 DTO 생성
+        return new BlogResponse(blog, isLiked, pieceOptional); // 수정된 생성자로 DTO 생성
     }
 
     @Transactional
@@ -165,8 +167,8 @@ public class BlogService {
         }
         
         boolean isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
-        boolean isSavedAsPiece = pieceRepository.existsByUserAndBlogId(user, blogId);
-        return new BlogResponse(blog, isLiked, isSavedAsPiece);
+        Optional<Piece> pieceOptional = pieceRepository.findByUserAndBlogId(user, blogId);
+        return new BlogResponse(blog, isLiked, pieceOptional);
     }
 
     @Transactional
