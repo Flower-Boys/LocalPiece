@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
+import com.flowerguys.localpiece.domain.piece.repository.PieceRepository;
 import com.flowerguys.localpiece.domain.hashtag.entity.BlogHashtag;
 import com.flowerguys.localpiece.domain.hashtag.entity.Hashtag;
 import org.springframework.util.StringUtils;
@@ -38,11 +39,10 @@ public class BlogService {
 
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final BlogContentRepository blogContentRepository;
     private final ImageUploadService imageUploadService;
     private final BlogLikeRepository blogLikeRepository;
     private final HashtagRepository hashtagRepository;
-    private final BlogHashtagRepository blogHashtagRepository;
+    private final PieceRepository pieceRepository;
 
     @Transactional
     public BlogResponse createBlog(String userEmail, BlogCreateRequest request, List<MultipartFile> imageFiles) {
@@ -111,12 +111,15 @@ public class BlogService {
 
         // ✨ 좋아요 여부 확인 로직 추가
         boolean isLiked = false;
+        boolean isSavedAsPiece = false;
+
         if (userDetails != null) {
             User user = findUser(userDetails.getUsername());
             isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
+            isSavedAsPiece = pieceRepository.existsByUserAndBlogId(user, blogId);
         }
 
-        return new BlogResponse(blog, isLiked); // 수정된 생성자로 DTO 생성
+        return new BlogResponse(blog, isLiked, isSavedAsPiece); // 수정된 생성자로 DTO 생성
     }
 
     @Transactional
@@ -162,7 +165,8 @@ public class BlogService {
         }
         
         boolean isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
-        return new BlogResponse(blog, isLiked);
+        boolean isSavedAsPiece = pieceRepository.existsByUserAndBlogId(user, blogId);
+        return new BlogResponse(blog, isLiked, isSavedAsPiece);
     }
 
     @Transactional
