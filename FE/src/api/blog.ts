@@ -1,12 +1,17 @@
 import apiClient from "./client";
 
-import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateRequest, BlogAiCreateResponse } from "@/types/blog";
+import { Blog, BlogCreateRequest, BlogResponse, BlogDetailResponse, CommentCreateRequest, BlogCommentResponse, BlogAiCreateResponse, BlogAiCreatePayload, JobStatusResponse } from "@/types/blog";
 
 // ✅ 블로그 목록 조회
 export const getBlogs = async (): Promise<Blog[]> => {
   const res = await apiClient.get("/blogs"); // /api/blogs 프록시 적용됨
   return res.data;
 };
+
+export const getMyBlogs = async (): Promise<Blog[]> => {
+  const res = await apiClient.get("/mypage/blogs");
+  return res.data;
+}
 
 // ✅ 블로그 생성 (multipart/form-data)
 export const createBlog = async (payload: BlogCreateRequest, images: File[]): Promise<BlogResponse> => {
@@ -73,13 +78,33 @@ export const deleteBlog = async (blogId: string | number) => {
   const token = localStorage.getItem("accessToken");
   const res = await apiClient.delete(`/blogs/${blogId}`);
   return res.data;
-}
+};
 
 // AI 블로그 생성
-export const createAiBlog = async (payload: BlogAiCreateRequest): Promise<BlogAiCreateResponse> => {
-  const token = localStorage.getItem("accessToken");
-  const { data } = await apiClient.post<BlogAiCreateResponse>("/ai/generate-blog", { payload }, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+export const createAiBlog = async (payload: BlogAiCreatePayload): Promise<BlogAiCreateResponse> => {
+  const form = new FormData();
+  form.append("request", JSON.stringify(payload.request)); // ← JSON 문자열
+  payload.images.forEach((f) => form.append("images", f)); // ← 'images' 반복 append (배열 키 아님)
+
+  const { data } = await apiClient.post<BlogAiCreateResponse>(
+    "/ai/generate-blog", // ← 포스트맨과 동일 경로로 통일
+    form
+  );
   return data;
-}
+};
+
+// ✅ Job 상태 조회 API
+export const getJobStatus = async (jobId: string): Promise<JobStatusResponse> => {
+  const { data } = await apiClient.get<JobStatusResponse>(`/ai/jobs/${jobId}`);
+  return data;
+};
+
+// ✅ 수정 (멀티파트: request JSON + newImages[])
+// request에는 { title, isPrivate, contents, hashtags, deletedImageIds } 포함
+export const updateBlog = async (id: number, payload: BlogCreateRequest & { hashtags: string[]; deletedImageIds?: string[] }, newImages: File[]) => {
+  const fd = new FormData();
+  fd.append("request", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  newImages.forEach((f) => fd.append("newImages", f));
+  const { data } = await apiClient.put(`/blogs/${id}`, fd);
+  return data;
+};
