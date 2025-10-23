@@ -9,7 +9,7 @@ import BlogDetail from "@/pages/blogs/BlogDetail";
 import BlogEditPage from "@/pages/blogs/BlogEditPage";
 import TourDetail from "@/components/tour/TourDetail";
 import { AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
-import MyPage from "@/components/mypage/MyPage";
+import MyPage from "@/pages/mypage/MyPage";
 
 // const isAuthenticated = () => {
 //   return !!localStorage.getItem("token");
