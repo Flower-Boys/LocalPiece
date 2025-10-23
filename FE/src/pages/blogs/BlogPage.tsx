@@ -136,8 +136,8 @@ const BlogPage = () => {
 
               {/* 본문 */}
               <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">{blog.title}</h3>
+                <div className="flex flex-col justify-between flex-1">
+                  {blog.title ? <h3 className="text-lg font-semibold mb-2 line-clamp-2">{blog.title}</h3> : <p className="text-lg font-semibold text-gray-400 mb-2">제목 없음</p>}
                   <p className="text-sm text-gray-500 flex items-center gap-1 mb-3">
                     <User size={14} className="text-gray-400" />
                     {blog.author} ·{" "}
