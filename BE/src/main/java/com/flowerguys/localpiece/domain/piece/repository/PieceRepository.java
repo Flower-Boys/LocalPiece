@@ -19,6 +19,8 @@ public interface PieceRepository extends JpaRepository<Piece, Long> {
     // 특정 조각 삭제를 위한 조회
     Optional<Piece> findByIdAndUserEmail(Long pieceId, String email);
 
+    Optional<Piece> findByUserAndBlogId(User user, Long blogId);
+
     // 이미 저장된 조각인지 확인
     boolean existsByUserAndBlogId(User user, Long blogId);
 }
