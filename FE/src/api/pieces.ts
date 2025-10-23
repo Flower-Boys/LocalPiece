@@ -7,3 +7,6 @@ export const createMyPagePiece = (payload: CreatePiecePayload) => apiClient.post
 
 /** 조회: GET /mypage/pieces */
 export const getMyPagePieces = () => apiClient.get<TravelPieceSummary[]>("/mypage/pieces").then((r) => r.data);
+
+/** 삭제: DELETE /mypage/pieces/{piecesId} **/
+export const deleteMyPagePiece = (pieceId: number) => apiClient.delete<void>(`/mypage/pieces/${pieceId}`).then((r) => r.data);
