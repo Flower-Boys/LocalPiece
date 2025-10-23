@@ -15,6 +15,9 @@ import { getMyPagePieces } from "@/api/pieces";
 import { sigunguCodeLabel } from "@/components/home/constants";
 import { TravelPieceSummary } from "../../types/pieces";
 
+import ProgressGauge from "@/components/mypage/ProgressGauge";
+import Scrapbook from "@/components/mypage/Scrapbook";
+
 const canonical = (name: string) => name.replace(/(시|군|구)$/, "");
 
 const cityToCode = (city: string): string | undefined => {
@@ -47,7 +50,7 @@ const MyPage = () => {
   const [loading, setLoading] = useState(true);
 
   // 보기 모드
-  const [viewMode, setViewMode] = useState<"default" | "map">("default");
+  const [viewMode, setViewMode] = useState<"default" | "map" | "scrapbook">("default");
 
   // 조각
   const [pieces, setPieces] = useState<TravelPieceSummary[]>([]);
@@ -55,6 +58,9 @@ const MyPage = () => {
 
   // 지도 선택
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null); // 예: "경주시"
+
+  // 전체 도시 수
+  const totalCities = Object.keys(sigunguCodeLabel).length;
 
   // ───────── 데이터 로드 ─────────
   useEffect(() => {
@@ -74,7 +80,7 @@ const MyPage = () => {
 
   // 지도 보기 최초 진입 시 조각 로드
   useEffect(() => {
-    if (viewMode !== "map" || pieces.length > 0) return;
+    if ((viewMode !== "map" && viewMode !== "scrapbook") || pieces.length > 0) return;
     (async () => {
       try {
         setPiecesLoading(true);
@@ -149,6 +155,9 @@ const MyPage = () => {
           <button onClick={() => setViewMode("map")} className={`px-4 py-2 rounded-lg ${viewMode === "map" ? "bg-green-700 text-white" : "bg-green-500 text-white hover:bg-green-600"}`}>
             지도 보기
           </button>
+          <button onClick={() => setViewMode("scrapbook")} className={`px-4 py-2 rounded-lg ${viewMode === "scrapbook" ? "bg-purple-700 text-white" : "bg-purple-500 text-white hover:bg-purple-600"}`}>
+            조각 북
+          </button>
 
           <button onClick={() => setOpenModal("cancelAccount")} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
             회원 탈퇴
@@ -158,7 +167,9 @@ const MyPage = () => {
 
       {/* 오른쪽 메인 */}
       <main className="md:col-span-3 space-y-10">
-        {viewMode === "map" ? (
+        {viewMode === "scrapbook" ? (
+          <Scrapbook pieces={pieces} />
+        ) : viewMode === "map" ? (
           <section>
             <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
               <MapPin className="text-rose-500" /> 나의 여행 지도
@@ -193,6 +204,9 @@ const MyPage = () => {
                     </div>
                     <p className="text-xs text-gray-500 mt-1">더 많은 조각을 모아 등급을 올려보세요!</p>
                   </div>
+                </div>
+                <div className="mt-4">
+                  <ProgressGauge collectedCities={uniqueCities} totalCities={totalCities} />
                 </div>
 
                 {/* Top 3 도시 */}
