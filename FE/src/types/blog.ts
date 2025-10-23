@@ -73,6 +73,7 @@ export interface BlogDetailResponse {
   contents: BlogContentResponse[];
   comments: BlogCommentResponse[];
   likeCount: number;
+  savedAsPiece?: boolean;
   likedByCurrentUser: boolean;
   private: boolean;
   hashtags?: string[]; // 선택적 태그 필드
