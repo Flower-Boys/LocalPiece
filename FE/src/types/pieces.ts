@@ -17,3 +17,17 @@ export type TravelPieceSummary = {
   createdAt: string;       // ISO 문자열
   thumbnail?: string | null;
 };
+
+export type ProgressGaugeProps = {
+  collectedCities: number; // 수집한 도시 수
+  totalCities: number;     // 전체 도시 수 (경북 시군구 개수)
+};
+
+export type JigsawPieceProps = {
+  imageUrl: string;
+  label?: string;           // 조각 제목(옵션)
+  subtitle?: string;        // 도시/날짜(옵션)
+  size?: number;            // 정사각 한 변 px (기본 160)
+  onClick?: () => void;
+  variant?: number; // 0~3
+};
