@@ -5,7 +5,7 @@ import SelectableCard, { CATEGORY_META } from "@/components/aiTravel/SelectableC
 import type { CategoryKey, VisitCreateRequest  } from "@/types/aiTravel";
 import { Sparkles, X } from "lucide-react";
 import { travelSigunguCodeLabel } from "@/components/home/constants";
-import {CoursesGenerate} from "@/api/cours"
+import {coursesGenerate} from "@/api/cours"
 
 
 type Companion = "커플/친구" | "가족" | "혼자";
@@ -78,7 +78,7 @@ const CategorySelect: React.FC = () => {
 
 
    try {
-     const data = await CoursesGenerate(payload); // TripResponse
+     const data = await coursesGenerate(payload); // TripResponse
      navigate("/ai/travel/result", { state: { payload, data } });
    } catch (err) {
      console.error(err);
