@@ -8,7 +8,7 @@ import BlogWrite from "../pages/blogs/BlogWrite";
 import BlogDetail from "@/pages/blogs/BlogDetail";
 import BlogEditPage from "@/pages/blogs/BlogEditPage";
 import TourDetail from "@/components/tour/TourDetail";
-import { AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
+import { AiTravelDetail, AiTravelLanding, CategorySelect, AiResultPreview } from "@/pages/aitravel";
 import MyPage from "@/pages/mypage/MyPage";
 
 // const isAuthenticated = () => {
@@ -32,6 +32,7 @@ const router = createBrowserRouter([
       { path: "/ai/travel/result", element: <AiResultPreview /> },
       { path: "/mypage", element: <MyPage /> },
       { path: "/blog/:id/edit", element: <BlogEditPage /> },
+      { path: "/ai/travel/route-detail", element: <AiTravelDetail /> },
     ],
   },
   // { path: "/login", element: <Login /> },
