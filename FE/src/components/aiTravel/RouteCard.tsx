@@ -23,7 +23,9 @@ const LikeStar = ({ value }: { value: number }) => {
   );
 };
 
-const RouteCard = ({ item }: { item: RouteCardItem }) => {
+const RouteCard = ({ item, to, state }: { item: RouteCardItem; to?: string; state?: any }) => {
+  console.log(state)
+  console.log(item)
   return (
     <article
       className="group relative overflow-hidden rounded-2xl border border-gray-200 
@@ -44,10 +46,10 @@ const RouteCard = ({ item }: { item: RouteCardItem }) => {
       {/* 내용 */}
       <div className="flex flex-col gap-3 p-5">
         {/* 제목 + 별점 */}
-        <div className="flex items-start justify-between gap-2">
+        {/* <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-lg font-bold text-gray-900 dark:text-gray-50">{item.title}</h3>
           <LikeStar value={item.rating} />
-        </div>
+        </div> */}
 
         {/* 태그 */}
         <div className="flex flex-wrap gap-1.5">
@@ -74,9 +76,14 @@ const RouteCard = ({ item }: { item: RouteCardItem }) => {
 
         {/* 하단 */}
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-gray-400">총 {item.distanceKm}km · 대중교통/자차 가능</span>
+             <span className="text-xs text-gray-500 dark:text-gray-400">
+     {item.distanceKm && item.distanceKm > 0
+       ? `총 ${item.distanceKm}km · 대중교통/자차 가능`
+       : "상세에서 이동거리/교통 확인"}
+   </span>
           <Link
             to={`/travel/route/${item.id}`}
+     state={state}
             className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1.5 text-sm font-medium text-gray-900 
         shadow-sm transition hover:bg-amber-300"
           >
