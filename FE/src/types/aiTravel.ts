@@ -89,3 +89,15 @@ export interface TripResponse {
 }
 
 
+
+// ===== 추가: ISO 날짜-시간 문자열 =====
+export type DateTimeString = `${number}-${number}-${number}T${string}`;
+
+// ===== 여행 루트 상세 조회 응답 =====
+export interface CourseDetailResponse {
+  courseId: number;         // 코스 ID
+  tripTitle: string;        // 예: "최고의 여행"
+  themeTitle: string;       // 예: "베스트 코스"
+  createdAt: DateTimeString;// 예: "2025-10-24T16:39:28.721585"
+  days: DayPlan[];          // 기존 DayPlan 재사용
+}
