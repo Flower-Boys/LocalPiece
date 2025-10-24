@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Getter
@@ -28,6 +29,7 @@ public class SavedDay {
 
     @OneToMany(mappedBy = "savedDay", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderNum ASC")
+    @BatchSize(size = 100)
     private List<SavedPlace> route = new ArrayList<>();
 
     @Builder

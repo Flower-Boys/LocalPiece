@@ -3,6 +3,7 @@ package com.flowerguys.localpiece.domain.savedcourse.service;
 import com.flowerguys.localpiece.domain.course.dto.DailyCourseDto;
 import com.flowerguys.localpiece.domain.course.dto.PlaceDto;
 import com.flowerguys.localpiece.domain.savedcourse.dto.CourseSaveRequestDto;
+import com.flowerguys.localpiece.domain.savedcourse.dto.SavedCourseDetailResponseDto;
 import com.flowerguys.localpiece.domain.savedcourse.dto.SavedCourseListResponseDto;
 import com.flowerguys.localpiece.domain.savedcourse.entity.SavedCourse;
 import com.flowerguys.localpiece.domain.savedcourse.entity.SavedDay;
@@ -66,6 +67,13 @@ public class SavedCourseService {
         return savedCourseRepository.findAllByUserEmailOrderByCreatedAtDesc(email).stream()
                 .map(SavedCourseListResponseDto::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public SavedCourseDetailResponseDto getSavedCourseDetails(Long courseId, String email) {
+        return savedCourseRepository.findDetailsByIdAndUserEmail(courseId, email)
+                .map(SavedCourseDetailResponseDto::new) // 조회된 Entity를 DTO로 변환
+                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED, "해당 코스를 조회할 권한이 없거나 코스가 존재하지 않습니다."));
     }
 
     @Transactional

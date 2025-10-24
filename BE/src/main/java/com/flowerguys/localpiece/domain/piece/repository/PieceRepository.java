@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface PieceRepository extends JpaRepository<Piece, Long> {
 
     // 사용자의 모든 조각(블로그) 목록 조회
-    @Query("SELECT p FROM Piece p JOIN FETCH p.blog WHERE p.user.email = :email ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Piece p JOIN FETCH p.blog b WHERE p.user.email = :email AND b.isDeleted = false ORDER BY p.createdAt DESC")
     List<Piece> findAllByUserEmailWithBlog(@Param("email") String email);
 
     // 특정 조각 삭제를 위한 조회

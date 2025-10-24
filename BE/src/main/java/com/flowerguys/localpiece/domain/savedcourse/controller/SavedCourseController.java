@@ -1,6 +1,7 @@
 package com.flowerguys.localpiece.domain.savedcourse.controller;
 
 import com.flowerguys.localpiece.domain.savedcourse.dto.CourseSaveRequestDto;
+import com.flowerguys.localpiece.domain.savedcourse.dto.SavedCourseDetailResponseDto;
 import com.flowerguys.localpiece.domain.savedcourse.dto.SavedCourseListResponseDto;
 import com.flowerguys.localpiece.domain.savedcourse.service.SavedCourseService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,14 @@ public class SavedCourseController {
             @AuthenticationPrincipal UserDetails userDetails) {
         List<SavedCourseListResponseDto> savedCourses = savedCourseService.getSavedCourses(userDetails.getUsername());
         return ResponseEntity.ok(savedCourses);
+    }
+
+    @GetMapping("/{courseId}")
+    public ResponseEntity<SavedCourseDetailResponseDto> getSavedCourseDetails(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        SavedCourseDetailResponseDto courseDetails = savedCourseService.getSavedCourseDetails(courseId, userDetails.getUsername());
+        return ResponseEntity.ok(courseDetails);
     }
 
     @DeleteMapping("/{courseId}")
