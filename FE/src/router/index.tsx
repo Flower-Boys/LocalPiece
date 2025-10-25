@@ -32,7 +32,7 @@ const router = createBrowserRouter([
       { path: "/ai/travel/result", element: <AiResultPreview /> },
       { path: "/mypage", element: <MyPage /> },
       { path: "/blog/:id/edit", element: <BlogEditPage /> },
-      { path: "/ai/travel/route-detail", element: <AiTravelDetail /> },
+      { path: "/ai/travel/detail/:id", element: <AiTravelDetail /> },
     ],
   },
   // { path: "/login", element: <Login /> },
