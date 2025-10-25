@@ -3,6 +3,14 @@ import apiClient from "./client";
 import type { VisitCreateRequest } from "@/types/aiTravel";
 import type { MyTripSummary, TripResponse, CourseDetailResponse, DayPlan, SaveCourseRequest, SaveCourseResponse, GeneratedTripResponse, Course } from "@/types/aiTravel";
 
+// ------ 삭제 API ------
+export const deleteSavedCourse = async (contentId: string | number) => {
+  const res = await apiClient.delete<void>(`/saved-courses/${contentId}`);
+  console.log(res);
+  return res.data;
+};
+
+// ------ 기존: 마이페이지 조회 ------
 export const getMyCourses = async () => {
   const res = await apiClient.get<MyTripSummary[]>(`/saved-courses`);
   console.log(res);
