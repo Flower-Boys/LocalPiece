@@ -10,16 +10,9 @@ import OrderedList from "@tiptap/extension-ordered-list";
 import Blockquote from "@tiptap/extension-blockquote";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { lowlight } from "lowlight/lib/core";
-import {
-  Bold, Italic, Link as LinkIcon, List, ListOrdered,
-  Quote, Code, Heading1, Heading2, Heading3, ImagePlus, Hash, X
-} from "lucide-react";
+import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Quote, Code, Heading1, Heading2, Heading3, ImagePlus, Hash, X } from "lucide-react";
 
-import type {
-  BlogCreateRequest,
-  BlogContentRequest,
-  BlogDetailResponse,
-} from "@/types/blog";
+import type { BlogCreateRequest, BlogContentRequest, BlogDetailResponse } from "@/types/blog";
 
 const MAX_TAGS = 10;
 const MAX_TAG_LEN = 20;
@@ -27,10 +20,7 @@ const MAX_TAG_LEN = 20;
 type Props = {
   mode: "create" | "edit";
   initialData?: BlogDetailResponse; // edit에서 필요
-  onSubmit: (
-    payload: BlogCreateRequest & { deletedImageKeys?: string[] },
-    newImages: File[]
-  ) => Promise<void>;
+  onSubmit: (payload: BlogCreateRequest & { deletedImageKeys?: string[] }, newImages: File[]) => Promise<void>;
   /**
    * 이미지 키(= BlogContentResponse.content)를 실제 표시 가능한 URL로 바꿔주는 함수.
    * - 서버가 내용에 '절대 URL'을 바로 내려주면 기본값 그대로 써도 됨.
@@ -71,10 +61,120 @@ export default function BlogEditor({
       Blockquote,
       CodeBlockLowlight.configure({ lowlight }),
     ],
-    content:
-      mode === "edit" ? buildInitialHtmlFromContents(initialData) : "<p>여행의 추억을 기록해보세요 ✈️</p>",
+    content: mode === "edit" ? buildInitialHtmlFromContents(initialData) : "<p>여행의 추억을 기록해보세요 ✈️</p>",
     onUpdate: ({ editor }) => syncImagesWithEditor(editor),
   });
+  // 의미 있는 HTML인지(빈 <p><br></p>만 있는 경우 제외)
+  const isMeaningfulHtml = (html: string) => {
+    const trimmed = html.replace(/<p><br\/?><\/p>/g, "").trim();
+    const withoutTags = trimmed.replace(/<[^>]+>/g, "").trim();
+    return Boolean(trimmed) && Boolean(withoutTags);
+  };
+
+  // 1) 에디터 내 <img> src → 서버 key(file.name) 매핑 테이블 생성
+  function buildSrcToKeyMap(images: ImageRef[]) {
+    const map = new Map<string, string>();
+    for (const ref of images) {
+      if (ref.kind === "existing") {
+        // 기존 이미지: 화면에 보이는 src(URL) -> 서버 보관키
+        map.set(ref.url, ref.filename ?? ref.key);
+      } else {
+        // 신규 이미지: dataURL -> 업로드 시 파일명
+        map.set(ref.previewUrl, ref.file.name);
+      }
+    }
+    return map;
+  }
+  // 2) HTML을 TEXT/IMAGE 순서로 분해하되, key 매핑이 없으면 <img alt="KEY">로 폴백
+  function buildOrderedChunksFromHtmlWithAlt(html: string, srcToKey: Map<string, string>) {
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+
+    // <img>를 마커로 바꾸되, src/alt 둘 다 보관
+    const altMap = new Map<string, string>(); // markerId -> altKey
+    let markerSeq = 0;
+
+    temp.querySelectorAll("img").forEach((img) => {
+      const src = (img as HTMLImageElement).src || "";
+      const altKey = (img as HTMLImageElement).alt || ""; // 수정 모드에서 넣어준 key
+      const markerId = `LPIMG_${markerSeq++}`;
+      if (altKey) altMap.set(markerId, altKey);
+      const marker = document.createComment(`LPIMG::${markerId}::${src}`);
+      img.replaceWith(marker);
+    });
+
+    const serialized = temp.innerHTML;
+    const re = /<!--LPIMG::(.*?)::(.*?)-->/g;
+
+    const chunks: { type: "TEXT" | "IMAGE"; value: string }[] = [];
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+
+    const isMeaningfulHtml = (h: string) => {
+      const trimmed = h.replace(/<p><br\/?><\/p>/g, "").trim();
+      const withoutTags = trimmed.replace(/<[^>]+>/g, "").trim();
+      return Boolean(trimmed) && Boolean(withoutTags);
+    };
+
+    while ((m = re.exec(serialized)) !== null) {
+      const before = serialized.slice(lastIndex, m.index);
+      if (isMeaningfulHtml(before)) chunks.push({ type: "TEXT", value: before });
+
+      const markerId = m[1];
+      const src = m[2];
+
+      // 우선 src 매핑, 실패 시 alt 폴백
+      const key = srcToKey.get(src) ?? altMap.get(markerId);
+      if (key) {
+        chunks.push({ type: "IMAGE", value: key });
+      }
+      lastIndex = re.lastIndex;
+    }
+    const tail = serialized.slice(lastIndex);
+    if (isMeaningfulHtml(tail)) chunks.push({ type: "TEXT", value: tail });
+
+    return chunks;
+  }
+  // HTML을 이미지 마커로 치환 후 TEXT/IMAGE 순서대로 쪼개기
+  function buildOrderedChunksFromHtml(html: string, srcToKey: Map<string, string>) {
+    // 1) img -> <!--LPIMG::src-->
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+
+    temp.querySelectorAll("img").forEach((img) => {
+      const src = (img as HTMLImageElement).src || "";
+      const marker = document.createComment(`LPIMG::${src}`);
+      img.replaceWith(marker);
+    });
+
+    // 2) 마커 기준으로 분해
+    const serialized = temp.innerHTML;
+    const re = /<!--LPIMG::(.*?)-->/g;
+    const chunks: { type: "TEXT" | "IMAGE"; value: string }[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = re.exec(serialized)) !== null) {
+      const beforeHtml = serialized.slice(lastIndex, match.index);
+      if (isMeaningfulHtml(beforeHtml)) {
+        chunks.push({ type: "TEXT", value: beforeHtml });
+      }
+
+      const src = match[1];
+      const key = srcToKey.get(src); // 존재하는 이미지일 때만 IMAGE로
+      if (key) {
+        chunks.push({ type: "IMAGE", value: key });
+      }
+      lastIndex = re.lastIndex;
+    }
+
+    const tail = serialized.slice(lastIndex);
+    if (isMeaningfulHtml(tail)) {
+      chunks.push({ type: "TEXT", value: tail });
+    }
+
+    return chunks;
+  }
 
   // --- 수정 모드: 기존 이미지 초기화
   useEffect(() => {
@@ -82,8 +182,8 @@ export default function BlogEditor({
     const existing: ExistingImage[] = initialData.contents
       .filter((c) => c.contentType === "IMAGE")
       .map((c) => {
-        const key = c.content;            // 서버가 내려준 이미지 key/URL/파일명
-        const url = getImageUrl(key);     // 표시용 URL
+        const key = c.content; // 서버가 내려준 이미지 key/URL/파일명
+        const url = getImageUrl(key); // 표시용 URL
         return { kind: "existing", key, url, filename: key };
       });
     setImages(existing);
@@ -108,9 +208,7 @@ export default function BlogEditor({
     const html = editorInstance.getHTML();
     const temp = document.createElement("div");
     temp.innerHTML = html;
-    const liveSrcs = new Set(
-      Array.from(temp.querySelectorAll("img")).map((img) => (img as HTMLImageElement).src)
-    );
+    const liveSrcs = new Set(Array.from(temp.querySelectorAll("img")).map((img) => (img as HTMLImageElement).src));
 
     setImages((prev) =>
       prev.filter((ref) => {
@@ -187,7 +285,10 @@ export default function BlogEditor({
   const validate = () => {
     if (!title.trim()) return "제목을 입력해주세요.";
     const html = editor!.getHTML();
-    const textOnly = html.replace(/<img[^>]*>/g, "").replace(/<[^>]+>/g, "").trim();
+    const textOnly = html
+      .replace(/<img[^>]*>/g, "")
+      .replace(/<[^>]+>/g, "")
+      .trim();
     if (!textOnly && images.length === 0) return "본문 텍스트 또는 이미지를 최소 1개 이상 입력해주세요.";
     for (const t of tags) if (t.length > MAX_TAG_LEN) return `태그 '${t}'가 ${MAX_TAG_LEN}자를 초과했습니다.`;
     return null;
@@ -204,50 +305,36 @@ export default function BlogEditor({
     setSaving(true);
 
     try {
-      // 1) contents 빌드 (TEXT → IMAGE들 순서)
+      // (A) 현재 이미지 풀 → src→key 매핑
+      const srcToKey = buildSrcToKeyMap(images);
+
+      // (B) 순서 보존 직렬화(alt 폴백 포함)
       const html = editor!.getHTML();
-      const cleanHtml = html.replace(/<img[^>]*>/g, "");
-      const contents: BlogContentRequest[] = [];
+      const chunks = buildOrderedChunksFromHtmlWithAlt(html, srcToKey);
+
+      // (C) 시퀀스 부여
       let sequence = 1;
+      const contents: BlogContentRequest[] = chunks.map((c) => ({
+        sequence: sequence++,
+        contentType: c.type,
+        content: c.value,
+      }));
 
-      if (cleanHtml.trim()) {
-        contents.push({
-          sequence: sequence++,
-          contentType: "TEXT",
-          content: cleanHtml,
-        });
-      }
-
-      images.forEach((ref) => {
-        contents.push({
-          sequence: sequence++,
-          contentType: "IMAGE",
-          // 생성: 신규는 file.name, 수정: 기존은 key(= 서버 저장키) 유지
-          content: ref.kind === "new" ? ref.file.name : (ref.filename ?? ref.key),
-        });
-      });
-
-      // 2) 수정 모드 삭제 키 계산 (초기 기존 이미지 키 - 현재 남은 기존 이미지 키)
-      let deletedImageKeys: string[] | undefined = undefined;
+      // (D) 삭제된 기존 이미지 키
+      let deletedImageKeys: string[] | undefined;
       if (mode === "edit" && initialData) {
-        const initialKeys = new Set(
-          initialData.contents.filter((c) => c.contentType === "IMAGE").map((c) => c.content)
-        );
-        const currentExistingKeys = new Set(
-          images.filter((i): i is ExistingImage => i.kind === "existing").map((i) => i.key)
-        );
+        const initialKeys = new Set(initialData.contents.filter((c) => c.contentType === "IMAGE").map((c) => c.content));
+        const currentExistingKeys = new Set(images.filter((i): i is ExistingImage => i.kind === "existing").map((i) => i.key));
         deletedImageKeys = Array.from(initialKeys).filter((k) => !currentExistingKeys.has(k));
       }
 
-      // 3) 신규 업로드 파일만
-      const newFiles: File[] = images
-        .filter((i): i is NewImage => i.kind === "new")
-        .map((i) => i.file);
+      // (E) 신규 파일만 업로드
+      const newFiles = images.filter((i): i is NewImage => i.kind === "new").map((i) => i.file);
 
-      // 4) payload (타입에 맞게 `private`!)
+      // (F) payload (API 스펙에 맞게 private!)
       const payload: BlogCreateRequest & { deletedImageKeys?: string[] } = {
         title,
-        isPrivate,
+        private: isPrivate,
         contents,
         hashtags: tags,
         ...(mode === "edit" ? { deletedImageKeys } : {}),
@@ -362,17 +449,11 @@ export default function BlogEditor({
           )}
         </div>
 
-        <p className="mt-1 text-xs text-gray-500">
-          Enter 또는 쉼표(,)로 추가 · 한 태그 최대 {MAX_TAG_LEN}자 · 중복/공백만 태그는 자동 제외
-        </p>
+        <p className="mt-1 text-xs text-gray-500">Enter 또는 쉼표(,)로 추가 · 한 태그 최대 {MAX_TAG_LEN}자 · 중복/공백만 태그는 자동 제외</p>
       </div>
 
       {/* 저장 */}
-      <button
-        onClick={handleSubmit}
-        disabled={saving}
-        className={`mt-6 w-full py-3 rounded-lg font-semibold text-white ${saving ? "bg-gray-400" : "bg-red-500 hover:bg-red-600"}`}
-      >
+      <button onClick={handleSubmit} disabled={saving} className={`mt-6 w-full py-3 rounded-lg font-semibold text-white ${saving ? "bg-gray-400" : "bg-red-500 hover:bg-red-600"}`}>
         {saving ? "저장 중..." : mode === "edit" ? "수정하기" : "저장하기"}
       </button>
     </div>
