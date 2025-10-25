@@ -13,6 +13,7 @@ import { lowlight } from "lowlight/lib/core";
 import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Quote, Code, Heading1, Heading2, Heading3, ImagePlus, Hash, X } from "lucide-react";
 
 import type { BlogCreateRequest, BlogContentRequest, BlogDetailResponse } from "@/types/blog";
+import Dropcursor from "@tiptap/extension-dropcursor";
 
 const MAX_TAGS = 10;
 const MAX_TAG_LEN = 20;
@@ -48,6 +49,31 @@ export default function BlogEditor({
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const previewSrcMap = useRef<Map<File, string>>(new Map());
+  const [dragActive, setDragActive] = useState(false);
+
+  // 로컬 이미지 파일들 삽입 (드롭/붙여넣기/파일선택 공용)
+  const insertLocalImageFiles = (files: FileList | File[]) => {
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!arr.length) return;
+
+    arr.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        previewSrcMap.current.set(file, dataUrl);
+
+        const ref: NewImage = { kind: "new", file, previewUrl: dataUrl };
+        setImages((prev) => [...prev, ref]);
+
+        editor
+          ?.chain()
+          .focus()
+          .insertContent({ type: "image", attrs: { src: dataUrl } })
+          .run();
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   // --- TipTap
   const editor = useEditor({
@@ -60,10 +86,12 @@ export default function BlogEditor({
       OrderedList,
       Blockquote,
       CodeBlockLowlight.configure({ lowlight }),
+      Dropcursor, // ✅ 드롭 커서
     ],
     content: mode === "edit" ? buildInitialHtmlFromContents(initialData) : "<p>여행의 추억을 기록해보세요 ✈️</p>",
     onUpdate: ({ editor }) => syncImagesWithEditor(editor),
   });
+
   // 의미 있는 HTML인지(빈 <p><br></p>만 있는 경우 제외)
   const isMeaningfulHtml = (html: string) => {
     const trimmed = html.replace(/<p><br\/?><\/p>/g, "").trim();
@@ -223,18 +251,9 @@ export default function BlogEditor({
     const input = document.createElement("input");
     input.accept = "image/*";
     input.type = "file";
+    input.multiple = true; // ✅ 여러 장
     input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        previewSrcMap.current.set(file, dataUrl);
-        const ref: NewImage = { kind: "new", file, previewUrl: dataUrl };
-        setImages((prev) => [...prev, ref]);
-        editor?.chain().focus().setImage({ src: dataUrl }).run();
-      };
-      reader.readAsDataURL(file);
+      if (input.files?.length) insertLocalImageFiles(input.files);
     };
     input.click();
   };
@@ -407,8 +426,53 @@ export default function BlogEditor({
       {showPreview ? (
         <article className="border rounded-lg p-3 prose prose-lg max-w-none bg-gray-50" dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
       ) : (
-        <div className="border rounded-lg p-3 min-h-[600px] prose prose-lg max-w-none">
-          <EditorContent editor={editor} className="min-h-[500px]" />
+        <div
+          className={["border rounded-lg p-3 min-h-[600px] prose prose-lg max-w-none transition", dragActive ? "ring-2 ring-red-400 border-red-300 bg-red-50/30" : ""].join(" ")}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault(); // 기본 브라우저 파일 열기 방지
+          }}
+          onDragLeave={(e) => {
+            // 영역 밖으로 나갈 때만 해제
+            const related = e.relatedTarget as Node | null;
+            if (!related || !(e.currentTarget as HTMLElement).contains(related)) {
+              setDragActive(false);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            if (!editor) return;
+
+            // 드랍 좌표 기준 커서 이동 → 그 위치에 삽입
+            const view = editor.view;
+            const posAt = view.posAtCoords({ left: e.clientX, top: e.clientY });
+            if (posAt) editor.commands.setTextSelection(posAt.pos);
+
+            if (e.dataTransfer?.files?.length) {
+              insertLocalImageFiles(e.dataTransfer.files);
+            }
+          }}
+          onPaste={(e) => {
+            // 클립보드에 이미지가 있으면 가로채서 삽입 (텍스트는 기본동작)
+            if (e.clipboardData?.files?.length) {
+              const hasImage = Array.from(e.clipboardData.files).some((f) => f.type.startsWith("image/"));
+              if (hasImage) {
+                e.preventDefault();
+                insertLocalImageFiles(e.clipboardData.files);
+              }
+            }
+          }}
+        >
+          <EditorContent editor={editor} className="min-h-[500px] outline-none" />
+          {dragActive && (
+            <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
+              <div className="rounded-xl border border-red-300 bg-white/80 px-4 py-2 text-sm text-red-500 shadow">이미지를 여기로 드롭하세요</div>
+            </div>
+          )}
         </div>
       )}
 
