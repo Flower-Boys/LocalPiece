@@ -140,33 +140,58 @@ const MyPage = () => {
   return (
     <div className="max-w-6xl mx-auto py-10 px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
       {/* 왼쪽 사이드바 */}
-      <aside className="md:col-span-1 bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center">
+      <aside className="md:col-span-1 bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-md p-6 flex flex-col items-center text-center">
         <UserCircle size={80} className="text-gray-400 mb-4" />
         <h1 className="text-xl font-bold text-gray-800 mb-1">마이페이지</h1>
         <p className="text-sm text-gray-600">내 계정 관리 및 기록</p>
 
         <div className="mt-6 flex flex-col gap-3 w-full">
+          {/* 기본 보기 */}
           <button
             onClick={() => {
               setViewMode("default");
               setSelectedRegion(null);
             }}
-            className={`px-4 py-2 rounded-lg ${viewMode === "default" ? "bg-gray-800 text-white" : "bg-gray-300 text-gray-700 hover:bg-gray-200"}`}
+            className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+              viewMode === "default" ? "bg-gray-600 text-white shadow-md scale-[1.02]" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
-            기본 보기
+            🏠 기본 보기
           </button>
 
-          <button onClick={() => setViewMode("map")} className={`px-4 py-2 rounded-lg ${viewMode === "map" ? "bg-green-700 text-white" : "bg-green-500 text-white hover:bg-green-600"}`}>
-            지도 보기
+          {/* 지도 보기 */}
+          <button
+            onClick={() => setViewMode("map")}
+            className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+              viewMode === "map" ? "bg-green-400 text-white shadow-md scale-[1.02]" : "bg-green-100 text-green-700 hover:bg-green-200"
+            }`}
+          >
+            🗺️ 지도 보기
           </button>
-          <button onClick={() => setViewMode("scrapbook")} className={`px-4 py-2 rounded-lg ${viewMode === "scrapbook" ? "bg-purple-700 text-white" : "bg-purple-500 text-white hover:bg-purple-600"}`}>
-            조각 북
+
+          {/* 조각 북 */}
+          <button
+            onClick={() => setViewMode("scrapbook")}
+            className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+              viewMode === "scrapbook" ? "bg-purple-400 text-white shadow-md scale-[1.02]" : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+            }`}
+          >
+            📖 조각 북
           </button>
-          <button onClick={() => setViewMode("aitravel")} className={`px-4 py-2 rounded-lg ${viewMode === "aitravel" ? "bg-blue-700 text-white" : "bg-blue-500 text-white hover:bg-blue-600"}`}>
-            여행 루트
+
+          {/* 여행 루트 */}
+          <button
+            onClick={() => setViewMode("aitravel")}
+            className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+              viewMode === "aitravel" ? "bg-blue-400 text-white shadow-md scale-[1.02]" : "bg-blue-200 text-blue-700 hover:bg-blue-200"
+            }`}
+          >
+            ✈️ 여행 루트
           </button>
-          <button onClick={() => setOpenModal("cancelAccount")} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-            회원 탈퇴
+
+          {/* 회원 탈퇴 */}
+          <button onClick={() => setOpenModal("cancelAccount")} className="w-full py-3 rounded-xl font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-200">
+            ❌ 회원 탈퇴
           </button>
         </div>
       </aside>
