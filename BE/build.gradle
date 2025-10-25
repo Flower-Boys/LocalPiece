@@ -1,0 +1,84 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.4' 
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'com.flowerguys'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21) // ✅ Java 21
+
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+	
+}
+
+dependencies {
+	// ✅ Spring Boot
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// ✅ PostgreSQL
+	implementation 'org.postgresql:postgresql:42.7.3'
+	
+	// ✅ JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// ✅ Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// ✅ Devtools & Test
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	// OCI
+    implementation("com.oracle.oci.sdk:oci-java-sdk:3.38.0")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common:3.38.0")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage:3.38.0")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient:3.38.0")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-choices:3.38.0")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3:3.37.0")
+	
+	// 스웨거(SpringDoc)
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+	// 이미지 메타데이터(EXIF) 추출을 위한 라이브러리
+	implementation 'com.drewnoakes:metadata-extractor:2.18.0'
+
+	implementation 'org.xerial:sqlite-jdbc:3.41.2.1'
+}
+
+// ✅ Gson 충돌 방지 (jjwt-gson 대신 jackson 사용을 보장)
+configurations {
+	implementation {
+		exclude group: 'io.jsonwebtoken', module: 'jjwt-gson'
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = 'app.jar'
+}
