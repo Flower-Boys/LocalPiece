@@ -128,3 +128,53 @@ export interface MyTripSummary {
   authorNickname: string;
   createdAt: DateTimeString;
 }
+
+// ==== 새로 추가: 공개 저장 코스 목록 타입 ====
+
+/** 개별 저장 코스 요약 (명세서 content 원소) */
+export interface SavedCourseSummary {
+  courseId: number;
+  tripTitle: string;
+  themeTitle: string;
+  authorNickname: string;
+  /** ISO 8601 string (e.g., "2025-10-25T17:02:00") */
+  createdAt: string;
+}
+
+/** 공통 페이지 메타 */
+export interface PageSortMeta {
+  sorted: boolean;
+  unsorted: boolean;
+  empty: boolean;
+}
+
+export interface PageableMeta {
+  pageNumber: number;
+  pageSize: number;
+  sort: PageSortMeta;
+  offset: number;
+  paged: boolean;
+  unpaged: boolean;
+}
+
+/** 스프링 페이지 응답 제네릭 */
+export interface PageResponse<T> {
+  content: T[];
+  pageable: PageableMeta;
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort: PageSortMeta;
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
+}
+
+export type GetPublicSavedCoursesParams = {
+  page?: number;                  // 기본 0
+  size?: number;                  // 기본 10
+  /** "createdAt,desc" 또는 ["createdAt,desc","tripTitle,asc"] 처럼 다중 */
+  sort?: string | string[];       // 기본 "createdAt,desc"
+};
