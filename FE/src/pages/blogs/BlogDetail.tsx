@@ -172,9 +172,9 @@ const BlogDetail = () => {
           {/* 제목 + 뒤로가기 */}
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-3xl font-bold">{blog.title || "제목 없음"}</h1>
-            <button onClick={() => navigate("/blog")} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
               <ArrowLeft size={18} />
-              <span className="hidden sm:inline">목록으로</span>
+              <span className="hidden sm:inline">뒤로가기</span>
             </button>
           </div>
 
