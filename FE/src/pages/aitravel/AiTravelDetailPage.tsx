@@ -15,6 +15,7 @@ type RouteItem = {
   arrival_time: string;
   departure_time: string;
   duration_minutes: number;
+  content_type_id?: number | null;
 };
 type DayPlan = { day: number; date: string; route: RouteItem[] };
 export type TripData = {
