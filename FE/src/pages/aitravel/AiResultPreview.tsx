@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RouteCard from "@/components/aiTravel/RouteCard";
 import RouteCardSkeleton from "@/components/aiTravel/RouteCardSkeleton";
-import { MOCK_ROUTES } from "@/data/mockRoutes";
 import type { CategoryKey, TripResponse, Course, SaveResult } from "@/types/aiTravel";
 import { Map as MapIcon } from "lucide-react";
 import { getTourCommon } from "@/api/tour";
+import Logo from "@/assets/Logo.png";
 
 const AiResultPreview: React.FC = () => {
   const nav = useNavigate();
@@ -116,9 +116,10 @@ const AiResultPreview: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {picks.map((item, idx) => {
-            const withCover = { ...item, cover: thumbs[item.id] ?? item.cover };
+            const withCover = { ...item, cover: thumbs[item.id] ?? Logo };
             const courseId = savedIdMap.get(idx); // 저장된 코스의 PK
             const to = courseId ? `/travel/route/${courseId}` : undefined;
+            console.log(picks);
             return (
               <RouteCard
                 key={item.id}
