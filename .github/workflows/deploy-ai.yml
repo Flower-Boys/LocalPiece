@@ -1,0 +1,35 @@
+name: Deploy AI Server to OCI
+
+on:
+  push:
+    branches:
+      - AI
+      - feature/AI-CMG
+    paths:
+      - "AI/**"
+      - ".github/workflows/deploy-ai.yml"
+      - "nginx.conf"
+      - "docker-compose.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to OCI Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_SERVER_USERNAME }}
+          key: ${{ secrets.OCI_PRIVATE_KEY }}
+          script: |
+            cd LocalPiece
+            git pull origin ${{ github.ref_name }}
+
+            echo "KAKAO_API_KEY=${{ secrets.KAKAO_API_KEY }}" > .env
+            
+            docker-compose up -d --build
+
+     
