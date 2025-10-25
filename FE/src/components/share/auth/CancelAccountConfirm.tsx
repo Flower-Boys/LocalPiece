@@ -1,8 +1,8 @@
-// src/components/share/auth/CancelAccountConfirm.tsx
 import { cancelUser } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
 import { useModalStore } from "@/store/modalStore";
 import { toast } from "react-hot-toast";
+import { HeartCrack } from "lucide-react"; // 💔 아이콘 추가
 
 const CancelAccountConfirm = () => {
   const logout = useAuthStore((s) => s.logout);
@@ -12,7 +12,7 @@ const CancelAccountConfirm = () => {
     try {
       await cancelUser();
       logout();
-      toast.success("회원 탈퇴가 완료되었습니다.");
+      toast.success("그동안 함께해 주셔서 감사했습니다 🥲");
       setOpenModal(null);
     } catch (err) {
       console.error("회원 탈퇴 실패:", err);
@@ -21,15 +21,27 @@ const CancelAccountConfirm = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 text-center">
-      <h2 className="text-xl font-bold text-gray-800">정말 탈퇴하시겠습니까?</h2>
-      <p className="text-gray-600">탈퇴 후 데이터는 복구할 수 없습니다.</p>
-      <div className="flex justify-center gap-3">
-        <button onClick={handleCancel} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-          탈퇴하기
+    <div className="flex flex-col items-center text-center gap-5 p-4">
+      {/* 💔 감성 아이콘 */}
+      <div className="bg-red-100 text-red-500 p-4 rounded-full">
+        <HeartCrack size={48} strokeWidth={1.5} />
+      </div>
+
+      <div>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">정말 떠나시겠어요? 🥺</h2>
+        <p className="text-gray-600 text-sm">
+          탈퇴 후에는 여행 기록과 조각들이 모두 사라집니다.
+          <br />
+          그래도 괜찮으신가요?
+        </p>
+      </div>
+
+      <div className="flex justify-center gap-3 mt-4">
+        <button onClick={handleCancel} className="px-5 py-2.5 rounded-lg bg-red-500 text-white font-semibold shadow-sm hover:bg-red-600 hover:shadow transition-all">
+          네, 탈퇴할게요 💔
         </button>
-        <button onClick={() => setOpenModal(null)} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-          취소
+        <button onClick={() => setOpenModal(null)} className="px-5 py-2.5 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-all">
+          다시 생각할게요 😢
         </button>
       </div>
     </div>
