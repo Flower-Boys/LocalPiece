@@ -313,6 +313,8 @@ export default function BlogEditor({
     return null;
   };
 
+  const keepEmptyParagraphs = (html: string) => html.replace(/<p>(?:\s|&nbsp;)*<\/p>/g, "<p>&#8203;</p>");
+
   // --- 제출
   const handleSubmit = async () => {
     const msg = validate();
@@ -328,8 +330,9 @@ export default function BlogEditor({
       const srcToKey = buildSrcToKeyMap(images);
 
       // (B) 순서 보존 직렬화(alt 폴백 포함)
-      const html = editor!.getHTML();
-      const chunks = buildOrderedChunksFromHtmlWithAlt(html, srcToKey);
+      const raw = editor!.getHTML();
+      const html = keepEmptyParagraphs(raw); // ✅ 빈 <p></p> → <p>&#8203;</p>
+      const chunks = buildOrderedChunksFromHtmlWithAlt(html, srcToKey); // ✅ 치환된 html 사용
 
       // (C) 시퀀스 부여
       let sequence = 1;

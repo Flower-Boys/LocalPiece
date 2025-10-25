@@ -240,6 +240,8 @@ const BlogWrite = () => {
     setTags((prev) => prev.filter((v) => v !== t));
   };
 
+  const keepEmptyParagraphs = (html: string) => html.replace(/<p>(?:\s|&nbsp;)*<\/p>/g, "<p>&#8203;</p>");
+
   // =========================
   // 저장
   // =========================
@@ -248,7 +250,8 @@ const BlogWrite = () => {
     const srcToFileName = buildSrcToFileNameMap(previewSrcMap);
 
     // 1) 현재 에디터 HTML
-    const html = editor.getHTML();
+    const raw = editor.getHTML(); // ✅ 원본 HTML
+    const html = keepEmptyParagraphs(raw); // ✅ 빈 p → <p>&#8203;</p>
 
     // 2) TEXT/IMAGE 순서 보존 직렬화
     const chunks = buildOrderedContents(html, srcToFileName);
