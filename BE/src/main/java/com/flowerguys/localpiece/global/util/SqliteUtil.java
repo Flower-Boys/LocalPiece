@@ -2,104 +2,166 @@ package com.flowerguys.localpiece.global.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource; // ClassPathResource 사용
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 
-import java.io.IOException; // IOException 추가
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections; // Collections 추가
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 public class SqliteUtil {
 
-    private final String dbUrl;
+    private String dbUrl;
+    private static boolean driverLoaded = false;
 
-    // 생성자에서 DB 경로를 설정합니다. application.yml 설정이 없으면 기본값 사용
-    public SqliteUtil(@Value("${sqlite.db.path:classpath:db/gyeongsangbuk_do.db}") String dbPath) {
-        String finalDbPath;
-        if (dbPath.startsWith("classpath:")) {
-            try {
-                // ClassPathResource를 사용하여 resources 폴더 내 파일 경로를 안전하게 가져옴
-                finalDbPath = new ClassPathResource(dbPath.substring(10)).getFile().getAbsolutePath();
-            } catch (IOException e) {
-                log.error("SQLite DB 파일을 찾을 수 없습니다: {}", dbPath, e);
-                throw new RuntimeException("SQLite DB 파일 경로 오류: " + dbPath, e);
-            }
-        } else {
-             finalDbPath = dbPath; // 직접 파일 경로 사용
-        }
-
-        this.dbUrl = "jdbc:sqlite:" + finalDbPath;
-        log.info("SQLite DB 연결 URL 설정 완료: {}", this.dbUrl);
-
-        // JDBC 드라이버 로드
+    static {
         try {
             Class.forName("org.sqlite.JDBC");
+            driverLoaded = true;
+            log.info("SQLite JDBC Driver loaded successfully via static block.");
         } catch (ClassNotFoundException e) {
-             log.error("SQLite JDBC 드라이버 로딩 실패.", e);
-             throw new RuntimeException("SQLite JDBC Driver not found", e);
+            log.error("FATAL: SQLite JDBC 드라이버를 찾을 수 없습니다. 의존성이 올바르게 추가되었는지 확인하세요.", e);
         }
     }
 
-    /**
-     * 여러 contentId에 해당하는 category의 top_parent_code (contentTypeId)를 조회합니다.
-     * @param contentIds 조회할 tourism_id (contentId) 세트
-     * @return Map<Integer, String> 형태 (Key: contentId, Value: topParentCode)
-     */
+    public SqliteUtil(@Value("${sqlite.db.path:classpath:db/gyeongsangbuk_do.db}") String dbPath) {
+        if (!driverLoaded) {
+             throw new RuntimeException("SQLite JDBC Driver was not loaded.");
+        }
+        File tempDbFile = null; // 임시 파일 참조 변수
+        try {
+            String resolvedPath;
+            if (dbPath.startsWith("classpath:")) {
+                String resourcePath = dbPath.substring(10);
+                ClassPathResource resource = new ClassPathResource(resourcePath);
+
+                if (!resource.exists()) {
+                    throw new IOException("Classpath resource not found: " + resourcePath);
+                }
+
+                // 1. InputStream으로 리소스 직접 얻기 (경로 변환 X)
+                try (InputStream inputStream = resource.getInputStream()) {
+                    if (inputStream == null) {
+                        throw new IOException("Could not get InputStream for resource: " + resourcePath);
+                    }
+
+                    // 2. 임시 파일 생성
+                    tempDbFile = File.createTempFile("sqlite-db-", ".db", new File("/tmp")); // /tmp 디렉토리에 생성
+                    tempDbFile.deleteOnExit(); // JVM 종료 시 자동 삭제
+
+                    // 3. InputStream -> 임시 파일 복사
+                    try (FileOutputStream outputStream = new FileOutputStream(tempDbFile)) {
+                        FileCopyUtils.copy(inputStream, outputStream);
+                    }
+                    resolvedPath = tempDbFile.getAbsolutePath();
+                    log.info("SQLite DB resource '{}' copied to temporary file: {}", resourcePath, resolvedPath);
+                }
+
+            } else {
+                // classpath: 접두사가 없으면 외부 파일 시스템 경로로 간주
+                File dbFile = new File(dbPath);
+                if (!dbFile.exists()) {
+                    throw new IOException("SQLite DB file not found at external path: " + dbPath);
+                }
+                resolvedPath = dbFile.getAbsolutePath();
+                log.info("Using external SQLite DB file: {}", resolvedPath);
+            }
+
+            this.dbUrl = "jdbc:sqlite:" + resolvedPath;
+            log.info("SQLite DB URL set to: {}", this.dbUrl);
+
+        } catch (IOException e) {
+            log.error("FATAL: SQLite DB 파일 처리 중 오류 발생: {}", dbPath, e);
+            // 임시 파일 생성 실패 시 정리
+            if (tempDbFile != null && tempDbFile.exists()) {
+                tempDbFile.delete();
+            }
+            throw new RuntimeException("SQLite DB 파일 처리 오류", e);
+        } catch (Exception e) { // 그 외 예외 처리
+             log.error("FATAL: SQLiteUtil 생성 중 예상치 못한 오류 발생: {}", dbPath, e);
+             if (tempDbFile != null && tempDbFile.exists()) {
+                 tempDbFile.delete();
+             }
+             throw new RuntimeException("SQLiteUtil 생성 오류", e);
+        }
+    }
+
+    // findContentTypeIds 메소드는 이전과 동일
     public Map<Integer, String> findContentTypeIds(Set<Integer> contentIds) {
-        // contentIds가 비어있으면 빈 Map 반환
+        // ... (이전 코드와 동일) ...
         if (contentIds == null || contentIds.isEmpty()) {
+            log.warn("findContentTypeIds called with empty or null contentIds set.");
             return Collections.emptyMap();
         }
-
         Map<Integer, String> contentTypeMap = new HashMap<>();
-
-        // contentId 목록을 PreparedStatement의 IN 절 파라미터로 사용하기 위한 문자열 생성 (?, ?, ?)
-        String placeholders = contentIds.stream()
-                                      .map(id -> "?")
-                                      .collect(Collectors.joining(", "));
-
-        // tourism 테이블과 category 테이블을 조인하여 tourism_id와 top_parent_code를 조회
+        String placeholders = String.join(",", Collections.nCopies(contentIds.size(), "?"));
         String sql = String.format(
             "SELECT t.content_id, c.top_parent_code " +
-            "FROM tourism t JOIN category c ON t.category_id = c.category_id " +
-            "WHERE t.content_id IN (%s)", placeholders
-        );
+            "FROM tourism t LEFT JOIN category c ON t.category_id = c.category_id " +
+            "WHERE t.content_id IN (%s)", placeholders);
 
-        log.debug("Executing SQLite Query: {}", sql); // 쿼리 로그 추가 (디버깅용)
-
-        try (Connection conn = DriverManager.getConnection(dbUrl);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            // PreparedStatement에 contentId 파라미터 설정
+        log.debug("Executing SQLite query: {}", sql);
+        log.debug("Querying with content IDs: {}", contentIds);
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DriverManager.getConnection(dbUrl);
+            pstmt = conn.prepareStatement(sql);
             int index = 1;
             for (Integer id : contentIds) {
-                pstmt.setInt(index++, id);
-            }
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    int contentId = rs.getInt("content_id"); // DB 컬럼명 확인!
-                    String topParentCode = rs.getString("top_parent_code"); // DB 컬럼명 확인!
-                    if (topParentCode != null) {
-                        contentTypeMap.put(contentId, topParentCode);
-                    }
+                if (id != null) {
+                   pstmt.setInt(index++, id);
+                } else {
+                   log.warn("Null contentId encountered in the input set.");
                 }
-                log.debug("SQLite Query Result Size: {}", contentTypeMap.size()); // 결과 개수 로그
             }
+             if (index -1 != contentIds.size()) {
+                  log.error("Parameter count mismatch after handling null IDs. Expected {}, got {}", contentIds.size(), index -1);
+                  // 임시방편으로 빈 맵 반환, 실제로는 예외처리 고려
+                  return Collections.emptyMap();
+             }
+            rs = pstmt.executeQuery();
+            int foundCount = 0;
+            while (rs.next()) {
+                foundCount++;
+                int contentIdResult = rs.getInt("content_id");
+                String topParentCode = rs.getString("top_parent_code");
+                if (topParentCode != null) {
+                    contentTypeMap.put(contentIdResult, topParentCode);
+                    log.debug("Found mapping: contentId={} -> contentTypeId={}", contentIdResult, topParentCode);
+                } else {
+                    log.warn("Found contentId={} but its top_parent_code is NULL in category table.", contentIdResult);
+                    contentTypeMap.put(contentIdResult, null);
+                }
+            }
+            log.info("Query executed. Found {} mappings for {} input IDs.", foundCount, contentIds.size());
+            contentIds.forEach(id -> {
+                if (id != null && !contentTypeMap.containsKey(id)) {
+                    log.warn("No data or category mapping found for contentId: {}", id);
+                }
+            });
         } catch (SQLException e) {
-            log.error("SQLite 조회 중 오류 발생 (ContentTypeId 조회): {}", e.getMessage(), e);
-            // 운영 환경에서는 단순히 로깅만 할지, 아니면 예외를 던질지 결정 필요
-            // throw new RuntimeException("SQLite 조회 오류", e);
+            log.error("SQLite 조회 중 심각한 오류 발생. DB URL: [{}], SQL: [{}]. Error: {}", dbUrl, sql, e.getMessage(), e);
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) { log.error("ResultSet closing error", e); }
+            try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { log.error("PreparedStatement closing error", e); }
+            try { if (conn != null) conn.close(); } catch (SQLException e) { log.error("Connection closing error", e); }
         }
         return contentTypeMap;
     }
