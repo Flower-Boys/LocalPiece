@@ -183,6 +183,13 @@ const BlogDetail = () => {
         {blog.contents?.find((c) => c.contentType === "IMAGE") && (
           <div className="relative">
             <img src={blog.contents.find((c) => c.contentType === "IMAGE")?.content || ""} alt={blog.title || "블로그 이미지"} className="w-full h-72 object-cover rounded-t-lg" />
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute top-4 right-4 flex items-center gap-1 px-3 py-2 rounded-full bg-white/80 text-gray-800 shadow hover:bg-white hover:text-black transition"
+            >
+              <ArrowLeft size={18} />
+              <span className="text-sm font-medium">뒤로가기</span>
+            </button>
             <div className="absolute bottom-0 left-0 right-0 h-10 bg-white rounded-t-3xl"></div>
           </div>
         )}
@@ -192,10 +199,6 @@ const BlogDetail = () => {
           {/* 제목 + 뒤로가기 */}
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-3xl font-bold">{blog.title || "제목 없음"}</h1>
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-400 hover:bg-gray-200 text-white hover:text-gray-700 transition">
-              <ArrowLeft size={18} />
-              <span className="hidden sm:inline">뒤로가기</span>
-            </button>
           </div>
 
           {/* 작성자 + 날짜 + 좋아요 */}
