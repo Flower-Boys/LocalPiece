@@ -14,6 +14,7 @@ type RouteItem = {
   arrival_time: string;
   departure_time: string;
   duration_minutes: number;
+  content_type_id?: number | null;
 };
 
 type DayPlan = { day: number; date: string; route: RouteItem[] };
@@ -227,7 +228,7 @@ const AiTravelDetailPretty: React.FC<{ data?: TripData }> = ({ data }) => {
                           </a>
                           <Link
                             to={`/tour/${r.content_id}`}
-                            state={{ fromAi: true, id: r.content_id }}
+                            state={{ fromAi: true, id: r.content_id, typeId: r.content_type_id }}
                             className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
                           >
                             상세 보기 <ChevronRight className="h-4 w-4" />
@@ -264,11 +265,14 @@ const AiTravelDetailPretty: React.FC<{ data?: TripData }> = ({ data }) => {
             </dl>
 
             <div className="mt-4 grid gap-2">
-              <button className="w-full rounded-xl bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 active:translate-y-[1px]">
+              <button onClick={() => navigate("/mypage")} className="w-full rounded-xl bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 active:translate-y-[1px]">
                 <Bookmark className="mr-1 inline h-4 w-4" />
-                코스 저장
+                마이페이지에서 확인하기
               </button>
-              <button className="w-full rounded-xl border border-slate-200  px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 active:translate-y-[1px]">
+              <button
+                onClick={() => copyToClipboard(window.location.href)}
+                className="w-full rounded-xl border border-slate-200  px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 active:translate-y-[1px]"
+              >
                 <Share2 className="mr-1 inline h-4 w-4" />
                 공유하기
               </button>
