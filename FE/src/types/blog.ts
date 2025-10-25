@@ -76,6 +76,7 @@ export interface BlogDetailResponse {
   savedAsPiece?: boolean;
   likedByCurrentUser: boolean;
   private: boolean;
+  pieceId: number;
   hashtags?: string[]; // 선택적 태그 필드
 }
 
