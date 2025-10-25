@@ -120,3 +120,11 @@ export interface TripDetailResponse {
   trip_title: string;
   courseId: number;
 }
+
+export interface MyTripSummary {
+  courseId: number;
+  tripTitle: string;
+  themeTitle: string;
+  authorNickname: string;
+  createdAt: DateTimeString;
+}
