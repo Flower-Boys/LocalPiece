@@ -9,6 +9,7 @@ import type { Blog } from "@/types/blog";
 import defaultThumbnail from "@/assets/default-thumbnail.png";
 import MapPuzzle from "./MapPuzzle";
 import { Eye, Heart, MessageCircle, User } from "lucide-react";
+import MyAiTravelRoutes from "@/components/mypage/MyAiTravelRoutes";
 
 // ✅ 조각 API/타입
 import { getMyPagePieces } from "@/api/pieces";
@@ -50,7 +51,10 @@ const MyPage = () => {
   const [loading, setLoading] = useState(true);
 
   // 보기 모드
-  const [viewMode, setViewMode] = useState<"default" | "map" | "scrapbook">("default");
+  const [viewMode, setViewMode] = useState<"default" | "map" | "scrapbook" | "aitravel">("default");
+  useEffect(() => {
+    console.log("viewMode changed:", viewMode);
+  }, [viewMode]);
 
   // 조각
   const [pieces, setPieces] = useState<TravelPieceSummary[]>([]);
@@ -80,7 +84,7 @@ const MyPage = () => {
 
   // 지도 보기 최초 진입 시 조각 로드
   useEffect(() => {
-    if ((viewMode !== "map" && viewMode !== "scrapbook") || pieces.length > 0) return;
+    if ((viewMode !== "map" && viewMode !== "scrapbook" && viewMode !== "aitravel") || pieces.length > 0) return;
     (async () => {
       try {
         setPiecesLoading(true);
@@ -158,7 +162,9 @@ const MyPage = () => {
           <button onClick={() => setViewMode("scrapbook")} className={`px-4 py-2 rounded-lg ${viewMode === "scrapbook" ? "bg-purple-700 text-white" : "bg-purple-500 text-white hover:bg-purple-600"}`}>
             조각 북
           </button>
-
+          <button onClick={() => setViewMode("aitravel")} className={`px-4 py-2 rounded-lg ${viewMode === "aitravel" ? "bg-blue-700 text-white" : "bg-blue-500 text-white hover:bg-blue-600"}`}>
+            여행 루트
+          </button>
           <button onClick={() => setOpenModal("cancelAccount")} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
             회원 탈퇴
           </button>
@@ -205,6 +211,7 @@ const MyPage = () => {
                     <p className="text-xs text-gray-500 mt-1">더 많은 조각을 모아 등급을 올려보세요!</p>
                   </div>
                 </div>
+
                 <div className="mt-4">
                   <ProgressGauge collectedCities={uniqueCities} totalCities={totalCities} />
                 </div>
@@ -262,6 +269,9 @@ const MyPage = () => {
               </>
             )}
           </section>
+        ) : viewMode === "aitravel" ? (
+          /* ✅ 여기 추가 */
+          <MyAiTravelRoutes />
         ) : (
           <>
             {/* 내가 작성한 블로그 */}
