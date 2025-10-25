@@ -11,12 +11,14 @@ public class SavedCourseListResponseDto {
     private Long courseId;
     private String tripTitle;
     private String themeTitle;
+    private String authorNickname;
     private LocalDateTime createdAt; // 코스를 저장한 날짜
 
     public SavedCourseListResponseDto(SavedCourse savedCourse) {
         this.courseId = savedCourse.getId();
         this.tripTitle = savedCourse.getTripTitle();
         this.themeTitle = savedCourse.getThemeTitle();
+        this.authorNickname = savedCourse.getUser() != null ? savedCourse.getUser().getNickname() : "알 수 없음";
         this.createdAt = savedCourse.getCreatedAt();
     }
 }

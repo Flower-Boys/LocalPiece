@@ -14,6 +14,7 @@ public class SavedCourseDetailResponseDto {
     private Long courseId;
     private String tripTitle;
     private String themeTitle;
+    private String authorNickname;
     private LocalDateTime createdAt; // 저장된 시간
     private List<DailyCourseDto> days; // ⬅️ 상세 일정을 담을 리스트
 
@@ -22,6 +23,7 @@ public class SavedCourseDetailResponseDto {
         this.tripTitle = savedCourse.getTripTitle();
         this.themeTitle = savedCourse.getThemeTitle();
         this.createdAt = savedCourse.getCreatedAt();
+        this.authorNickname = savedCourse.getUser() != null ? savedCourse.getUser().getNickname() : "알 수 없음";
         // Entity 목록을 DTO 목록으로 변환 (DailyCourseDto의 생성자 활용)
         this.days = savedCourse.getDays().stream()
                 .map(DailyCourseDto::new) // SavedDay Entity를 DailyCourseDto로 변환
