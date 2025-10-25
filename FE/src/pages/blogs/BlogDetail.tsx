@@ -36,9 +36,17 @@ const BlogDetail = () => {
   const [openPieceModal, setOpenPieceModal] = useState(false);
 
   // 여행지 조각 삭제 핸들러
-  const handleDeletePiece = async () => {
+  const handleDeletePiece = async (pieceId: string | number) => {
     if (!blog) return;
     if (!window.confirm("정말 이 블로그의 여행지 조각을 삭제하시겠습니까?")) return;
+
+    await deleteMyPagePiece(pieceId);
+    toast.success("여행지 조각이 삭제되었습니다.");
+
+    // 0.8초 정도 기다렸다가 새로고침
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
   };
 
   const handleDeleteBlog = async () => {
@@ -60,18 +68,30 @@ const BlogDetail = () => {
       toast("🚫 로그인이 필요합니다.");
       return;
     }
-    if (!blog) return;
+    if (!blog || likeLoading) return; // 연타 방지
+
+    const nextLiked = !liked; // 낙관적 토글
+    const delta = nextLiked ? +1 : -1;
 
     try {
       setLikeLoading(true);
-      const res = await toggleBlogLike(blog.id);
 
-      // ✅ 상태 토글 & 개수 업데이트
-      setLiked((prev) => !prev);
-      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-    } catch (err: any) {
+      // 낙관적 업데이트
+      setLiked(nextLiked);
+      setLikeCount((c) => c + delta);
+
+      // ▶️ 여기서 단 한 번만 토스트
+      if (nextLiked) toast.success("❤️ 좋아요를 눌렀습니다!");
+      else toast("💔 좋아요를 취소했습니다.");
+
+      // 서버 반영
+      await toggleBlogLike(blog.id);
+    } catch (err) {
       console.error(err);
-      alert("좋아요 처리 중 오류가 발생했습니다.");
+      // 롤백
+      setLiked((v) => !v);
+      setLikeCount((c) => c - delta);
+      toast.error("좋아요 처리 중 오류가 발생했습니다.");
     } finally {
       setLikeLoading(false);
     }
@@ -238,7 +258,7 @@ const BlogDetail = () => {
               <>
                 {blog.savedAsPiece ? (
                   <button
-                    onClick={() => handleDeletePiece()} // 삭제 로직 함수
+                    onClick={() => handleDeletePiece(blog.pieceId)} // 삭제 로직 함수
                     className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 text-sm inline-flex items-center gap-1"
                   >
                     <Puzzle size={16} />
