@@ -1,7 +1,19 @@
 // src/api/courses.ts
 import apiClient from "./client";
 import type { VisitCreateRequest } from "@/types/aiTravel";
-import type { MyTripSummary, TripResponse, CourseDetailResponse, DayPlan, SaveCourseRequest, SaveCourseResponse, GeneratedTripResponse, Course } from "@/types/aiTravel";
+import type {
+  GetPublicSavedCoursesParams,
+  MyTripSummary,
+  TripResponse,
+  CourseDetailResponse,
+  DayPlan,
+  SaveCourseRequest,
+  SaveCourseResponse,
+  GeneratedTripResponse,
+  Course,
+  PageResponse,
+  SavedCourseSummary,
+} from "@/types/aiTravel";
 
 // ------ 삭제 API ------
 export const deleteSavedCourse = async (contentId: string | number) => {
@@ -127,3 +139,13 @@ export const generateAndSaveAll = async (payload: VisitCreateRequest) => {
 
   return { generated, results };
 };
+
+// ------ (추가) 공개된 저장된 코스 조회 API ------
+export async function getPublicSavedCourses(params: GetPublicSavedCoursesParams = {}) {
+  const { page = 0, size = 10, sort = "createdAt,desc" } = params;
+
+  // axios는 같은 key를 배열로 넘기면 &sort=a&sort=b 형태로 직렬화됨
+  const res = await apiClient.get<PageResponse<SavedCourseSummary>>("/public/saved-courses", { params: { page, size, sort } });
+
+  return res.data;
+}
