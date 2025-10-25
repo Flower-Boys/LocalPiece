@@ -106,6 +106,7 @@ const AiTravelDetailPretty: React.FC<{ data?: TripData }> = ({ data }) => {
     }
   };
 
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 lg:py-8 bg-white">
       {/* 헤더 */}
@@ -130,19 +131,20 @@ const AiTravelDetailPretty: React.FC<{ data?: TripData }> = ({ data }) => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-50 active:translate-y-[1px]"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-200 active:translate-y-[1px]"
             onClick={() => copyToClipboard(window.location.href)}
           >
             <Share2 className="mr-1 inline h-4 w-4" />
             공유
           </button>
+
         </div>
       </header>
       {/* Day 탭 */}
 
       <nav className="sticky top-0 z-10 mt-5 -mx-4 border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto max-w-6xl px-4">
-          <ul className="flex gap-2 overflow-x-auto py-2">
+          <ul className="flex justify-between gap-2 overflow-x-auto py-2">
             {days.map((d, i) => (
               <li key={d.day}>
                 <button
