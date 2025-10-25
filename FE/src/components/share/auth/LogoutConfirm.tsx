@@ -11,7 +11,7 @@ const LogoutConfirm = () => {
     try {
       await logoutApi(); // ✅ API 호출
       logout(); // ✅ Zustand 상태 초기화
-      toast.success("로그아웃 되었습니다.");
+      // toast.success("로그아웃 되었습니다.");
       setOpenModal(null);
     } catch (err) {
       console.error("로그아웃 실패:", err);
