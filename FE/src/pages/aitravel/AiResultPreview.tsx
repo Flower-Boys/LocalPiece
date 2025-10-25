@@ -97,7 +97,6 @@ const AiResultPreview: React.FC = () => {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">AI 추천 루트 미리보기</h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">선택: {sel.length ? sel.join(", ") : "(기본)"}</p>
         </div>
         <button
           onClick={() => nav("/ai/travel/builder")}
@@ -134,12 +133,12 @@ const AiResultPreview: React.FC = () => {
 
       <div className="mt-10 flex flex-col items-center gap-3">
         <p className="text-sm text-gray-600 dark:text-gray-300">맘에 드는 루트를 선택하면 상세(지도 + 타임라인 + 교통수단)로 이동합니다.</p>
-        <button
+        {/* <button
           onClick={() => alert("TODO: 상세 생성 페이지로 이동(지도/타임라인)")}
           className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:translate-y-[1px] hover:shadow-md dark:bg-white dark:text-black"
         >
           <MapIcon className="h-5 w-5" /> 임시 · 상세 보기 예시
-        </button>
+        </button> */}
       </div>
     </main>
   );
