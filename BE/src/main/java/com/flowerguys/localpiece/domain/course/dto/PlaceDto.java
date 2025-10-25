@@ -5,8 +5,10 @@ import com.flowerguys.localpiece.domain.savedcourse.entity.SavedPlace;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class PlaceDto {
     private int order;
@@ -27,6 +29,9 @@ public class PlaceDto {
 
     @JsonProperty("duration_minutes")
     private int durationMinutes;
+
+    @JsonProperty("content_type_id")
+    private String contentTypeId;
 
     public PlaceDto(SavedPlace savedPlace) {
         this.order = savedPlace.getOrderNum();

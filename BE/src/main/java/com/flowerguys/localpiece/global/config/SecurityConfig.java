@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/**").permitAll()
                         .requestMatchers("/api/users/login", "/api/users/signup").permitAll()
                         .requestMatchers("/api/tour/**").permitAll() 
+                        .requestMatchers("/api/public/saved-courses/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login.disable())
