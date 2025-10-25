@@ -12,10 +12,10 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { lowlight } from "lowlight/lib/core";
 import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Quote, Code, Heading1, Heading2, Heading3, ImagePlus, ArrowLeft, Hash, X } from "lucide-react";
 
-import { createBlog } from "../../api/blog";
-import { BlogCreateRequest, BlogContentRequest } from "../../types/blog";
-import SearchBar from "../../components/home/SearchBar";
-import AuthButtons from "../../components/share/auth/AuthButtons";
+import { createBlog } from "@/api/blog";
+import { BlogCreateRequest, BlogContentRequest } from "@/types/blog";
+import SearchBar from "@/components/home/SearchBar";
+import AuthButtons from "@/components/share/auth/AuthButtons";
 
 const MAX_TAGS = 10;
 const MAX_TAG_LEN = 20;
@@ -30,6 +30,65 @@ const BlogWrite = () => {
   const [tagInput, setTagInput] = useState("");
 
   const navigate = useNavigate();
+  // ✅ 빈/의미없는 HTML인지 판별
+  const isMeaningfulHtml = (html: string) => {
+    const trimmed = html.replace(/<p><br\/?><\/p>/g, "").trim();
+    const withoutTags = trimmed.replace(/<[^>]+>/g, "").trim();
+    return Boolean(trimmed) && Boolean(withoutTags); // 태그만 있는 덩어리는 버림
+  };
+
+  // ✅ dataURL(src) → 파일명 역매핑 생성
+  const buildSrcToFileNameMap = (previewSrcMap: React.MutableRefObject<Map<File, string>>) => {
+    const map = new Map<string, string>();
+    for (const [file, src] of previewSrcMap.current.entries()) {
+      map.set(src, file.name);
+    }
+    return map;
+  };
+
+  // ✅ 에디터 내용을 "등장 순서대로" TEXT/IMAGE로 직렬화
+  const buildOrderedContents = (html: string, srcToFileName: Map<string, string>) => {
+    // 1) img를 코멘트 마커로 변환: <!--LPIMG::src-->
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+
+    temp.querySelectorAll("img").forEach((img) => {
+      const src = (img as HTMLImageElement).src || "";
+      const marker = document.createComment(`LPIMG::${src}`);
+      img.replaceWith(marker);
+    });
+
+    // 2) 직렬화한 문자열에서 마커 기준으로 순서대로 분해
+    const serialized = temp.innerHTML;
+    const re = /<!--LPIMG::(.*?)-->/g;
+
+    const chunks: { type: "TEXT" | "IMAGE"; value: string }[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = re.exec(serialized)) !== null) {
+      const beforeHtml = serialized.slice(lastIndex, match.index);
+      if (isMeaningfulHtml(beforeHtml)) {
+        chunks.push({ type: "TEXT", value: beforeHtml });
+      }
+
+      const src = match[1];
+      const fileName = srcToFileName.get(src);
+      // 업로드된 이미지와 매칭되는 경우에만 IMAGE로 기록
+      if (fileName) {
+        chunks.push({ type: "IMAGE", value: fileName });
+      }
+      lastIndex = re.lastIndex;
+    }
+
+    // 마지막 꼬리 텍스트
+    const tail = serialized.slice(lastIndex);
+    if (isMeaningfulHtml(tail)) {
+      chunks.push({ type: "TEXT", value: tail });
+    }
+
+    return chunks;
+  };
 
   // ✅ File → dataURL 매핑(에디터 이미지 미리보기 추적)
   const previewSrcMap = useRef<Map<File, string>>(new Map());
@@ -159,34 +218,28 @@ const BlogWrite = () => {
   // 저장
   // =========================
   const handleSave = async () => {
-    const contents: BlogContentRequest[] = [];
+    // 0) 역매핑 준비: dataURL(src) -> 파일명
+    const srcToFileName = buildSrcToFileNameMap(previewSrcMap);
+
+    // 1) 현재 에디터 HTML
+    const html = editor.getHTML();
+
+    // 2) TEXT/IMAGE 순서 보존 직렬화
+    const chunks = buildOrderedContents(html, srcToFileName);
+
+    // 3) 시퀀싱하여 contents 생성
     let sequence = 1;
+    const contents: BlogContentRequest[] = chunks.map((c) => ({
+      sequence: sequence++,
+      contentType: c.type, // "TEXT" | "IMAGE"
+      content: c.value, // TEXT면 html, IMAGE면 file.name
+    }));
 
-    // 1) TEXT(이미지 태그 제거)
-    const htmlContent = editor.getHTML();
-    const cleanHtml = htmlContent.replace(/<img[^>]*>/g, "");
-    if (cleanHtml.trim()) {
-      contents.push({
-        sequence: sequence++,
-        contentType: "TEXT",
-        content: cleanHtml,
-      });
-    }
-
-    // 2) IMAGE: 남아있는 파일만
-    images.forEach((file) => {
-      contents.push({
-        sequence: sequence++,
-        contentType: "IMAGE",
-        content: file.name,
-      });
-    });
-
+    // 4) 요청 본문
     const requestData: BlogCreateRequest & { hashtags: string[] } = {
       title,
       private: Private,
       contents,
-      // ✅ 서버로 해시태그 배열 전송
       hashtags: tags,
     };
 
