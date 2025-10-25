@@ -152,7 +152,7 @@ const TourDetail = () => {
   const effAddr1 = common?.addr1 ?? "";
   const effAddr2 = common?.addr2 ?? "";
   const effAddr = [effAddr1, effAddr2].filter(Boolean).join(" ") || state.location || "";
-  const heroImage = common?.firstimage || state.image || "https://placehold.co/1200x600/png";
+  const heroImage = common?.firstimage || state.image;
 
   // 좌표 (API common 우선 → state 보조)
   const effLng = toNum(common?.mapx ?? state.mapx); // x = 경도
@@ -199,7 +199,15 @@ const TourDetail = () => {
 
       {/* 히어로 */}
       <header className="relative w-full h-[360px] md:h-[420px]">
-        <img src={heroImage} alt={effTitle} className="w-full h-full object-cover" />
+        {heroImage ? (
+          <img src={heroImage} alt={effTitle} className="w-full h-full object-cover rounded-lg" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 flex flex-col items-center justify-center text-gray-700 rounded-lg">
+            <span className="text-2xl font-semibold mb-1">🗺️ 이미지가 없습니다</span>
+            <span className="text-sm opacity-70">조각을 채워 여행을 완성하세요 🧩</span>
+          </div>
+        )}
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 max-w-6xl mx-auto px-4 pb-6 text-white">
           <div className="flex items-center gap-2 mb-2">
