@@ -103,7 +103,7 @@ export default function AiJobModal({ jobId, open, onCompleted, onFailed, onClose
         {renderContent()}
         {onClose && (
           <button onClick={onClose} className="mt-5 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm" disabled={status === "COMPLETED"}>
-            닫기
+            닫기 (나중에 확인 가능해요)
           </button>
         )}
       </div>
