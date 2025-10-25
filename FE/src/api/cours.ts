@@ -1,7 +1,13 @@
 // src/api/courses.ts
 import apiClient from "./client";
 import type { VisitCreateRequest } from "@/types/aiTravel";
-import type { TripResponse, CourseDetailResponse, DayPlan, SaveCourseRequest, SaveCourseResponse, GeneratedTripResponse, Course } from "@/types/aiTravel";
+import type { MyTripSummary, TripResponse, CourseDetailResponse, DayPlan, SaveCourseRequest, SaveCourseResponse, GeneratedTripResponse, Course } from "@/types/aiTravel";
+
+export const getMyCourses = async () => {
+  const res = await apiClient.get<MyTripSummary[]>(`/saved-courses`);
+  console.log(res);
+  return res.data;
+};
 
 // ------ 기존: 생성/조회 ------
 export const coursesGenerate = async (payload: VisitCreateRequest) => {
@@ -19,7 +25,7 @@ export const getCourseGetAll = async () => {
   const res = await apiClient.get<CourseDetailResponse[]>(`/saved-courses`);
   console.log(res);
   return res.data;
-}
+};
 
 // ------ (수정) 문자열 sanitize + 타입 내로잉 유틸 ------
 
