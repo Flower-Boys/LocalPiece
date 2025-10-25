@@ -175,7 +175,6 @@ Temporary Items
 # iCloud generated files
 *.icloud
 
-<<<<<<< HEAD
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -355,10 +354,8 @@ pyrightconfig.json
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
-=======
 ### VisualStudioCode ###
 .vscode/
->>>>>>> main
 
 # Local History for Visual Studio Code
 .history/
@@ -397,12 +394,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-<<<<<<< HEAD
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,python,visualstudiocode
-=======
 # End of https://www.toptal.com/developers/gitignore/api/intellij,visualstudiocode,java,windows,macos
 
 
 # Environment variables
 .env
->>>>>>> main
