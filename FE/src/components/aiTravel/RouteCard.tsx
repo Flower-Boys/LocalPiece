@@ -31,12 +31,7 @@ const LikeStar = ({ value }: { value: number }) => {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={`h-4 w-4 ${
-            i < full ? "fill-yellow-400 text-yellow-400" : half && i === full ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"
-          }`}
-        />
+        <Star key={i} className={`h-4 w-4 ${i < full ? "fill-yellow-400 text-yellow-400" : half && i === full ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"}`} />
       ))}
       <span className="ml-1 text-xs text-gray-600 dark:text-gray-300">{value.toFixed(1)}</span>
     </div>
@@ -75,9 +70,7 @@ const RouteCard = ({
         if (!ignore) {
           if (Array.isArray(data) && data.length > 0) {
             // createdAt 최신순으로 정렬해서 가장 최근 courseId 채택
-            const latest = [...data].sort(
-              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            )[0];
+            const latest = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
             setCourseId(latest.courseId);
           } else {
             setCourseId(null); // 비어있으면 null 유지
@@ -98,21 +91,15 @@ const RouteCard = ({
 
   // 버튼 비활성화 조건
   const disabled = useMemo(() => loading || fetchError != null || courseId == null, [loading, fetchError, courseId]);
-
   return (
     <article
       className="group relative overflow-hidden rounded-2xl border border-gray-200 
-      bg-gradient-to-br from-white to-gray-50 
-      shadow-sm transition hover:-translate-y-1 hover:shadow-lg
-      dark:border-gray-700 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900"
+    bg-gradient-to-br from-white to-gray-50 
+    shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
     >
       {/* 썸네일 */}
       <div className="relative aspect-[16/10] w-full overflow-hidden">
-        <img
-          src={item.cover || Logo} // nullish 병합 대신 Fallback 단순화
-          alt={item.title}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+        <img src={item.cover || Logo} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute left-3 top-3 flex flex-wrap gap-1">
           <StatBadge icon={MapPinned} label={item.city} />
@@ -121,20 +108,17 @@ const RouteCard = ({
       </div>
 
       {/* 내용 */}
-      <div className="flex flex-col gap-3 p-5">
+      <div className="flex flex-col gap-3 p-5 bg-white rounded-b-2xl">
         {/* 제목 + 별점 */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 text-lg font-bold text-gray-900 dark:text-gray-50">{item.title}</h3>
+          <h3 className="line-clamp-2 text-lg font-bold text-gray-900">{item.title}</h3>
           {/* <LikeStar value={item.rating} /> */}
         </div>
 
         {/* 태그 */}
         <div className="flex flex-wrap gap-1.5">
           {item.tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700 dark:bg-amber-800/30 dark:text-amber-300"
-            >
+            <span key={t} className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
               #{t}
             </span>
           ))}
@@ -143,11 +127,7 @@ const RouteCard = ({
         {/* 경유지 */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {item.stops.slice(0, 4).map((s, i) => (
-            <span
-              key={i}
-              className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700 
-              dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-            >
+            <span key={i} className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700">
               {s}
             </span>
           ))}
@@ -156,9 +136,7 @@ const RouteCard = ({
 
         {/* 하단 */}
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {item.distanceKm && item.distanceKm > 0 ? `총 ${item.distanceKm}km · 대중교통/자차 가능` : "상세에서 이동거리/교통 확인"}
-          </span>
+          <span className="text-xs text-gray-500">{item.distanceKm && item.distanceKm > 0 ? `총 ${item.distanceKm}km · 대중교통/자차 가능` : "상세에서 이동거리/교통 확인"}</span>
 
           {/* 링크/버튼 */}
           {to ? (
@@ -182,13 +160,9 @@ const RouteCard = ({
           ) : (
             <button
               disabled={disabled}
-              title={
-                loading ? "저장 코스 조회 중…" : fetchError ?? "저장이 완료되지 않아 상세 이동이 비활성화되었습니다."
-              }
+              title={loading ? "저장 코스 조회 중…" : fetchError ?? "저장이 완료되지 않아 상세 이동이 비활성화되었습니다."}
               className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium shadow-sm ${
-                disabled
-                  ? "cursor-not-allowed bg-gray-300 text-gray-700"
-                  : "bg-amber-400 text-gray-900 hover:bg-amber-300"
+                disabled ? "cursor-not-allowed bg-gray-300 text-gray-700" : "bg-amber-400 text-gray-900 hover:bg-amber-300"
               }`}
               onClick={(e) => e.preventDefault()}
             >
@@ -198,11 +172,7 @@ const RouteCard = ({
         </div>
 
         {/* 에러 메시지(옵션) */}
-        {fetchError && (
-          <p className="mt-1 text-xs text-red-500">
-            {fetchError}
-          </p>
-        )}
+        {/* {fetchError && <p className="mt-1 text-xs text-red-500">{fetchError}</p>} */}
       </div>
     </article>
   );
