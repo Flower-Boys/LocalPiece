@@ -26,17 +26,29 @@ function Home() {
 
   const totalPages = 302;
 
+  // Home 컴포넌트 내부 상단 어딘가에
+  const buildSearch = (patch: Record<string, string | undefined | null>) => {
+    const next = new URLSearchParams(searchParams); // 현재 쿼리 유지
+    Object.entries(patch).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") next.delete(k);
+      else next.set(k, String(v));
+    });
+    return next.toString();
+  };
+
   // ✅ 검색 실행 → URL 업데이트
   const handleSearch = (params: { sigunguCode?: string; contentTypeId?: string; keyword?: string }) => {
-    const nextParams = new URLSearchParams();
-
-    if (params.sigunguCode) nextParams.set("sigunguCode", params.sigunguCode);
-    if (params.contentTypeId) nextParams.set("contentTypeId", params.contentTypeId);
-    if (params.keyword) nextParams.set("keyword", params.keyword);
-
-    nextParams.set("page", "1"); // 검색 시 항상 1페이지부터 시작
-    nextParams.set("arrange", "R"); // ✅ 대표이미지 + 생성일순 정렬
-    navigate({ pathname: "/", search: nextParams.toString() });
+    // 검색 시작 시 page=1로 리셋, 전달 안 된 값은 제거
+    navigate({
+      pathname: "/",
+      search: buildSearch({
+        sigunguCode: params.sigunguCode || undefined,
+        contentTypeId: params.contentTypeId || undefined,
+        keyword: params.keyword || undefined,
+        arrange: "R",
+        page: "1",
+      }),
+    });
   };
 
   // ✅ 데이터 로드 (쿼리스트링 기반)
@@ -142,12 +154,14 @@ function Home() {
           <button
             key={cat.id}
             onClick={() => {
-              const nextParams = new URLSearchParams();
-              if (cat.id) {
-                nextParams.set("contentTypeId", cat.id);
-              }
-              nextParams.set("page", "1");
-              navigate({ pathname: "/", search: nextParams.toString() });
+              // 빈 문자열이면 해당 파라미터 제거되도록 undefined/null 처리
+              navigate({
+                pathname: "/",
+                search: buildSearch({
+                  contentTypeId: cat.id || undefined,
+                  page: "1",
+                }),
+              });
             }}
             className={`px-4 py-2 rounded-full border ${contentTypeId === cat.id || (!contentTypeId && cat.id === "") ? "bg-blue-500 text-white" : "bg-white"}`}
           >
@@ -178,21 +192,41 @@ function Home() {
       {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div className="max-w-6xl mx-auto px-4 pb-10 flex items-center justify-center gap-2 flex-wrap">
-          <button onClick={() => navigate(`/?page=1`)} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+          <button onClick={() => navigate({ pathname: "/", search: buildSearch({ page: "1" }) })} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
             {"<<"}
           </button>
-          <button onClick={() => navigate(`/?page=${page - 1}`)} disabled={page === 1} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+
+          <button
+            onClick={() => navigate({ pathname: "/", search: buildSearch({ page: String(page - 1) }) })}
+            disabled={page === 1}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {"<"}
           </button>
+
           {pageNumbers.map((p) => (
-            <button key={p} onClick={() => navigate(`/?page=${p}`)} className={`px-3 py-1 rounded ${page === p ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}>
+            <button
+              key={p}
+              onClick={() => navigate({ pathname: "/", search: buildSearch({ page: String(p) }) })}
+              className={`px-3 py-1 rounded ${page === p ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+            >
               {p}
             </button>
           ))}
-          <button onClick={() => navigate(`/?page=${page + 1}`)} disabled={page === totalPages} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+
+          <button
+            onClick={() => navigate({ pathname: "/", search: buildSearch({ page: String(page + 1) }) })}
+            disabled={page === totalPages}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {">"}
           </button>
-          <button onClick={() => navigate(`/?page=${totalPages}`)} disabled={page === totalPages} className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300">
+
+          <button
+            onClick={() => navigate({ pathname: "/", search: buildSearch({ page: String(totalPages) }) })}
+            disabled={page === totalPages}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
+          >
             {">>"}
           </button>
         </div>
