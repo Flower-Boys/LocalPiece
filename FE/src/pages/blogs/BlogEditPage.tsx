@@ -20,8 +20,15 @@ export default function BlogEditPage() {
     })();
   }, [id]);
 
+  // src/pages/blog/BlogEditPage.tsx
+
   const onSubmit: Parameters<typeof BlogEditor>[0]["onSubmit"] = async (payload, newImages) => {
-    await updateBlog(Number(id), payload, newImages);
+    // 🔹 서버는 isPrivate을 원하므로 key rename
+    const { private: _private, ...rest } = payload;
+    const adaptedPayload = { ...rest, isPrivate: _private };
+
+    await updateBlog(Number(id), adaptedPayload as any, newImages);
+
     alert("블로그가 수정되었습니다!");
     navigate(`/blog/${id}`);
   };
