@@ -20,6 +20,9 @@ dependencies:
   '@tiptap/extension-code-block-lowlight':
     specifier: ^3.4.2
     version: 3.4.2(@tiptap/core@3.4.2)(@tiptap/extension-code-block@3.4.2)(@tiptap/pm@3.4.2)(highlight.js@11.11.1)(lowlight@2.9.0)
+  '@tiptap/extension-dropcursor':
+    specifier: ^3.8.0
+    version: 3.8.0(@tiptap/extensions@3.8.0)
   '@tiptap/extension-heading':
     specifier: ^3.4.2
     version: 3.4.2(@tiptap/core@3.4.2)
@@ -44,6 +47,9 @@ dependencies:
   axios:
     specifier: ^1.11.0
     version: 1.12.1
+  clsx:
+    specifier: ^2.1.1
+    version: 2.1.1
   framer-motion:
     specifier: ^12.23.12
     version: 12.23.12(react-dom@18.3.1)(react@18.3.1)
@@ -1186,12 +1192,20 @@ packages:
       '@tiptap/core': 3.4.2(@tiptap/pm@3.4.2)
     dev: false
 
-  /@tiptap/extension-dropcursor@3.4.2(@tiptap/extensions@3.4.2):
-    resolution: {integrity: sha512-BHjfpusRvxsa8aV1C0O0mNNjBGWfa1uwolHflCOb4PNkh9nGU0htuaPYTS4fGEVVKOhOC9qsp0hUHSejWL1E6g==}
+  /@tiptap/extension-dropcursor@3.8.0(@tiptap/extensions@3.4.2):
+    resolution: {integrity: sha512-/71aSSZwbzi8HbIpL/OuscNxkY9PLY4m4oBsSwSScsF5X9bggkqrvizITrzuNNsCK2sDoAQJPTSxyr1OhOzpgQ==}
     peerDependencies:
-      '@tiptap/extensions': ^3.4.2
+      '@tiptap/extensions': ^3.8.0
     dependencies:
       '@tiptap/extensions': 3.4.2(@tiptap/core@3.4.2)(@tiptap/pm@3.4.2)
+    dev: false
+
+  /@tiptap/extension-dropcursor@3.8.0(@tiptap/extensions@3.8.0):
+    resolution: {integrity: sha512-/71aSSZwbzi8HbIpL/OuscNxkY9PLY4m4oBsSwSScsF5X9bggkqrvizITrzuNNsCK2sDoAQJPTSxyr1OhOzpgQ==}
+    peerDependencies:
+      '@tiptap/extensions': ^3.8.0
+    dependencies:
+      '@tiptap/extensions': 3.8.0(@tiptap/core@3.4.2)(@tiptap/pm@3.4.2)
     dev: false
 
   /@tiptap/extension-floating-menu@3.4.2(@floating-ui/dom@1.7.4)(@tiptap/core@3.4.2)(@tiptap/pm@3.4.2):
@@ -1345,6 +1359,16 @@ packages:
       '@tiptap/pm': 3.4.2
     dev: false
 
+  /@tiptap/extensions@3.8.0(@tiptap/core@3.4.2)(@tiptap/pm@3.4.2):
+    resolution: {integrity: sha512-Zz0Tl8JrSAvGUhn9XUqMGOeofzuAVaHFfO44kdKk7X6DeYHjpFY9FdDPUjmhWyoq9BsX0iG7sXmIguFgBvXdTQ==}
+    peerDependencies:
+      '@tiptap/core': ^3.8.0
+      '@tiptap/pm': ^3.8.0
+    dependencies:
+      '@tiptap/core': 3.4.2(@tiptap/pm@3.4.2)
+      '@tiptap/pm': 3.4.2
+    dev: false
+
   /@tiptap/pm@3.4.2:
     resolution: {integrity: sha512-cU1DYb1vnpAZhe7R578PfSCh9FbZDf/zR3wuhc6QOkZjGertTgG9ge7pn0RZnJeX4U9hO1WWJ5eOIPoalotlcA==}
     dependencies:
@@ -1404,7 +1428,7 @@ packages:
       '@tiptap/extension-code': 3.4.2(@tiptap/core@3.4.2)
       '@tiptap/extension-code-block': 3.4.2(@tiptap/core@3.4.2)(@tiptap/pm@3.4.2)
       '@tiptap/extension-document': 3.4.2(@tiptap/core@3.4.2)
-      '@tiptap/extension-dropcursor': 3.4.2(@tiptap/extensions@3.4.2)
+      '@tiptap/extension-dropcursor': 3.8.0(@tiptap/extensions@3.4.2)
       '@tiptap/extension-gapcursor': 3.4.2(@tiptap/extensions@3.4.2)
       '@tiptap/extension-hard-break': 3.4.2(@tiptap/core@3.4.2)
       '@tiptap/extension-heading': 3.4.2(@tiptap/core@3.4.2)
@@ -1861,6 +1885,11 @@ packages:
 
   /classnames@2.5.1:
     resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
+    dev: false
+
+  /clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
+    engines: {node: '>=6'}
     dev: false
 
   /color-convert@2.0.1:

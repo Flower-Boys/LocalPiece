@@ -11,7 +11,7 @@ export const getBlogs = async (): Promise<Blog[]> => {
 export const getMyBlogs = async (): Promise<Blog[]> => {
   const res = await apiClient.get("/mypage/blogs");
   return res.data;
-}
+};
 
 // ✅ 블로그 생성 (multipart/form-data)
 export const createBlog = async (payload: BlogCreateRequest, images: File[]): Promise<BlogResponse> => {
@@ -101,10 +101,16 @@ export const getJobStatus = async (jobId: string): Promise<JobStatusResponse> =>
 
 // ✅ 수정 (멀티파트: request JSON + newImages[])
 // request에는 { title, isPrivate, contents, hashtags, deletedImageIds } 포함
-export const updateBlog = async (id: number, payload: BlogCreateRequest & { hashtags: string[]; deletedImageIds?: string[] }, newImages: File[]) => {
+export async function updateBlog(id: number, payload: BlogCreateRequest & { deletedImageKeys?: string[] }, newImages: File[] = []) {
   const fd = new FormData();
+
+  // ✅ 생성 API와 동일한 JSON 파트 이름을 사용! (예: "request")
   fd.append("request", new Blob([JSON.stringify(payload)], { type: "application/json" }));
-  newImages.forEach((f) => fd.append("newImages", f));
-  const { data } = await apiClient.put(`/blogs/${id}`, fd);
-  return data;
-};
+
+  // ✅ 파일 파트 이름도 생성과 동일 (예: "images")
+  newImages.forEach((file) => fd.append("images", file, file.name));
+
+  // PUT/PATCH 중 서버와 맞춘 메서드 사용
+  return apiClient.put(`/blogs/${id}`, fd);
+  // 필요하면: return apiClient.patch(`/blogs/${id}`, fd);
+}

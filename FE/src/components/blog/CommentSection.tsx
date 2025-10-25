@@ -103,7 +103,7 @@ const CommentSection = ({ blogId, userId, comments = [], onAdd, onDelete }: Prop
                   </div>
 
                   <div className="flex gap-2 text-xs text-gray-500">
-                    <button className="hover:text-rose-500">좋아요</button>
+                    {/* <button className="hover:text-rose-500">좋아요</button> */}
                     {isMine && (
                       <button onClick={() => handleDelete(comment.commentId)} disabled={deleting === comment.commentId} className="hover:text-red-500">
                         {deleting === comment.commentId ? "삭제 중..." : "삭제"}

@@ -43,46 +43,6 @@ const stripHtml = (html?: string) => {
   return html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/?[^>]+(>|$)/g, "");
 };
 
-// 🔑 타입별 렌더러 매핑
-const renderers: Record<string, (item: TourInfoResponse) => React.ReactNode | null> = {
-  // 숙박 (32)
-  "32": (item) => (
-    <div key={item.serialnum || item.roomtitle} className="p-4 border rounded-lg bg-white shadow-sm">
-      <h3 className="text-lg font-semibold mb-1">{item.roomtitle}</h3>
-      {item.roomintro && <p className="text-sm text-gray-600 mb-2">{item.roomintro}</p>}
-      <p className="text-sm">
-        기준 {item.roombasecount}명 / 최대 {item.roommaxcount}명
-      </p>
-      <p className="text-sm">
-        비수기 {item.roomoffseasonminfee1}원 / 성수기 {item.roompeakseasonminfee1}원
-      </p>
-
-      {/* 이미지 갤러리 */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {[item.roomimg1, item.roomimg2, item.roomimg3, item.roomimg4, item.roomimg5].filter(Boolean).map((src, idx) => (
-          <img key={idx} src={src!} alt={item[`roomimg${idx + 1}alt`] || "객실 이미지"} className="rounded-md h-28 w-full object-cover" />
-        ))}
-      </div>
-    </div>
-  ),
-
-  // 음식점 (39)
-  "39": (item) => (
-    <li key={item.serialnum} className="flex gap-2 text-sm py-1">
-      <span className="font-medium">{item.infoname}:</span>
-      <span>{item.infotext}</span>
-    </li>
-  ),
-
-  // 관광지 (12)
-  "12": (item) => (
-    <div key={item.serialnum} className="mb-4">
-      <h4 className="font-medium">{item.infoname}</h4>
-      <p className="text-sm text-gray-700 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: item.infotext || "" }} />
-    </div>
-  ),
-};
-
 // helper 함수 (TourDetail.tsx 위쪽에 추가하거나 utils로 분리 가능)
 const extractHref = (html?: string | null): string | undefined => {
   if (!html) return undefined;
@@ -102,12 +62,14 @@ const TourDetail = () => {
       id: string;
       title: string;
       location: string;
-      type: string | number;
+      type?: string | number;
       image: string;
       mapx: string;
       mapy: string;
+      typeId?: number | null;
     };
   };
+  console.log(state);
 
   const navigate = useNavigate();
 
@@ -124,16 +86,24 @@ const TourDetail = () => {
     // 👉 Home으로 이동하면서 검색 파라미터 전달
     navigate("/", { state: params });
   };
-
+  // console.log(state.type);
+  // console.log(state.typeId);
   useEffect(() => {
     if (!state) return;
 
     const fetchData = async () => {
       try {
+        // 1) 먼저 raw 값을 고른다 (null/undefined면 typeId로)
+        const rawContentType = state?.type ?? state?.typeId; // undefined/null 이면 뒤로 넘어감
+
+        // 2) 최종 문자열 변환 (둘 다 없으면 undefined 유지)
+        const contentTypeId = rawContentType == null ? undefined : String(rawContentType);
+        console.log(contentTypeId);
+        // 사용
         const [commonRes, introRes, infoRes, imageRes] = await Promise.all([
           getTourCommon(state.id),
-          getTourIntro(state.id, String(state.type)),
-          getTourInfo(state.id, String(state.type)),
+          getTourIntro(state.id, String(contentTypeId)),
+          getTourInfo(state.id, String(contentTypeId)),
           getTourImages(state.id),
         ]);
 
@@ -154,9 +124,11 @@ const TourDetail = () => {
   if (!state) return <div className="p-10 text-center">잘못된 접근입니다.</div>;
 
   const { id, title, location, image, mapx, mapy, type } = state;
+  console.log(location);
+  console.log(mapx, mapy);
 
-  const heroImage = common?.firstimage || image || "https://placehold.co/1200x600/png";
-  const prettyType = contentTypeLabel[String(type)] || "정보";
+  // const heroImage = common?.firstimage || image || "https://placehold.co/1200x600/png";
+  // const prettyType = contentTypeLabel[String(type)] || "정보";
   const phoneText = formatTel(common?.tel);
   const homepage = extractHref(common?.homepage);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -164,7 +136,31 @@ const TourDetail = () => {
   const [modalImages, setModalImages] = useState<{ url: string; alt?: string }[]>([]);
 
   // 길찾기/공유/복사 등
-  const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapy},${mapx}`;
+  // 안전 숫자 변환
+  const toNum = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  // ---- 파생값 (렌더에서만 사용) ----
+  const rawContentType = state?.type ?? state?.typeId;
+  const contentTypeId = rawContentType == null ? undefined : String(rawContentType);
+  const prettyType = contentTypeLabel[contentTypeId ?? ""] || "정보";
+
+  // 제목 / 주소 / 히어로 이미지
+  const effTitle = common?.title ?? state.title ?? "";
+  const effAddr1 = common?.addr1 ?? "";
+  const effAddr2 = common?.addr2 ?? "";
+  const effAddr = [effAddr1, effAddr2].filter(Boolean).join(" ") || state.location || "";
+  const heroImage = common?.firstimage || state.image;
+
+  // 좌표 (API common 우선 → state 보조)
+  const effLng = toNum(common?.mapx ?? state.mapx); // x = 경도
+  const effLat = toNum(common?.mapy ?? state.mapy); // y = 위도
+
+  // 길찾기 URL
+  const mapsSearchUrl = effLat != null && effLng != null ? `https://www.google.com/maps/search/?api=1&query=${effLat},${effLng}` : undefined;
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -173,7 +169,12 @@ const TourDetail = () => {
       // noop
     }
   };
-
+  const cleanText = (html?: string | null) => {
+    if (!html) return "";
+    return html
+      .replace(/<br\s*\/?>/gi, "\n") // <br> → 줄바꿈
+      .replace(/<\/?[^>]+(>|$)/g, ""); // 나머지 태그 제거
+  };
   return (
     <div className="w-full min-h-screen bg-neutral-50">
       {/* 상단 검색바 영역 */}
@@ -198,18 +199,25 @@ const TourDetail = () => {
 
       {/* 히어로 */}
       <header className="relative w-full h-[360px] md:h-[420px]">
-        <img src={heroImage} alt={title} className="w-full h-full object-cover" />
+        {heroImage ? (
+          <img src={heroImage} alt={effTitle} className="w-full h-full object-cover rounded-lg" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 flex flex-col items-center justify-center text-gray-700 rounded-lg">
+            <span className="text-2xl font-semibold mb-1">🗺️ 이미지가 없습니다</span>
+            <span className="text-sm opacity-70">조각을 채워 여행을 완성하세요 🧩</span>
+          </div>
+        )}
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 max-w-6xl mx-auto px-4 pb-6 text-white">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2 py-1 text-xs rounded-full bg-white/20 backdrop-blur">{prettyType}</span>
             {common?.areacode && <span className="px-2 py-1 text-xs rounded-full bg-white/20 backdrop-blur">지역코드 {common.areacode}</span>}
           </div>
-          <h1 className="text-2xl md:text-4xl font-bold leading-tight drop-shadow">{common?.title || title}</h1>
+          <h1 className="text-2xl md:text-4xl font-bold leading-tight drop-shadow">{common?.title ?? effTitle}</h1>
           <p className="mt-2 flex items-center gap-2 text-sm md:text-base text-gray-200">
             <MapPin className="w-4 h-4" />
-            {common?.addr1 || location}
-            {common?.addr2 ? ` ${common.addr2}` : ""}
+            {effAddr}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {/* {common?.cpyrhtDivCd && <span className="text-xs px-2 py-1 rounded bg-white/15">저작권: {common.cpyrhtDivCd}</span>} */}
@@ -291,7 +299,7 @@ const TourDetail = () => {
                   <p className="text-sm text-gray-700 whitespace-pre-line">{cleanText(intro.infocenter)}</p>
                 </div>
               )}
-              {intro?.parking && kv("주차", intro.parking)}
+              {intro?.parking && kv("주차", cleanText(intro.parking))}
               {intro?.expagerange && kv("체험연령", intro.expagerange)}
               {intro?.chkpet && kv("반려동물", intro.chkpet)}
               {intro?.chkcreditcard && kv("카드결제", intro.chkcreditcard)}
@@ -419,62 +427,117 @@ const TourDetail = () => {
         </section>
 
         {/* 우측 스티키 사이드: 지도 + CTA */}
+        {/* ✅ 지도 + 길찾기 카드 */}
         <aside className="lg:sticky lg:top-6 h-max space-y-4">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* 헤더 */}
             <div className="p-4 border-b border-gray-100 flex items-center gap-2">
               <MapPinned className="w-5 h-5 text-rose-500" />
               <h3 className="font-semibold">위치 & 길찾기</h3>
             </div>
-            <div className="p-4">
-              <div className="rounded-xl overflow-hidden ring-1 ring-gray-100">
-                <TourMap lat={parseFloat(mapy)} lng={parseFloat(mapx)} title={title} location={location} />
-              </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <a href={mapsSearchUrl} target="_blank" className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-                  <MapPin className="w-4 h-4" />
-                  길찾기
-                </a>
-                <button onClick={() => copyToClipboard(window.location.href)} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200">
-                  <Share2 className="w-4 h-4" />
-                  공유
-                </button>
-                <a
-                  href={phoneText ? `tel:${phoneText}` : undefined}
-                  onClick={(e) => !phoneText && e.preventDefault()}
-                  className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg ${phoneText ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-gray-100 text-gray-400"}`}
-                  title={phoneText ? "전화 걸기" : "전화 정보 없음"}
-                >
-                  <Phone className="w-4 h-4" />
-                  전화
-                </a>
-                <a
-                  href={homepage || undefined}
-                  target="_blank"
-                  onClick={(e) => !homepage && e.preventDefault()}
-                  className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg ${homepage ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-gray-100 text-gray-400"}`}
-                  title={homepage ? "웹사이트" : "웹사이트 정보 없음"}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  웹사이트
-                </a>
-              </div>
+            {/* 본문 */}
+            <div className="p-4">
+              {(() => {
+                // 안전 숫자 변환 유틸
+                const toNum = (v: unknown) => {
+                  const n = Number(v);
+                  return Number.isFinite(n) ? n : null;
+                };
+
+                // ✅ common 값이 우선, 없으면 state 보조
+                const effLng = toNum(common?.mapx ?? state.mapx); // x = 경도
+                const effLat = toNum(common?.mapy ?? state.mapy); // y = 위도
+
+                // 길찾기 URL
+                const mapsSearchUrl = effLat != null && effLng != null ? `https://www.google.com/maps/search/?api=1&query=${effLat},${effLng}` : undefined;
+
+                // 실제 표시 위치 (주소)
+                const effAddr = [common?.addr1, common?.addr2].filter(Boolean).join(" ") || state.location || "주소 정보 없음";
+
+                const effTitle = common?.title ?? state.title ?? "";
+
+                // 렌더링 조건
+                if (effLat == null || effLng == null) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                      <MapPinned className="w-12 h-12 mb-2 opacity-50" />
+                      <p className="text-sm">좌표 정보가 없어 지도를 표시할 수 없습니다</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    {/* 지도 */}
+                    <div className="rounded-xl overflow-hidden ring-1 ring-gray-100">
+                      <TourMap lat={effLat} lng={effLng} title={effTitle} location={effAddr} />
+                    </div>
+
+                    {/* 버튼 4개 */}
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {/* 길찾기 */}
+                      <a
+                        href={mapsSearchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        길찾기
+                      </a>
+
+                      {/* 공유 */}
+                      <button onClick={() => copyToClipboard(window.location.href)} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200">
+                        <Share2 className="w-4 h-4" />
+                        공유
+                      </button>
+
+                      {/* 전화 */}
+                      <a
+                        href={phoneText ? `tel:${phoneText}` : undefined}
+                        onClick={(e) => !phoneText && e.preventDefault()}
+                        className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg ${phoneText ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-gray-100 text-gray-400"}`}
+                        title={phoneText ? "전화 걸기" : "전화 정보 없음"}
+                      >
+                        <Phone className="w-4 h-4" />
+                        전화
+                      </a>
+
+                      {/* 웹사이트 */}
+                      <a
+                        href={homepage || undefined}
+                        target="_blank"
+                        onClick={(e) => !homepage && e.preventDefault()}
+                        className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg ${homepage ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-gray-100 text-gray-400"}`}
+                        title={homepage ? "웹사이트" : "웹사이트 정보 없음"}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        웹사이트
+                      </a>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
-          {/* ID/좌표 요약 카드 */}
+          {/* ✅ ID/좌표 요약 카드 (기존 유지) */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-sm">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               <div className="text-gray-500">콘텐츠 ID</div>
-              <div className="text-gray-800">{id}</div>
+              <div className="text-gray-800">{state.id}</div>
               <div className="text-gray-500">분류</div>
-              <div className="text-gray-800">{prettyType}</div>
+              <div className="text-gray-800">{contentTypeLabel[String(state.type ?? state.typeId)] || "정보"}</div>
               <div className="text-gray-500">홈페이지</div>
               <div className="text-gray-800">
-                {" "}
-                <a href={homepage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
-                  바로가기 <ExternalLink className="w-4 h-4" />
-                </a>
+                {homepage ? (
+                  <a href={homepage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                    바로가기 <ExternalLink className="w-4 h-4" />
+                  </a>
+                ) : (
+                  "정보 없음"
+                )}
               </div>
             </div>
           </div>
