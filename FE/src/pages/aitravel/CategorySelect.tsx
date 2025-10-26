@@ -9,6 +9,7 @@ import { travelSigunguCodeLabel } from "@/components/home/constants";
 // ✅ 경로 오타 수정 + 직렬 처리 유틸 사용
 import { generateAndSaveAll } from "@/api/cours";
 
+type CityMeta = { code: number; name: string };
 type Companion = "커플/친구" | "가족" | "혼자";
 type Pacing = "여유롭게" | "보통" | "빠르게";
 
@@ -42,6 +43,7 @@ const CategorySelect: React.FC = () => {
       })),
     [] // ❗️원래 [2]였는데 버그. 빈 배열이 맞음.
   );
+  // console.log(cities);
 
   const toggleCity = (code: number) => {
     setCities((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
@@ -60,6 +62,7 @@ const CategorySelect: React.FC = () => {
 
   const canSubmit = cities.length > 0 && !!startDate && !!endDate && new Date(startDate) <= new Date(endDate) && selectedKeywords.length > 0;
 
+  const cityMeta: CityMeta[] = useMemo(() => cities.map((code) => ({ code, name: travelSigunguCodeLabel[String(code)] })), [cities]);
   // ✅ 생성 → 저장 직렬 처리 (모든 코스 저장)
   const handleSubmit = async () => {
     if (!canSubmit || saving) return;
@@ -78,19 +81,32 @@ const CategorySelect: React.FC = () => {
       setSaving(true);
 
       // A안) 생성된 모든 코스안 저장
-      const { generated, results } = await generateAndSaveAll(payload);
+      // ✅ cityMeta는 화면 전환용 state로만 전달
+      // const cityMeta: CityMeta[] = useMemo(() => cities.map((code) => ({ code, name: travelSigunguCodeLabel[String(code)] })), [cities]);
+
+      // ✅ 여기서는 'cityMeta' (변수) 를 넘겨야 함. 'CityMeta'(타입) 아님!
+      const { generated, results } = await generateAndSaveAll(payload, cityMeta);
+
+      navigate("/ai/travel/result", {
+        state: {
+          payload,
+          data: generated,
+          saveResults: results,
+          // cityMeta, // ✅ 여기로 전달해서 결과 페이지에서 사용
+        },
+      });
 
       // (원하면 B안) 하나만 저장:
       // const { generated, data } = await generateAndSaveOne(payload, 0);
 
       // 결과 페이지로 생성 응답 + 저장 결과 함께 전달
-      navigate("/ai/travel/result", {
-        state: {
-          payload,
-          data: generated, // TripResponse
-          saveResults: results, // [{ index, themeTitle, ok, data?: {courseId}, error? }]
-        },
-      });
+      // navigate("/ai/travel/result", {
+      //   state: {
+      //     payload,
+      //     data: generated, // TripResponse
+      //     saveResults: results, // [{ index, themeTitle, ok, data?: {courseId}, error? }]
+      //   },
+      // });
     } catch (err) {
       console.error(err);
       // TODO: toast.error("코스 저장에 실패했어요. 잠시 후 다시 시도해 주세요.");
