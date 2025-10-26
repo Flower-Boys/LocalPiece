@@ -5,7 +5,7 @@ import { Map as MapIcon, Sparkles, Filter, Clock4, Mountain, Tent, UtensilsCross
 import TagChip from "@/components/aiTravel/TagChip";
 import RouteCard from "@/components/aiTravel/RouteCard";
 import RouteCardSkeleton from "@/components/aiTravel/RouteCardSkeleton";
-import type { AllTag, CategoryKey, SavedCourseSummary, RouteCardItem } from "@/types/aiTravel";
+import type { CategoryKey, SavedCourseSummary, RouteCardItem } from "@/types/aiTravel";
 import { getPublicSavedCourses } from "@/api/cours";
 
 // ✅ 이미지 임포트
@@ -15,23 +15,26 @@ import foodImg from "@/assets/food.png";
 import cityImg from "@/assets/city.png";
 import cultureImg from "@/assets/culture.png";
 
-// 필요 시: 태그 리스트 (기존 ALL_TAGS 대체/병행)
-const ALL_TAGS: AllTag[] = ["전체", "자연", "휴식/힐링", "맛집", "액티비티/체험", "역사/문화", "쇼핑"];
+// ✅ "전체" + 3종 전용 필터만 노출
+type CourseFilter = "전체" | "👍 인기만점! 베스트 코스" | "✨ 또 다른 매력! 추천 코스" | "🤫 나만 아는 숨은 명소 코스";
+
+const COURSE_FILTERS: CourseFilter[] = ["전체", "👍 인기만점! 베스트 코스", "✨ 또 다른 매력! 추천 코스", "🤫 나만 아는 숨은 명소 코스"];
 
 const AiTravelLanding: React.FC = () => {
   const navigate = useNavigate();
 
   // === 상태 ===
-  const [activeTag, setActiveTag] = useState<AllTag>("전체"); // 서버 필터는 아직 없음(클라 표기용)
+  const [activeFilter, setActiveFilter] = useState<CourseFilter>("전체");
   const [loading, setLoading] = useState(false);
 
+  // ⚠️ UI 페이지(항상 18개 기준으로 보여주기)
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(9);
+  const [size, setSize] = useState(18);
   const [sort, setSort] = useState<string | string[]>("createdAt,desc");
 
   const [content, setContent] = useState<SavedCourseSummary[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
-  const [numberOfElements, setNumberOfElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0); // 서버가 주는 totalPages (전체일 때만 사용)
+  const [numberOfElements, setNumberOfElements] = useState(0); // 이번 서버 페이지 항목 수(전체일 때만 사용)
 
   // === API 호출 ===
   useEffect(() => {
@@ -39,27 +42,64 @@ const AiTravelLanding: React.FC = () => {
     (async () => {
       setLoading(true);
       try {
-        const data = await getPublicSavedCourses({ page, size, sort });
+        // ✅ 필터 ON이면 서버에서 넉넉히 받아오고(page=0), OFF(전체)면 서버 페이지네이션 그대로
+        const requestPage = activeFilter === "전체" ? page : 0;
+        const requestSize = activeFilter === "전체" ? size : 90; // 18의 배수 권장 (필터 결과를 내부 슬라이싱)
+        const data = await getPublicSavedCourses({ page: requestPage, size: requestSize, sort });
+
         if (!alive) return;
+
         setContent(data.content);
         setTotalPages(data.totalPages);
         setNumberOfElements(data.numberOfElements);
       } catch (e) {
-        console.error(e);
       } finally {
         if (alive) setLoading(false);
       }
     })();
+
     return () => {
       alive = false;
     };
-  }, [page, size, sort]);
+  }, [page, size, sort, activeFilter]);
 
-  // === 서버가 아직 태그 필터를 받지 않으므로, 표시만 유지 ===
+  // ✅ themeTitle과 정확히 일치하는지로만 필터
   const filtered = useMemo(() => {
-    // activeTag === "전체" 외에는 현재 서버 필터 없음 → 그대로 노출
-    return content;
-  }, [content, activeTag]);
+    if (activeFilter === "전체") return content;
+    return content.filter((c) => c.themeTitle === activeFilter);
+  }, [content, activeFilter]);
+
+  // ✅ 클라 페이지네이션(필터 ON일 때만 사용)
+  const visible = useMemo(() => {
+    if (activeFilter === "전체") return filtered; // 전체는 서버 페이지네이션 결과 그대로
+    const start = page * size;
+    const end = start + size;
+    return filtered.slice(start, end);
+  }, [filtered, activeFilter, page, size]);
+
+  // ✅ 필터별 카운트 계산 (뱃지용)
+  const filterCounts = useMemo(() => {
+    const base = {
+      전체: content.length,
+      "👍 인기만점! 베스트 코스": 0,
+      "✨ 또 다른 매력! 추천 코스": 0,
+      "🤫 나만 아는 숨은 명소 코스": 0,
+    } as Record<CourseFilter, number>;
+
+    for (const item of content) {
+      if (item.themeTitle in base) {
+        base[item.themeTitle as Exclude<CourseFilter, "전체">] += 1;
+      }
+    }
+    return base;
+  }, [content]);
+
+  // ✅ 페이지 수(표시용)
+  const uiTotalPages = activeFilter === "전체" ? totalPages : Math.max(1, Math.ceil(filtered.length / size));
+
+  // === 페이지네이션 핸들러 ===
+  const canPrev = page > 0;
+  const canNext = page + 1 < uiTotalPages;
 
   // === RouteCard에 맞게 최소 변환 (임시 매핑) ===
   const adaptToRouteCard = (x: SavedCourseSummary): RouteCardItem => ({
@@ -83,10 +123,6 @@ const AiTravelLanding: React.FC = () => {
     { label: "역사/문화", icon: Landmark, desc: "역사/유적/전통", img: cultureImg, overlay: "from-red-600/70 to-orange-600/70" },
     { label: "쇼핑", icon: ShoppingBag, desc: "쇼핑/아울렛/거리", img: cityImg, overlay: "from-fuchsia-600/70 to-pink-600/70" },
   ];
-
-  // === 페이지네이션 핸들러 ===
-  const canPrev = page > 0;
-  const canNext = page + 1 < totalPages;
 
   return (
     <main className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
@@ -181,6 +217,7 @@ const AiTravelLanding: React.FC = () => {
               }}
             >
               <option value="createdAt,desc">최신 저장순</option>
+              <option value="createdAt,asc">오래된 저장순</option>
               <option value="tripTitle,asc">여행 제목 오름차순</option>
               <option value="tripTitle,desc">여행 제목 내림차순</option>
             </select>
@@ -203,10 +240,19 @@ const AiTravelLanding: React.FC = () => {
           </div>
         </div>
 
-        {/* 태그 바(표시용) */}
+        {/* 필터 바 */}
         <div className="-mx-1 mb-6 flex items-center gap-2 overflow-x-auto px-1 py-1">
-          {ALL_TAGS.map((t) => (
-            <TagChip key={t} label={t} active={activeTag === t} onClick={() => setActiveTag(t)} />
+          {COURSE_FILTERS.map((f) => (
+            <TagChip
+              key={f}
+              label={`${f} `}
+              active={activeFilter === f}
+              onClick={() => {
+                setActiveFilter(f);
+                setPage(0);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
           ))}
         </div>
 
@@ -219,27 +265,27 @@ const AiTravelLanding: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((item) => (
+            {(activeFilter === "전체" ? filtered : visible).map((item) => (
               <RouteCard key={item.courseId} item={adaptToRouteCard(item)} />
             ))}
           </div>
         )}
 
-        {/* 페이지네이션 */}
+        {/* 페이지네이션 (표시/이동은 uiTotalPages 기준) */}
         <div className="mt-8 flex items-center justify-center gap-2">
           <button disabled={!canPrev} onClick={() => setPage((p) => Math.max(0, p - 1))} className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm disabled:opacity-40">
             <ChevronLeft className="h-4 w-4" /> 이전
           </button>
           <span className="text-sm text-gray-600">
-            {totalPages === 0 ? 0 : page + 1} / {totalPages}
+            {uiTotalPages === 0 ? 0 : page + 1} / {uiTotalPages}
           </span>
           <button disabled={!canNext} onClick={() => setPage((p) => p + 1)} className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm disabled:opacity-40">
             다음 <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* 소계 */}
-        <p className="mt-2 text-center text-xs text-gray-500">이번 페이지 항목: {numberOfElements}개</p>
+        {/* 소계: 전체는 서버 값, 필터 ON은 클라 visible 길이 */}
+        <p className="mt-2 text-center text-xs text-gray-500">이번 페이지 항목: {activeFilter === "전체" ? numberOfElements : visible.length}개</p>
       </section>
     </main>
   );
