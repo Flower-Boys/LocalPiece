@@ -19,14 +19,12 @@ export type CityMeta = { code: number; name: string };
 // ------ 삭제 API ------
 export const deleteSavedCourse = async (contentId: string | number) => {
   const res = await apiClient.delete<void>(`/saved-courses/${contentId}`);
-  console.log(res);
   return res.data;
 };
 
 // ------ 기존: 마이페이지 조회 ------
 export const getMyCourses = async () => {
   const res = await apiClient.get<MyTripSummary[]>(`/saved-courses`);
-  console.log(res);
   return res.data;
 };
 
@@ -44,7 +42,6 @@ export const getCourseDetail = async (contentId: string) => {
 
 export const getCourseGetAll = async () => {
   const res = await apiClient.get<CourseDetailResponse[]>(`/saved-courses`);
-  console.log(res);
   return res.data;
 };
 
@@ -125,9 +122,7 @@ export const saveCourseOption = async (payload: SaveCourseRequest) => {
 
 export const generateAndSaveAll = async (payload: VisitCreateRequest, CityMeta: CityMeta[]) => {
   const generated = await coursesGenerate(payload);
-  console.log(payload);
-  console.log("Generated trip:", generated);
-  console.log("CityMeta:", CityMeta);
+
 
   const results: {
     index: number;
