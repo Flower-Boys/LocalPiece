@@ -43,7 +43,6 @@ const CategorySelect: React.FC = () => {
       })),
     [] // ❗️원래 [2]였는데 버그. 빈 배열이 맞음.
   );
-  // console.log(cities);
 
   const toggleCity = (code: number) => {
     setCities((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
@@ -108,7 +107,6 @@ const CategorySelect: React.FC = () => {
       //   },
       // });
     } catch (err) {
-      console.error(err);
       // TODO: toast.error("코스 저장에 실패했어요. 잠시 후 다시 시도해 주세요.");
     } finally {
       setSaving(false);
