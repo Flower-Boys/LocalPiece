@@ -1,0 +1,269 @@
+package com.flowerguys.localpiece.domain.blog.service;
+
+import com.flowerguys.localpiece.domain.blog.dto.*;
+import com.flowerguys.localpiece.domain.blog.entity.Blog;
+import com.flowerguys.localpiece.domain.blog.entity.BlogContent;
+import com.flowerguys.localpiece.domain.blog.entity.ContentType;
+import com.flowerguys.localpiece.domain.blog.repository.BlogContentRepository;
+import com.flowerguys.localpiece.domain.blog.repository.BlogRepository;
+import com.flowerguys.localpiece.domain.hashtag.repository.BlogHashtagRepository;
+import com.flowerguys.localpiece.domain.hashtag.repository.HashtagRepository;
+import com.flowerguys.localpiece.domain.image.service.ImageUploadService;
+import com.flowerguys.localpiece.domain.user.entity.User;
+import com.flowerguys.localpiece.domain.user.repository.UserRepository;
+import com.flowerguys.localpiece.global.common.ErrorCode;
+import com.flowerguys.localpiece.global.common.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import com.flowerguys.localpiece.domain.like.repository.BlogLikeRepository;
+import com.flowerguys.localpiece.domain.piece.entity.Piece;
+import com.flowerguys.localpiece.domain.piece.repository.PieceRepository;
+import com.flowerguys.localpiece.domain.hashtag.entity.BlogHashtag;
+import com.flowerguys.localpiece.domain.hashtag.entity.Hashtag;
+import org.springframework.util.StringUtils;
+import com.flowerguys.localpiece.domain.piece.entity.Piece;
+import java.util.Optional;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Set;
+
+@Service
+@RequiredArgsConstructor
+public class BlogService {
+
+    private final BlogRepository blogRepository;
+    private final UserRepository userRepository;
+    private final ImageUploadService imageUploadService;
+    private final BlogLikeRepository blogLikeRepository;
+    private final HashtagRepository hashtagRepository;
+    private final PieceRepository pieceRepository;
+
+    @Transactional
+    public BlogResponse createBlog(String userEmail, BlogCreateRequest request, List<MultipartFile> imageFiles) {
+        User user = findUser(userEmail);
+
+        Blog blog = Blog.builder()
+                .user(user)
+                .title(request.getTitle())
+                .isPrivate(request.isPrivate())
+                .build();
+
+        Queue<MultipartFile> imageFilesQueue = (imageFiles != null) ? new LinkedList<>(imageFiles) : new LinkedList<>();
+        List<BlogContent> contents = processBlogContents(blog, request.getContents(), imageFilesQueue);
+
+        contents.forEach(content -> content.setBlog(blog));
+        blog.setContents(contents);
+
+        if (StringUtils.hasText(request.getThumbnail())) {
+            blog.setThumbnail(request.getThumbnail());
+        } else {
+            contents.stream()
+                    .filter(bc -> bc.getContentType() == ContentType.IMAGE)
+                    .findFirst()
+                    .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
+        }
+
+         if (request.getHashtags() != null) {
+            manageHashtags(blog, request.getHashtags());
+        }
+   
+        Blog savedBlog = blogRepository.save(blog);
+        return new BlogResponse(savedBlog);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BlogListResponseDto> getBlogList(UserDetails userDetails) {
+        
+        Set<Long> likedBlogIds = Collections.emptySet();
+
+        // 로그인한 사용자라면, 좋아요 누른 블로그 ID 목록을 미리 조회
+        if (userDetails != null) {
+            User user = findUser(userDetails.getUsername());
+            likedBlogIds = blogLikeRepository.findLikedBlogIdsByUserId(user.getId());
+        }
+
+        // DB에서 블로그 목록 조회
+        List<Blog> blogs = blogRepository.findAllByIsDeletedFalseAndIsPrivateFalseOrderByCreatedAtDesc();
+
+        // final로 선언하여 람다 내부에서 사용할 수 있도록 함
+        final Set<Long> finalLikedBlogIds = likedBlogIds;
+
+        // DTO로 변환
+        return blogs.stream()
+                .map(blog -> {
+                    boolean isLiked = finalLikedBlogIds.contains(blog.getId());
+                    return new BlogListResponseDto(blog, isLiked);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public BlogResponse getBlogAndIncreaseViewCount(Long blogId, UserDetails userDetails) {
+        Blog blog = findBlogWithContents(blogId); // findById로 변경해도 무방
+        checkBlogAccess(blog, userDetails);
+        blogRepository.updateViewCount(blogId);
+
+        // ✨ 좋아요 여부 확인 로직 추가
+        boolean isLiked = false;
+        Optional<Piece> pieceOptional = Optional.empty();
+
+        if (userDetails != null) {
+            User user = findUser(userDetails.getUsername());
+            isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
+            pieceOptional = pieceRepository.findByUserAndBlogId(user, blogId);
+        }
+
+        return new BlogResponse(blog, isLiked, pieceOptional); // 수정된 생성자로 DTO 생성
+    }
+
+    @Transactional
+    public BlogResponse updateBlog(Long blogId, String userEmail, BlogUpdateRequest request, List<MultipartFile> imageFiles) {
+        User user = findUser(userEmail);
+        Blog blog = findBlogWithContents(blogId);
+        checkOwnership(blog, user);
+
+        blog.update(request.getTitle(), request.getIsPrivate());
+
+        List<String> newImageUrls = request.getContents().stream()
+                .filter(c -> c.getContentType() == ContentType.IMAGE && c.getContent().startsWith("http"))
+                .map(BlogContentDto::getContent)
+                .collect(Collectors.toList());
+
+        blog.getContents().stream()
+                .filter(c -> c.getContentType() == ContentType.IMAGE)
+                .map(BlogContent::getContent)
+                .filter(oldUrl -> !newImageUrls.contains(oldUrl))
+                .forEach(imageUploadService::deleteImage);
+
+        Queue<MultipartFile> imageFilesQueue = (imageFiles != null) ? new LinkedList<>(imageFiles) : new LinkedList<>();
+
+        // 1. 기존 contents 컬렉션을 비웁니다. (orphanRemoval=true에 의해 DB에서도 삭제됨)
+        blog.getContents().clear();
+
+        // 2. 새로운 BlogContent 리스트를 만듭니다. (이때 blog와의 연관관계가 설정됩니다)
+        List<BlogContent> newContents = processBlogContents(blog, request.getContents(), imageFilesQueue);
+
+        // 3. 비워진 기존 컬렉션에 새로운 내용들을 모두 추가합니다.
+        blog.getContents().addAll(newContents);
+
+        manageHashtags(blog, request.getHashtags());
+
+        if (StringUtils.hasText(request.getThumbnail())) {
+            blog.setThumbnail(request.getThumbnail());
+        } else {
+            blog.setThumbnail(null);
+            newContents.stream()
+                    .filter(bc -> bc.getContentType() == ContentType.IMAGE)
+                    .findFirst()
+                    .ifPresent(bc -> blog.setThumbnail(bc.getContent()));
+        }
+        
+        boolean isLiked = blogLikeRepository.existsByUserIdAndBlogId(user.getId(), blogId);
+        Optional<Piece> pieceOptional = pieceRepository.findByUserAndBlogId(user, blogId);
+        return new BlogResponse(blog, isLiked, pieceOptional);
+    }
+
+    @Transactional
+    public void deleteBlog(Long blogId, String userEmail) {
+        User user = findUser(userEmail);
+        Blog blog = findBlogWithContents(blogId);
+        checkOwnership(blog, user);
+
+        blog.getContents().stream()
+                .filter(c -> c.getContentType() == ContentType.IMAGE)
+                .map(BlogContent::getContent)
+                .forEach(imageUploadService::deleteImage);
+
+        blog.delete();
+    }
+    
+    // --- Private Helper Methods ---
+
+    private List<BlogContent> processBlogContents(Blog blog, List<BlogContentDto> contentDtos, Queue<MultipartFile> imageFilesQueue) {
+    return contentDtos.stream().map(dto -> {
+        String contentValue;
+        if (dto.getContentType() == ContentType.IMAGE) {
+            // content가 http로 시작하면 기존 URL을 그대로 사용 (수정 시)
+            if (dto.getContent().startsWith("http")) {
+                contentValue = dto.getContent();
+            } else {
+                // 파일 이름으로 찾는 대신, 큐에서 파일을 하나 꺼냄
+                if (imageFilesQueue.isEmpty()) {
+                    throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "요청된 콘텐츠 수에 비해 이미지 파일이 부족합니다.");
+                }
+                MultipartFile imageFile = imageFilesQueue.poll();
+                contentValue = imageUploadService.uploadImage(imageFile);
+            }
+        } else {
+            contentValue = dto.getContent();
+        }
+        return BlogContent.builder()
+                .blog(blog)
+                .sequence(dto.getSequence())
+                .contentType(dto.getContentType())
+                .content(contentValue)
+                .build();
+    }).collect(Collectors.toList());
+}
+
+    private User findUser(String email) {
+        return userRepository.findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private Blog findBlogWithContents(Long blogId) {
+        return blogRepository.findWithContentsById(blogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOG_NOT_FOUND));
+    }
+
+    private void checkOwnership(Blog blog, User user) {
+        if (!blog.getUser().equals(user)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    private void checkBlogAccess(Blog blog, UserDetails userDetails) {
+        if (blog.isDeleted()) {
+            throw new BusinessException(ErrorCode.BLOG_NOT_FOUND);
+        }
+        if (blog.isPrivate()) {
+            String loggedInUserEmail = (userDetails != null) ? userDetails.getUsername() : "";
+            if (!blog.getUser().getEmail().equals(loggedInUserEmail)) {
+                throw new BusinessException(ErrorCode.ACCESS_DENIED);
+            }
+        }
+    }
+
+    private void manageHashtags(Blog blog, List<String> tagNameList) {
+        // 기존 해시태그 연결 모두 삭제
+        blog.getHashtags().clear();
+
+        if (tagNameList == null || tagNameList.isEmpty()) {
+            return;
+        }
+
+        for (String tagName : tagNameList) {
+            // 1. 해시태그 이름으로 DB에서 조회
+            Hashtag hashtag = hashtagRepository.findByName(tagName)
+                    // 2. 없으면 새로 생성하여 저장
+                    .orElseGet(() -> hashtagRepository.save(Hashtag.builder().name(tagName).build()));
+
+            // 3. Blog와 Hashtag를 연결하는 BlogHashtag 생성
+            BlogHashtag blogHashtag = BlogHashtag.builder()
+                    .blog(blog)
+                    .hashtag(hashtag)
+                    .build();
+            
+            // 4. Blog 엔티티의 hashtags Set에 추가 (연관관계 편의 메소드 역할)
+            blog.getHashtags().add(blogHashtag);
+        }
+    }
+}

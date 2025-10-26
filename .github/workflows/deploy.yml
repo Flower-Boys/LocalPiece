@@ -1,0 +1,104 @@
+name: Build and Deploy to OCI
+
+on:
+  push:
+    branches: ["feature/INFRA", "BE"]
+    paths:
+      - "BE/**"
+      - "docker-compose.yml"
+      - "nginx.conf"
+      - ".github/workflows/deploy.yml"
+
+  pull_request:
+    branches:
+      - "BE"
+    paths:
+      - "BE/**"
+      - "docker-compose.yml"
+      - "nginx.conf"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 소스 코드 가져오기 (Checkout)
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. JDK 21 및 Gradle 설정, 빌드
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Grant execute permission for gradlew
+        working-directory: ./BE
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        working-directory: ./BE
+        run: ./gradlew build --no-daemon -x test
+
+      # 빌드 결과물(JAR 파일)을 아티팩트로 업로드
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: localpiece-jar
+          path: BE/build/libs/app.jar
+
+    # 2. 빌드된 JAR 파일을 서버에 배포하는 작업
+  deploy:
+    if: github.event_name == 'push'
+    # build 작업이 끝나야 실행됨
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Checkout
+      #   uses: actions/checkout@v4
+
+      # 업로드된 JAR 파일을 다운로드
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: localpiece-jar
+
+      # SCP를 이용해 JAR 파일을 서버로 전송
+      - name: Transfer JAR to Server
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.OCI_NEW_HOST }}
+          username: ${{ secrets.OCI_SERVER_USERNAME }}
+          key: ${{ secrets.OCI_NEW_PRIVATE_KEY }}
+          source: "app.jar"
+          target: "LocalPiece/BE/build/libs/"
+
+      # ⬇️ EC2 배포 대신 OCI 배포로 이름 변경 및 스크립트 수정
+      - name: Deploy to OCI Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_NEW_HOST }}
+          username: ${{ secrets.OCI_SERVER_USERNAME }}
+          key: ${{ secrets.OCI_NEW_PRIVATE_KEY }}
+          script: |
+            # 프로젝트 폴더로 이동
+            cd LocalPiece
+
+            # GitHub에서 최신 소스 코드(docker-compose.yml 등)를 받아옴
+            git pull origin ${{ github.ref_name }}
+
+            # .env 파일 생성 (민감 정보 주입)
+            echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "OCI_NAMESPACE=${{ secrets.OCI_NEW_NAMESPACE }}" >> .env
+            echo "OCI_BUCKET_NAME=${{ secrets.OCI_BUCKET_NAME }}" >> .env
+            echo "TOUR_API_SERVICE_KEY=${{ secrets.TOUR_API_SERVICE_KEY }}" >> .env
+            echo "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" >> .env
+            echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
+            echo "AI_NEW_SERVER_URL=${{ secrets.AI_NEW_SERVER_URL }}" >> .env
+
+
+            # Docker Compose로 서비스 재시작 
+            docker compose up -d --build
