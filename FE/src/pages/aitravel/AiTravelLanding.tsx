@@ -35,6 +35,7 @@ const AiTravelLanding: React.FC = () => {
   const [content, setContent] = useState<SavedCourseSummary[]>([]);
   const [totalPages, setTotalPages] = useState(0); // 서버가 주는 totalPages (전체일 때만 사용)
   const [numberOfElements, setNumberOfElements] = useState(0); // 이번 서버 페이지 항목 수(전체일 때만 사용)
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
 
   // === API 호출 ===
   useEffect(() => {
@@ -42,9 +43,8 @@ const AiTravelLanding: React.FC = () => {
     (async () => {
       setLoading(true);
       try {
-        // ✅ 필터 ON이면 서버에서 넉넉히 받아오고(page=0), OFF(전체)면 서버 페이지네이션 그대로
         const requestPage = activeFilter === "전체" ? page : 0;
-        const requestSize = activeFilter === "전체" ? size : 90; // 18의 배수 권장 (필터 결과를 내부 슬라이싱)
+        const requestSize = activeFilter === "전체" ? size : 90;
         const data = await getPublicSavedCourses({ page: requestPage, size: requestSize, sort });
 
         if (!alive) return;
@@ -52,7 +52,12 @@ const AiTravelLanding: React.FC = () => {
         setContent(data.content);
         setTotalPages(data.totalPages);
         setNumberOfElements(data.numberOfElements);
+
+        // ✅ 썸네일 있는 항목 중 첫 번째를 대표로 설정
+        const validThumbnail = data.content.find((item) => item.thumbnailUrl && item.thumbnailUrl.trim() !== "");
+        setThumbnailUrl(validThumbnail?.thumbnailUrl ?? "");
       } catch (e) {
+        console.error(e);
       } finally {
         if (alive) setLoading(false);
       }
@@ -102,17 +107,22 @@ const AiTravelLanding: React.FC = () => {
   const canNext = page + 1 < uiTotalPages;
 
   // === RouteCard에 맞게 최소 변환 (임시 매핑) ===
-  const adaptToRouteCard = (x: SavedCourseSummary): RouteCardItem => ({
-    id: String(x.courseId),
-    title: x.tripTitle,
-    city: x.authorNickname, // 작성자명 위치에 우선 매핑
-    days: 0, // 서버 필드 없음 → 0
-    distanceKm: 0, // 서버 필드 없음 → 0
-    tags: [], // 서버 필드 없음 → 빈 배열
-    cover: cityImg, // 임시 썸네일 (원하면 서버 확장 시 교체)
-    stops: [x.themeTitle], // 테마를 간단 표시
-    rating: 0, // 서버 필드 없음 → 0
-  });
+  const adaptToRouteCard = (x: SavedCourseSummary): RouteCardItem => {
+    // ✅ 썸네일 유효성 검사 (null/undefined/빈문자 대비)
+    const cover = x.thumbnailUrl && x.thumbnailUrl.trim() !== "" ? x.thumbnailUrl : cityImg;
+
+    return {
+      id: String(x.courseId),
+      title: x.tripTitle,
+      city: x.authorNickname, // 작성자명 위치에 매핑
+      days: 0, // 서버 필드 없음 → 0
+      distanceKm: 0, // 서버 필드 없음 → 0
+      tags: [], // 서버 필드 없음 → 빈 배열
+      cover, // ✅ 여기!
+      stops: [x.themeTitle], // 테마를 간단 표시
+      rating: 0, // 서버 필드 없음 → 0
+    };
+  };
 
   // ✅ 이미지 매핑 (히어로)
   const categoryImages: { label: CategoryKey; icon: React.ElementType; desc: string; img: string; overlay: string }[] = [
