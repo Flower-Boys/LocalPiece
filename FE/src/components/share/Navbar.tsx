@@ -7,11 +7,11 @@ import Logo from "../../assets/Logo.png";
 // import { useModalStore } from "../../store/modalStore";
 
 // ✅ 추가: AuthButtons
-import AuthButtons from "@/components/share/auth/AuthButtons";
+// import AuthButtons from "@/components/share/auth/AuthButtons";
 
 const Navbar = () => {
   const location = useLocation();
-  const isAiTravelOrMypage = location.pathname.startsWith("/ai/travel") || location.pathname.startsWith("/mypage");
+  // const isAiTravelOrMypage = location.pathname.startsWith("/ai/travel") || location.pathname.startsWith("/mypage");
 
   return (
     <nav className="flex h-full flex-col gap-3 m-2">
@@ -51,11 +51,11 @@ const Navbar = () => {
       </div>
 
       {/* ✅ 하단 고정 영역: /ai/travel 에서만 표시 */}
-      {isAiTravelOrMypage && (
+      {/* {isAiTravelOrMypage && (
         <div className="mt-auto pt-4 border-t border-gray-200">
           <AuthButtons />
         </div>
-      )}
+      )} */}
     </nav>
   );
 };
