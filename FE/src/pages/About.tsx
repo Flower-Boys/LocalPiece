@@ -71,7 +71,7 @@ const About = () => {
           사용자 시간을 아끼고, 더 즐거운 여정을 만듭니다.
         </motion.p>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-3">
           <motion.div
             variants={reveal}
             initial={reduce ? undefined : "hidden"}
@@ -126,7 +126,7 @@ const About = () => {
         <motion.h2 className="text-2xl font-bold text-gray-900" {...fadeUp(0)}>
           어떻게 작동하나요?
         </motion.h2>
-        <ol className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ol className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* STEP 1 */}
           <motion.li
             variants={reveal}
