@@ -8,6 +8,7 @@ import AuthButtons from "@/components/share/auth/AuthButtons";
 import SearchBar from "@/components/home/SearchBar";
 import toast from "react-hot-toast";
 import AiJobModal from "@/components/blog/AiJobModal";
+import { useAuthStore } from "@/store/authStore"; // ✅ 추가
 
 const BlogPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +31,7 @@ const BlogPage = () => {
     nextParams.set("arrange", "R");
     navigate({ pathname: "/", search: nextParams.toString() });
   };
+  const { isLoggedIn } = useAuthStore();
 
   // ✅ 블로그 목록 불러오기
   const fetchBlogs = async () => {
@@ -38,7 +40,6 @@ const BlogPage = () => {
       const data = await getBlogs();
       setBlogs(data);
     } catch (err) {
-      console.error("블로그 목록 조회 실패", err);
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,6 @@ const BlogPage = () => {
       // 필요 시 files 초기화
       setFiles([]);
     } catch (err) {
-      console.error("AI 블로그 생성 실패:", err);
       toast.error("AI 블로그 생성 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
@@ -112,15 +112,28 @@ const BlogPage = () => {
         {/* 헤더 */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
           <h1 className="text-3xl font-bold">🌍 여행 블로그</h1>
-          <div className="flex gap-3">
-            <button onClick={() => setShowModal(true)} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-semibold">
-              AI로 생성하기
-            </button>
-            <button onClick={() => navigate("/blog/write")} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-semibold">
-              추억 기록하기
-            </button>
-          </div>
+
+          {/* ✅ 로그인 상태 */}
+          {isLoggedIn ? (
+            <div className="flex gap-3">
+              <button onClick={() => setShowModal(true)} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-semibold shadow-sm transition">
+                ✨ AI로 생성하기
+              </button>
+              <button onClick={() => navigate("/blog/write")} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-semibold transition">
+                ✍️ 추억 기록하기
+              </button>
+            </div>
+          ) : (
+            // 🚫 로그아웃 상태 (UX 메시지 카드)
+            <div className="w-full sm:w-auto bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm text-center sm:text-left">
+              <p className="text-gray-700 font-medium">
+                🌱 여행 이야기를 남기려면 <span className="text-red-500 font-semibold">로그인</span>이 필요합니다.
+              </p>
+              <p className="text-gray-500 text-sm mt-1">로그인하면 AI가 대신 블로그를 써주거나, 직접 추억을 기록할 수 있어요.</p>
+            </div>
+          )}
         </div>
+
         <hr className="py-5" />
 
         {/* 블로그 카드 그리드 */}
