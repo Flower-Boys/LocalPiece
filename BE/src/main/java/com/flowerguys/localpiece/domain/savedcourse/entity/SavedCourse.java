@@ -30,6 +30,9 @@ public class SavedCourse extends BaseTimeEntity {
     @Column(nullable = false)
     private String themeTitle;
 
+    @Column
+    private String thumbnailUrl; // 썸네일 URL 필드
+
     @OneToMany(mappedBy = "savedCourse", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("day ASC")
     private List<SavedDay> days = new ArrayList<>();
@@ -44,5 +47,9 @@ public class SavedCourse extends BaseTimeEntity {
     public void addDay(SavedDay day) {
         this.days.add(day);
         day.setSavedCourse(this);
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }
