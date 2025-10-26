@@ -18,7 +18,7 @@ public interface SavedCourseRepository extends JpaRepository<SavedCourse, Long> 
     Optional<SavedCourse> findByIdAndUserEmail(Long id, String email);
 
     // ⬇️ 공개 목록 조회 (User 정보 포함, 페이징 적용)
-    @Query(value = "SELECT sc FROM SavedCourse sc JOIN FETCH sc.user u ORDER BY sc.createdAt DESC", // ⬅️ ORDER BY 추가
+    @Query(value = "SELECT sc FROM SavedCourse sc JOIN FETCH sc.user u", // ⬅️ ORDER BY 추가
            countQuery = "SELECT count(sc) FROM SavedCourse sc") // ⬅️ 페이징을 위한 count 쿼리 추가
     Page<SavedCourse> findAllPublic(Pageable pageable);
 
