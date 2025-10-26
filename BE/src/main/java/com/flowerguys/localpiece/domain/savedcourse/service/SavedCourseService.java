@@ -54,35 +54,40 @@ public class SavedCourseService {
                 .themeTitle(requestDto.getCourseOption().getThemeTitle())
                 .build();
 
-        Integer firstContentId = null;
+        Integer firstContentId = null; // 썸네일용 첫 contentId
 
         for (DailyCourseDto dayDto : requestDto.getCourseOption().getDays()) {
             SavedDay day = SavedDay.builder().day(dayDto.getDay()).date(dayDto.getDate()).build();
-            for (PlaceDto placeDto : dayDto.getRoute()) {
-                // 첫 번째 장소의 contentId 저장 (한 번만)
-                if (firstContentId == null && placeDto.getContentId() > 0) { // 유효한 ID인지 확인
-                    firstContentId = placeDto.getContentId();
-                }
 
+            for (PlaceDto placeDto : dayDto.getRoute()) {
                 SavedPlace place = SavedPlace.builder()
                         .orderNum(placeDto.getOrder())
                         .contentId(placeDto.getContentId())
-                        // ... (나머지 필드 매핑)
-                        .durationMinutes(placeDto.getDurationMinutes())
+                        .type(placeDto.getType())             
+                        .name(placeDto.getName())             
+                        .category(placeDto.getCategory())     
+                        .address(placeDto.getAddress())       
+                        .arrivalTime(placeDto.getArrivalTime()) 
+                        .departureTime(placeDto.getDepartureTime()) 
+                        .durationMinutes(placeDto.getDurationMinutes()) 
                         .build();
                 day.addPlace(place);
+
+                // 첫 번째 유효한 contentId 찾기 (썸네일용)
+                if (firstContentId == null && placeDto.getContentId() > 0) {
+                    firstContentId = placeDto.getContentId();
+                }
             }
             course.addDay(day);
         }
 
-        // ⬇️ 첫 번째 장소의 이미지 URL을 TourService를 통해 조회하고 설정
+        // --- 썸네일 조회 및 설정 로직 (이전과 동일) ---
         if (firstContentId != null) {
             try {
-                // TourService의 getCommonInfo 호출 (contentId는 String으로 전달)
                 List<CommonInfoDto> commonInfos = tourService.getCommonInfo(String.valueOf(firstContentId));
                 if (!commonInfos.isEmpty()) {
-                    String firstImage = commonInfos.get(0).getFirstimage(); // 첫 번째 결과의 firstimage 가져오기
-                    if (StringUtils.hasText(firstImage)) { // URL이 비어있지 않은지 확인
+                    String firstImage = commonInfos.get(0).getFirstimage();
+                    if (StringUtils.hasText(firstImage)) {
                         course.setThumbnailUrl(firstImage);
                         log.info("Set thumbnail for course {}: {}", requestDto.getTripTitle(), firstImage);
                     } else {
@@ -93,12 +98,13 @@ public class SavedCourseService {
                 }
             } catch (BusinessException e) {
                  log.error("Error calling Tour API for contentId: {}: {}", firstContentId, e.getMessage());
-                 // 썸네일 설정 실패 시 오류를 내지 않고 그냥 넘어갈 수 있음 (선택)
+            } catch (Exception e) {
+                 log.error("Unexpected error while fetching thumbnail for contentId: {}", firstContentId, e);
             }
         } else {
              log.warn("No valid first contentId found to fetch thumbnail for course: {}", requestDto.getTripTitle());
         }
-
+        // --- ---
 
         return savedCourseRepository.save(course).getId();
     }
