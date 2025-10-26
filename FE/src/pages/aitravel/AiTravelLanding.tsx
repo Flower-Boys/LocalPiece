@@ -136,7 +136,7 @@ const AiTravelLanding: React.FC = () => {
   const adaptToRouteCard = (x: SavedCourseSummary): RouteCardItem => {
     const cover = x.thumbnailUrl && x.thumbnailUrl.trim() !== "" ? x.thumbnailUrl : cityImg;
     const days = parseTripDays(x.tripTitle); // ⬅️ 여기!
-    console.log(days);
+    // console.log(days);
     return {
       id: String(x.courseId),
       title: x.tripTitle,
