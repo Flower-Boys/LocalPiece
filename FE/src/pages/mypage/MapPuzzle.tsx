@@ -134,7 +134,6 @@ export default function MapPuzzle({ visits, onSelectCity }: MapPuzzleProps) {
           });
         });
       } catch (e) {
-        console.error("SVG 로드/설정 중 오류:", e);
       }
     }
 

@@ -14,7 +14,6 @@ const LogoutConfirm = () => {
       // toast.success("로그아웃 되었습니다.");
       setOpenModal(null);
     } catch (err) {
-      console.error("로그아웃 실패:", err);
       toast.error("로그아웃 중 오류가 발생했습니다.");
     }
   };

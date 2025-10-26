@@ -15,7 +15,6 @@ const CancelAccountConfirm = () => {
       toast.success("그동안 함께해 주셔서 감사했습니다 🥲");
       setOpenModal(null);
     } catch (err) {
-      console.error("회원 탈퇴 실패:", err);
       toast.error("회원 탈퇴 중 오류가 발생했습니다.");
     }
   };

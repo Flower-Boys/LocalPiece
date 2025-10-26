@@ -53,9 +53,6 @@ const MyPage = () => {
 
   // 보기 모드
   const [viewMode, setViewMode] = useState<"default" | "map" | "scrapbook" | "aitravel">("default");
-  useEffect(() => {
-    console.log("viewMode changed:", viewMode);
-  }, [viewMode]);
 
   // ✅ 유저 정보 상태 (닉네임만 우선 사용)
   type UserInfo = { nickname?: string; username?: string; email?: string };
@@ -83,7 +80,6 @@ const MyPage = () => {
         const info = await getUserInfo(); // API에서 nickname을 내려준다고 가정
         setUser(info);
       } catch (e: any) {
-        console.error("유저 정보 불러오기 실패:", e);
         setUserError("유저 정보를 불러오지 못했어요.");
       } finally {
         setUserLoading(false);
@@ -98,7 +94,6 @@ const MyPage = () => {
         const data = await getMyBlogs();
         setBlogs(data);
       } catch (err) {
-        console.error("블로그 불러오기 실패:", err);
       } finally {
         setLoading(false);
       }
@@ -115,7 +110,6 @@ const MyPage = () => {
         const data = await getMyPagePieces(); // GET /mypage/pieces
         setPieces(data);
       } catch (e) {
-        console.error("조각 불러오기 실패:", e);
       } finally {
         setPiecesLoading(false);
       }

@@ -52,7 +52,6 @@ export default function PieceCreateModal({ open, onClose, blogId, onCreated }: P
       onCreated?.(created.pieceId);
       onClose();
     } catch (e: any) {
-      console.error(e);
       toast.error(e?.response?.data?.message ?? "조각 생성 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
