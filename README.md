@@ -166,7 +166,7 @@ com.flowerguys.localpiece
 
 ```
 
-2. FastAPI (Blog Create)
+2. FastAPI
 
 ```bash
 AI/
