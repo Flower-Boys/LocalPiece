@@ -69,7 +69,16 @@ const RouteCard = ({
     >
       {/* 썸네일 */}
       <div className="relative aspect-[16/10] w-full overflow-hidden">
-        <img src={item.cover || Logo} alt={item.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+        <img
+          src={item.cover || Logo}
+          alt={item.title}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          onError={(e) => {
+            // ✅ 로드 실패 시 로고로 폴백 (무한 루프 방지)
+            const img = e.target as HTMLImageElement;
+            if (img.src !== Logo) img.src = Logo;
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute left-3 top-3 flex flex-wrap gap-1">
           <StatBadge icon={MapPinned} label={item.city} />
