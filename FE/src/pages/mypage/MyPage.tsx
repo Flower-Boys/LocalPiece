@@ -10,6 +10,7 @@ import defaultThumbnail from "@/assets/default-thumbnail.png";
 import MapPuzzle from "./MapPuzzle";
 import { Eye, Heart, MessageCircle, User } from "lucide-react";
 import MyAiTravelRoutes from "@/components/mypage/MyAiTravelRoutes";
+import { getUserInfo } from "@/api/auth";
 
 // ✅ 조각 API/타입
 import { getMyPagePieces } from "@/api/pieces";
@@ -56,6 +57,12 @@ const MyPage = () => {
     console.log("viewMode changed:", viewMode);
   }, [viewMode]);
 
+  // ✅ 유저 정보 상태 (닉네임만 우선 사용)
+  type UserInfo = { nickname?: string; username?: string; email?: string };
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
+  const [userError, setUserError] = useState<string | null>(null);
+
   // 조각
   const [pieces, setPieces] = useState<TravelPieceSummary[]>([]);
   const [piecesLoading, setPiecesLoading] = useState(false);
@@ -67,6 +74,23 @@ const MyPage = () => {
   const totalCities = Object.keys(sigunguCodeLabel).length;
 
   // ───────── 데이터 로드 ─────────
+  useEffect(() => {
+    // ✅ 유저 닉네임 불러오기
+    (async () => {
+      try {
+        setUserLoading(true);
+        setUserError(null);
+        const info = await getUserInfo(); // API에서 nickname을 내려준다고 가정
+        setUser(info);
+      } catch (e: any) {
+        console.error("유저 정보 불러오기 실패:", e);
+        setUserError("유저 정보를 불러오지 못했어요.");
+      } finally {
+        setUserLoading(false);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -142,8 +166,10 @@ const MyPage = () => {
       {/* 왼쪽 사이드바 */}
       <aside className="md:col-span-1 bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-md p-6 flex flex-col items-center text-center">
         <UserCircle size={80} className="text-gray-400 mb-4" />
-        <h1 className="text-xl font-bold text-gray-800 mb-1">마이페이지</h1>
-        <p className="text-sm text-gray-600">내 계정 관리 및 기록</p>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">{userLoading ? "로딩 중..." : userError ? "마이페이지" : user?.nickname ? `${user.nickname}님` : "마이페이지"}</h1>
+
+        {/* ✅ 부제도 닉네임 기반으로 조금 자연스럽게 */}
+        <p className="text-sm text-gray-600">{user?.nickname ? "여행 조각과 기록을 한눈에" : "내 계정 관리 및 기록"}</p>
 
         <div className="mt-6 flex flex-col gap-3 w-full">
           {/* 기본 보기 */}
