@@ -106,21 +106,47 @@ const AiTravelLanding: React.FC = () => {
   const canPrev = page > 0;
   const canNext = page + 1 < uiTotalPages;
 
-  // === RouteCard에 맞게 최소 변환 (임시 매핑) ===
-  const adaptToRouteCard = (x: SavedCourseSummary): RouteCardItem => {
-    // ✅ 썸네일 유효성 검사 (null/undefined/빈문자 대비)
-    const cover = x.thumbnailUrl && x.thumbnailUrl.trim() !== "" ? x.thumbnailUrl : cityImg;
+  // ✅ 제목에서 'n박 m일', 'm일', 'n박' 등을 파싱해 day(일수) 추출
+  const parseTripDays = (title: string): number => {
+    if (!title) return 0;
 
+    // 1) "7박 8일", "1박2일" 등 (공백/구두점 허용)
+    const reNightsDays = /(\d+)\s*박[^\d]{0,3}(\d+)\s*일/;
+    const nd = title.match(reNightsDays);
+    if (nd) return Number(nd[2]);
+
+    // 2) "m일 코스", "2일" 등
+    const reDaysOnly = /(\d+)\s*일/;
+    const d = title.match(reDaysOnly);
+    if (d) return Number(d[1]);
+
+    // 3) "n박"만 있는 경우 → 통상 n+1일로 간주
+    const reNightsOnly = /(\d+)\s*박/;
+    const n = title.match(reNightsOnly);
+    if (n) return Number(n[1]) + 1;
+
+    // 4) "당일치기/원데이" 처리
+    if (/(당일|원데이)/.test(title)) return 1;
+
+    return 0; // 못 찾으면 0
+  };
+
+  // === RouteCard에 맞게 최소 변환 (임시 매핑) ===
+
+  const adaptToRouteCard = (x: SavedCourseSummary): RouteCardItem => {
+    const cover = x.thumbnailUrl && x.thumbnailUrl.trim() !== "" ? x.thumbnailUrl : cityImg;
+    const days = parseTripDays(x.tripTitle); // ⬅️ 여기!
+    console.log(days);
     return {
       id: String(x.courseId),
       title: x.tripTitle,
-      city: x.authorNickname, // 작성자명 위치에 매핑
-      days: 0, // 서버 필드 없음 → 0
-      distanceKm: 0, // 서버 필드 없음 → 0
-      tags: [], // 서버 필드 없음 → 빈 배열
-      cover, // ✅ 여기!
-      stops: [x.themeTitle], // 테마를 간단 표시
-      rating: 0, // 서버 필드 없음 → 0
+      city: x.authorNickname,
+      days, // ⬅️ 파싱 결과 주입
+      distanceKm: 0,
+      tags: [],
+      cover,
+      stops: [x.themeTitle],
+      rating: 0,
     };
   };
 
