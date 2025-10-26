@@ -13,6 +13,7 @@ import AuthButtons from "../../components/share/auth/AuthButtons";
 import { Pencil, Puzzle } from "lucide-react";
 import PieceCreateModal from "@/components/pieces/PieceCreateModal";
 import { deleteMyPagePiece } from "@/api/pieces";
+import HashtagList from "@/components/blog/HashtagList";
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +59,6 @@ const BlogDetail = () => {
       toast.success("블로그가 삭제되었습니다.");
       navigate("/blog"); // ✅ 삭제 후 블로그 목록으로 이동
     } catch (err) {
-      console.error(err);
       toast.error("블로그 삭제 중 오류가 발생했습니다.");
     }
   };
@@ -87,7 +87,6 @@ const BlogDetail = () => {
       // 서버 반영
       await toggleBlogLike(blog.id);
     } catch (err) {
-      console.error(err);
       // 롤백
       setLiked((v) => !v);
       setLikeCount((c) => c - delta);
@@ -117,12 +116,10 @@ const BlogDetail = () => {
             const userData = await getUserInfo();
             setUserInfo(userData);
           } catch (err) {
-            console.warn("유저 정보 불러오기 실패:", err);
             setUserInfo(null);
           }
         }
       } catch (err: any) {
-        console.error(err);
         if (err.response?.status === 403) {
           setError("비공개 블로그입니다. 접근 권한이 없습니다.");
         } else if (err.response?.status === 404) {
@@ -231,11 +228,8 @@ const BlogDetail = () => {
 
           {/* 태그 */}
           <div className="flex gap-2 mb-6">
-            {(blog.hashtags && blog.hashtags.length > 0 ? blog.hashtags : ["여행", "기록"]).map((tag, idx) => (
-              <span key={idx} className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600">
-                #{tag}
-              </span>
-            ))}
+            {/* 태그 */}
+            <HashtagList tags={blog.hashtags && blog.hashtags.length > 0 ? blog.hashtags : ["여행", "기록"]} initialCount={6} />
           </div>
 
           <hr className="my-8 border-gray-300" />
