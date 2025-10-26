@@ -39,10 +39,8 @@ const AiTravelDetailPage: React.FC = () => {
   const { state } = useLocation() as { state?: TripData };
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  console.log("AiTravelDetailPage id:", id);
 
   const [data, setData] = useState<TripData | null>(state ?? null);
-  console.log(data);
   const [loading, setLoading] = useState(!state);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +55,6 @@ const AiTravelDetailPage: React.FC = () => {
         setLoading(true);
         setError(null);
         const res = await getCourseDetail(id); // id: string OK
-        console.log(res);
         const trip = adapt(res);
         if (!cancelled) setData(trip);
       } catch (e: any) {
