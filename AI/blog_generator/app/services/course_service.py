@@ -148,12 +148,31 @@ class CourseService:
             current_time = datetime.combine(current_date, time(9, 0))
             end_of_day = datetime.combine(current_date, time(21, 0))
 
-            if start_spot.get('category_name') not in KEYWORD_CATEGORY_MAP["숙박"]:
-                visited_spot_ids.add(start_spot['content_id'])
-                start_spot_type = "meal" if start_spot['category_name'] in meal_categories else "spot"
-                stay_time = CATEGORY_STAY_TIME.get(start_spot['category_name'], 90)
-                daily_route_details.append({"details": start_spot, "type": start_spot_type, "arrival_time": current_time, "departure_time": current_time + timedelta(minutes=stay_time)})
+            start_spot_category = start_spot.get('category_name')
 
+            if start_spot_category in KEYWORD_CATEGORY_MAP["숙박"]:
+                # 2일차 이상: 시작점이 숙소인 경우
+                # 출발 시간(9시)만 기록하고, 머무는 시간은 0으로 설정
+                daily_route_details.append({
+                    "details": start_spot,
+                    "type": "accommodation",
+                    "arrival_time": current_time,
+                    "departure_time": current_time  # 출발 시간이 9시
+                })
+                # 숙소는 visited_spot_ids에 추가하지 않아도 됩니다. (숙소는 매일 방문 가능)
+            else:
+                # 1일차: 시작점이 관광지/맛집인 경우
+                visited_spot_ids.add(start_spot['content_id'])
+                start_spot_type = "meal" if start_spot_category in meal_categories else "spot"
+                stay_time = CATEGORY_STAY_TIME.get(start_spot_category, 90)
+                departure_time = current_time + timedelta(minutes=stay_time)
+                daily_route_details.append({
+                    "details": start_spot,
+                    "type": start_spot_type,
+                    "arrival_time": current_time,
+                    "departure_time": departure_time
+                })
+                
             meal_times = {"lunch": (time(12, 0), time(13, 30)), "dinner": (time(18, 0), time(19, 30))}; added_meals, cafe_added = [], False
             if daily_route_details and daily_route_details[0]['type'] == "meal":
                 if time(9,0) <= current_time.time() < time(15,0): added_meals.append("lunch")
