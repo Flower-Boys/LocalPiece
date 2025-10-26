@@ -14,6 +14,7 @@ import type {
   PageResponse,
   SavedCourseSummary,
 } from "@/types/aiTravel";
+export type CityMeta = { code: number; name: string };
 
 // ------ 삭제 API ------
 export const deleteSavedCourse = async (contentId: string | number) => {
@@ -36,7 +37,7 @@ export const coursesGenerate = async (payload: VisitCreateRequest) => {
 };
 
 export const getCourseDetail = async (contentId: string) => {
-  const res = await apiClient.get<CourseDetailResponse>(`/saved-courses/${contentId}`);
+  const res = await apiClient.get<CourseDetailResponse>(`/public/saved-courses/${contentId}`);
   console.log(res);
   return res.data;
 };
@@ -81,7 +82,7 @@ const asNumber = (v: unknown): number => {
 
 // ------ (수정) 생성 응답 → 저장 요청 직렬화 ------
 
-export const toSaveCourseRequest = (trip: GeneratedTripResponse, option: Course): SaveCourseRequest => {
+export const toSaveCourseRequest = (trip: GeneratedTripResponse, option: Course, payload: VisitCreateRequest): SaveCourseRequest => {
   const days = option.days.map((d) => ({
     day: asNumber(d.day),
     date: asDateString(cleanStr(d.date)), // ✅ DateString으로 내로잉
@@ -114,8 +115,11 @@ export const saveCourseOption = async (payload: SaveCourseRequest) => {
   return data;
 };
 
-export const generateAndSaveAll = async (payload: VisitCreateRequest) => {
+export const generateAndSaveAll = async (payload: VisitCreateRequest, CityMeta: CityMeta[]) => {
   const generated = await coursesGenerate(payload);
+  console.log(payload);
+  console.log("Generated trip:", generated);
+  console.log("CityMeta:", CityMeta);
 
   const results: {
     index: number;
@@ -127,7 +131,7 @@ export const generateAndSaveAll = async (payload: VisitCreateRequest) => {
 
   for (let i = 0; i < generated.courses.length; i++) {
     const course = generated.courses[i];
-    const req = toSaveCourseRequest(generated, course);
+    const req = toSaveCourseRequest(generated, course, payload);
 
     try {
       const data = await saveCourseOption(req);
