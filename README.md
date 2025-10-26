@@ -251,7 +251,7 @@ AI/
 🔗 [LocalPiece API 문서 (Notion)](https://min9yu.notion.site/API-21a3147c29e080658b98f44de740ec88?source=copy_link)
 
 ### 🌐 배포 링크  
-🔗 [https://localpiece.vercel.app](https://localpiece.netlify.app/)
+🔗 [https://localpiece.netlify.app/](https://localpiece.netlify.app/)
 
 ---
 
