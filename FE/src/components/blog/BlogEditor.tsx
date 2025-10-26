@@ -364,7 +364,6 @@ export default function BlogEditor({
 
       await onSubmit(payload, newFiles);
     } catch (e: any) {
-      console.error(e);
       alert(e?.response?.data?.message ?? "저장 중 오류가 발생했습니다.");
     } finally {
       setSaving(false);
