@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, generatePath } from "react-router-dom";
 import { MapPinned, Clock4, ChevronRight, Star } from "lucide-react";
 import { RouteCardItem } from "@/types/aiTravel";
 import Logo from "@/assets/Logo.png";
@@ -32,12 +32,12 @@ const LikeStar = ({ value }: { value: number }) => {
 
 const RouteCard = ({
   item,
-  to, // true/경로 문자열/undefined → undefined면 기본 상세 경로 사용
+  // to, // true/경로 문자열/undefined → undefined면 기본 상세 경로 사용
   state,
   detailPathBase = "/ai/travel/detail",
 }: {
   item: RouteCardItem;
-  to?: string | boolean; // 경로 문자열 또는 boolean
+  // to?: string | boolean; // 경로 문자열 또는 boolean
   state?: RouteCardState;
   detailPathBase?: string; // 기본 상세 경로 prefix
 }) => {
@@ -58,10 +58,9 @@ const RouteCard = ({
   const disabled = courseId == null;
 
   // 링크 타겟 계산
-  const linkHref = typeof to === "string" ? to : `${detailPathBase}/${courseId ?? ""}`; // courseId 없으면 버튼 비활성로 fallback
+  const linkHref = courseId != null ? generatePath(`${detailPathBase}/:id`, { id: String(courseId) }) : "";
 
-  const showLink = !disabled && (to === undefined || to === true || typeof to === "string");
-
+  const showLink = courseId != null; // to 값 무시하고 courseId가 있을 때만 링크
   return (
     <article
       className="group relative overflow-hidden rounded-2xl border border-gray-200 
