@@ -198,7 +198,7 @@ class CourseService:
                         if available_meals: next_place, place_type = self._find_closest_place(current_location, available_meals), "meal"; added_meals.append(next_meal_type)
                 if not next_place:
                     available_spots = [p for p in spot_pool if p['content_id'] not in visited_spot_ids]
-                    if not available_spots: break
+                    # if not available_spots: break
                     closest_spot = self._find_closest_place(current_location, available_spots)
                     if closest_spot: next_place, place_type = closest_spot, "spot"
                 
