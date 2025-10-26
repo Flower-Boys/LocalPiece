@@ -1,0 +1,313 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Heart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getBlogDetail, toggleBlogLike, deleteBlog } from "../../api/blog";
+import { getUserInfo } from "@/api/auth";
+import { BlogDetailResponse } from "../../types/blog";
+import { User } from "@/types/users";
+import CommentSection from "../../components/blog/CommentSection";
+import { useAuthStore } from "../../store/authStore";
+import toast from "react-hot-toast";
+import SearchBar from "../../components/home/SearchBar";
+import AuthButtons from "../../components/share/auth/AuthButtons";
+import { Pencil, Puzzle } from "lucide-react";
+import PieceCreateModal from "@/components/pieces/PieceCreateModal";
+import { deleteMyPagePiece } from "@/api/pieces";
+import HashtagList from "@/components/blog/HashtagList";
+
+const BlogDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const [blog, setBlog] = useState<BlogDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ✅ 좋아요 상태
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  const [userInfo, setUserInfo] = useState<User | null>(null);
+
+  // 전역 상태에서 로그인 여부 확인
+  const { isLoggedIn } = useAuthStore();
+
+  // 여행지 조각 추가 모달 상태
+  const [openPieceModal, setOpenPieceModal] = useState(false);
+
+  // 여행지 조각 삭제 핸들러
+  const handleDeletePiece = async (pieceId: string | number) => {
+    if (!blog) return;
+    if (!window.confirm("정말 이 블로그의 여행지 조각을 삭제하시겠습니까?")) return;
+
+    await deleteMyPagePiece(pieceId);
+    toast.success("여행지 조각이 삭제되었습니다.");
+
+    // 0.8초 정도 기다렸다가 새로고침
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
+  };
+
+  const handleDeleteBlog = async () => {
+    if (!blog) return;
+    if (!window.confirm("정말 블로그를 삭제하시겠습니까?")) return;
+
+    try {
+      await deleteBlog(blog.id);
+      toast.success("블로그가 삭제되었습니다.");
+      navigate("/blog"); // ✅ 삭제 후 블로그 목록으로 이동
+    } catch (err) {
+      toast.error("블로그 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleLike = async () => {
+    if (!isLoggedIn) {
+      toast("🚫 로그인이 필요합니다.");
+      return;
+    }
+    if (!blog || likeLoading) return; // 연타 방지
+
+    const nextLiked = !liked; // 낙관적 토글
+    const delta = nextLiked ? +1 : -1;
+
+    try {
+      setLikeLoading(true);
+
+      // 낙관적 업데이트
+      setLiked(nextLiked);
+      setLikeCount((c) => c + delta);
+
+      // ▶️ 여기서 단 한 번만 토스트
+      if (nextLiked) toast.success("❤️ 좋아요를 눌렀습니다!");
+      else toast("💔 좋아요를 취소했습니다.");
+
+      // 서버 반영
+      await toggleBlogLike(blog.id);
+    } catch (err) {
+      // 롤백
+      setLiked((v) => !v);
+      setLikeCount((c) => c - delta);
+      toast.error("좋아요 처리 중 오류가 발생했습니다.");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        if (!id) return;
+
+        const token = localStorage.getItem("accessToken") || undefined;
+
+        // 블로그 먼저
+        const blogData = await getBlogDetail(id, token);
+        setBlog(blogData);
+        setLiked(blogData.likedByCurrentUser);
+        setLikeCount(blogData.likeCount);
+
+        // 로그인된 경우에만 내 정보 요청
+        if (isLoggedIn) {
+          try {
+            const userData = await getUserInfo();
+            setUserInfo(userData);
+          } catch (err) {
+            setUserInfo(null);
+          }
+        }
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          setError("비공개 블로그입니다. 접근 권한이 없습니다.");
+        } else if (err.response?.status === 404) {
+          setError("블로그를 찾을 수 없습니다.");
+        } else {
+          setError("데이터 불러오는 중 오류가 발생했습니다.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  if (loading) return <div className="text-center py-10">로딩 중...</div>;
+  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (!blog) return null;
+
+  const handleSearch = (params: { sigunguCode?: string; contentTypeId?: string; keyword?: string }) => {
+    const nextParams = new URLSearchParams();
+
+    if (params.sigunguCode) nextParams.set("sigunguCode", params.sigunguCode);
+    if (params.contentTypeId) nextParams.set("contentTypeId", params.contentTypeId);
+    if (params.keyword) nextParams.set("keyword", params.keyword);
+
+    nextParams.set("page", "1"); // 검색 시 항상 1페이지부터 시작
+    nextParams.set("arrange", "R"); // ✅ 대표이미지 + 생성일순 정렬
+    navigate({ pathname: "/", search: nextParams.toString() });
+  };
+  // ✅ 블로그 수정 페이지로 이동
+  const handleEditBlog = () => {
+    if (!blog) return;
+    navigate(`/blog/${blog.id}/edit`);
+  };
+
+  return (
+    <div className="w-full">
+      {/* ✅ 상단 헤더: 전체폭 */}
+      <section className="from-pink-500 to-red-500 text-white py-3 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[1fr,2fr,1fr] items-center gap-4">
+          <div></div>
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <SearchBar onSearch={handleSearch} />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <AuthButtons />
+          </div>
+        </div>
+      </section>
+      <div className="border-b py-2 border-gray-300"></div>
+
+      {/* ✅ 본문 전체: 중앙정렬 */}
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* 대표 이미지 */}
+        {blog.contents?.find((c) => c.contentType === "IMAGE") && (
+          <div className="relative">
+            <img src={blog.contents.find((c) => c.contentType === "IMAGE")?.content || ""} alt={blog.title || "블로그 이미지"} className="w-full h-72 object-cover rounded-t-lg" />
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute top-4 right-4 flex items-center gap-1 px-3 py-2 rounded-full bg-white/80 text-gray-800 shadow hover:bg-white hover:text-black transition"
+            >
+              <ArrowLeft size={18} />
+              <span className="text-sm font-medium">뒤로가기</span>
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 h-10 bg-white rounded-t-3xl"></div>
+          </div>
+        )}
+
+        {/* 본문 */}
+        <div className="bg-white rounded-t-3xl -mt-6 shadow-sm p-6">
+          {/* 제목 + 뒤로가기 */}
+          <div className="flex justify-between items-center mb-2">
+            <h1 className="text-3xl font-bold">{blog.title || "제목 없음"}</h1>
+          </div>
+
+          {/* 작성자 + 날짜 + 좋아요 */}
+          <div className="flex items-center gap-3 mb-6 text-sm text-gray-500">
+            <span className="font-medium text-gray-700">✍️ 작성자: {blog.author || "알 수 없음"}</span>
+            <span>·</span>
+            <span>
+              {blog.createdAt
+                ? new Date(blog.createdAt).toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    timeZone: "Asia/Seoul",
+                  })
+                : "날짜 없음"}
+            </span>
+
+            <span>·</span>
+            <button
+              onClick={handleLike}
+              disabled={likeLoading}
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition ${liked ? "bg-rose-100 text-rose-500" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+            >
+              <Heart size={16} fill={liked ? "currentColor" : "none"} />
+              <div className="flex flex-row items-center justify-center">
+                {liked} {likeCount}
+              </div>
+            </button>
+          </div>
+
+          {/* 태그 */}
+          <div className="flex gap-2 mb-6">
+            {/* 태그 */}
+            <HashtagList tags={blog.hashtags && blog.hashtags.length > 0 ? blog.hashtags : ["여행", "기록"]} initialCount={6} />
+          </div>
+
+          <hr className="my-8 border-gray-300" />
+
+          {/* 본문 출력 */}
+          <div className="prose max-w-none">
+            {blog.contents && blog.contents.length > 0 ? (
+              blog.contents.map((c) =>
+                c.contentType === "TEXT" ? (
+                  <p key={c.sequence} dangerouslySetInnerHTML={{ __html: c.content || "" }} />
+                ) : (
+                  <img key={c.sequence} src={c.content || ""} alt={`image-${c.sequence}`} className="rounded-lg my-4" />
+                )
+              )
+            ) : (
+              <p>내용이 없습니다.</p>
+            )}
+          </div>
+
+          <hr className="mt-20 mb-20 border-gray-300" />
+          <div className="flex justify-end gap-2">
+            {userInfo?.nickname === blog.author && (
+              <>
+                {blog.savedAsPiece ? (
+                  <button
+                    onClick={() => handleDeletePiece(blog.pieceId)} // 삭제 로직 함수
+                    className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 text-sm inline-flex items-center gap-1"
+                  >
+                    <Puzzle size={16} />
+                    여행지 조각 삭제
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setOpenPieceModal(true)} // 생성 모달 열기
+                    className="px-4 py-2 rounded-lg bg-black text-white hover:bg-black/90 text-sm inline-flex items-center gap-1"
+                  >
+                    <Puzzle size={16} />
+                    여행지 조각 생성
+                  </button>
+                )}
+
+                {/* ✏️ 수정 버튼 */}
+                <button onClick={handleEditBlog} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm">
+                  <span className="inline-flex items-center gap-1">
+                    <Pencil size={16} />
+                    수정
+                  </span>
+                </button>
+
+                {/* 🗑 삭제 버튼 (기존) */}
+                <button onClick={handleDeleteBlog} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm">
+                  글 삭제
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* ✅ 댓글 섹션 */}
+          <CommentSection
+            blogId={blog.id}
+            userId={userInfo?.id ?? null}
+            comments={blog.comments || []}
+            onAdd={(newComment) => setBlog((prev) => (prev ? { ...prev, comments: [newComment, ...(prev.comments || [])] } : prev))}
+            onDelete={(commentId) => setBlog((prev) => (prev ? { ...prev, comments: prev.comments?.filter((c) => c.commentId !== commentId) } : prev))}
+          />
+        </div>
+      </div>
+      <PieceCreateModal
+        open={openPieceModal}
+        onClose={() => setOpenPieceModal(false)}
+        blogId={blog.id}
+        onCreated={(pieceId) => {
+          // 생성 성공 후 필요한 후처리(알림, 이동 등) 여기서 해도 됨.
+          // 예: navigate(`/mypage/pieces/${pieceId}`);
+        }}
+      />
+    </div>
+  );
+};
+
+export default BlogDetail;

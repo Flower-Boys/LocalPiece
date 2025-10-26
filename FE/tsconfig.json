@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["node", "vite/client"],
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true, // ✅ node_modules 타입검사 스킵 (supercluster 에러 방지)
+    "rootDir": "src", // ✅ 소스 경로 지정
+    "noEmit": true // ✅ 컴파일된 결과물 생성 안함
+  },
+  "include": ["src", "src/types/**/*.d.ts"],
+  "exclude": ["node_modules"]
+}
