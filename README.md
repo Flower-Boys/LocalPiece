@@ -21,21 +21,21 @@
 
 > **여행 루트 생성부터 블로그 기록까지, 단 한 번의 클릭으로 완성되는 AI 여행 서비스**
 
-- 경상북도 공공데이터 기반 여행지 데이터 활용  
-- AI가 여행 목적·분위기·동행자 정보를 기반으로 맞춤형 일정 생성  
-- 여행 후 방문지를 기반으로 블로그 자동 작성  
-- 여행지를 수집하며 “여행 퍼즐(Piece)”을 완성하는 게이미피케이션 시스템 제공  
+- 경상북도 공공데이터 기반 여행지 데이터 활용
+- AI가 여행 목적·분위기·동행자 정보를 기반으로 맞춤형 일정 생성
+- 여행 후 방문지를 기반으로 블로그 자동 작성
+- 여행지를 수집하며 “여행 퍼즐(Piece)”을 완성하는 게이미피케이션 시스템 제공
 
 ---
 
 ## 🚀 주요 기능
 
-1. **AI 여행 일정 생성** — 사용자 입력 기반 맞춤형 여행 루트 추천  
-2. **AI 블로그 자동 생성** — 방문지 및 이미지 기반 포스트 자동 작성  
-3. **여행 조각(Piece) 시스템** — 수집형 퍼즐 진척도 시각화  
-4. **여행지 목록 및 상세 페이지** — 관광/맛집/체험 등 카테고리별 검색  
-5. **마이페이지** — 나의 코스, 블로그, 조각 관리  
-6. **반응형 UI** — 모든 기기에서 최적화된 화면 구성  
+1. **AI 여행 일정 생성** — 사용자 입력 기반 맞춤형 여행 루트 추천
+2. **AI 블로그 자동 생성** — 방문지 및 이미지 기반 포스트 자동 작성
+3. **여행 조각(Piece) 시스템** — 수집형 퍼즐 진척도 시각화
+4. **여행지 목록 및 상세 페이지** — 관광/맛집/체험 등 카테고리별 검색
+5. **마이페이지** — 나의 코스, 블로그, 조각 관리
+6. **반응형 UI** — 모든 기기에서 최적화된 화면 구성
 
 ---
 
@@ -59,6 +59,7 @@
 ![pnpm](https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white)
 
 ---
+
 ### ⚙️ 백엔드
 
 ![Java](https://img.shields.io/badge/Java-007396.svg?style=for-the-badge&logo=openjdk&logoColor=white)
@@ -70,6 +71,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)
 
 ---
+
 ### 🧠 AI
 
 ![Python](https://img.shields.io/badge/Python-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)
@@ -121,8 +123,9 @@
 
 ### 📊 아키텍처 구조
 
-### 📦 프론트엔드
+![ERD](image/erd.jpg)
 
+### 📦 프론트엔드
 
 ```bash
 src/
@@ -189,12 +192,12 @@ AI/
 
 ## 👨‍👩‍👧‍👦 팀원 정보
 
-| 이름 | 역할 | 이메일 |
-|:--:|:--:|:--:|
-| **정민규** | 팀장 / 인프라 / AI / 백엔드 |  |
-| **임재열** | 프론트엔드 / AI / 백엔드 | a01092201761@gmail.com |
-| **우준규** | 프론트엔드 |  |
-| **송주헌** | 백엔드 / 데이터베이스 |  |
+|    이름    |            역할             |                  GitHub                  |         이메일         |
+| :--------: | :-------------------------: | :--------------------------------------: | :--------------------: |
+| **정민규** | 팀장 / 인프라 / AI / 백엔드 |  [GitHub](https://github.com/Chungmingyu)  |    ktfigs@gmail.com    |
+| **임재열** |  프론트엔드 / AI / 백엔드   | [GitHub](https://github.com/JYeol97) | a01092201761@gmail.com |
+| **우준규** |         프론트엔드          |    |                        |
+| **송주헌** |    백엔드 / 데이터베이스    |    |                        |
 
 ---
 
@@ -204,53 +207,59 @@ AI/
 
 ### 임재열
 
-- **프론트엔드 전체 설계 및 개발**  
-  - React + TypeScript 기반 구조 설계  
-  - Zustand 전역 상태관리 및 Axios 인터셉터 구성  
-  - TailwindCSS로 반응형 UI 구축  
+- **프론트엔드 전체 설계 및 개발**
 
-- **AI 기능 연동 (블로그 자동 작성)**  
-  - Tiptap 기반 에디터를 활용한 AI 블로그 자동 작성 기능 구현  
-  - AI 생성 API 파라미터 처리 및 결과 렌더링 로직 구현  
-  - 이미지 업로드 및 텍스트/이미지 혼합 콘텐츠 직렬화 처리  
+  - React + TypeScript 기반 구조 설계
+  - Zustand 전역 상태관리 및 Axios 인터셉터 구성
+  - TailwindCSS로 반응형 UI 구축
 
-- **백엔드 기능 구현 (Spring Boot)**  
-  - 회원 CRUD 기능 개발 (회원가입, 로그인, 수정, 삭제)  
-  - JWT 기반 인증 및 BCrypt 비밀번호 암호화 적용  
-  - `/api/users/` 통일된 REST API 구조 설계  
+- **AI 기능 연동 (블로그 자동 작성)**
 
-- **UX/UI**  
-  - Framer Motion + Lottie로 인터랙션 구현  
-  - Toast 알림, Skeleton UI 등 사용자 경험 개선  
+  - Tiptap 기반 에디터를 활용한 AI 블로그 자동 작성 기능 구현
+  - AI 생성 API 파라미터 처리 및 결과 렌더링 로직 구현
+  - 이미지 업로드 및 텍스트/이미지 혼합 콘텐츠 직렬화 처리
 
-- **지도 및 시각화**  
-  - Google Maps API 기반 여행 루트 시각화  
-  - 마커·경로·거리 계산 등 기능 구현  
+- **백엔드 기능 구현 (Spring Boot)**
+
+  - 회원 CRUD 기능 개발 (회원가입, 로그인, 수정, 삭제)
+  - JWT 기반 인증 및 BCrypt 비밀번호 암호화 적용
+  - `/api/users/` 통일된 REST API 구조 설계
+
+- **UX/UI**
+
+  - Framer Motion + Lottie로 인터랙션 구현
+  - Toast 알림, Skeleton UI 등 사용자 경험 개선
+
+- **지도 및 시각화**
+  - Google Maps API 기반 여행 루트 시각화
+  - 마커·경로·거리 계산 등 기능 구현
 
 ### 우준규
 
 ### 송주헌
 
-
 ---
 
 ## 🧩 기능 시연
 
-| AI 여행 일정 생성 | 여행 조각 시스템 | AI 블로그 자동 생성 |
-|:------------------:|:----------------:|:-------------------:|
+|         AI 여행 일정 생성         |      여행 조각 시스템      |   AI 블로그 자동 생성   |
+| :-------------------------------: | :------------------------: | :---------------------: |
 | ![ai_travel](image/ai_travel.gif) | ![pieces](image/piece.gif) | ![blog](image/blog.gif) |
 
 ---
 
 ## 📌 산출물
 
-### 🧱 ERD  
+### 🧱 ERD
+
 ![ERD](image/localpiece_erd.png)
 
-### 📜 API 명세서  
+### 📜 API 명세서
+
 🔗 [LocalPiece API 문서 (Notion)](https://min9yu.notion.site/API-21a3147c29e080658b98f44de740ec88?source=copy_link)
 
-### 🌐 배포 링크  
+### 🌐 배포 링크
+
 🔗 [https://localpiece.netlify.app/](https://localpiece.netlify.app/)
 
 ---
