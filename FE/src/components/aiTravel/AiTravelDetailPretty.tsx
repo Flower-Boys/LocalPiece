@@ -106,13 +106,13 @@ const AiTravelDetailPretty: React.FC<{ data?: TripData }> = ({ data }) => {
     }
   };
 
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 lg:py-8 bg-white">
       {/* 헤더 */}
-      <header className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{trip.tripTitle}</h1>
+      <header className="flex flex-col gap-3 lg:flex-col xl:flex-row xl:items-end xl:justify-between">
+        {/* 왼쪽: 제목 + 정보 */}
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-snug break-keep">{trip.tripTitle}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span className="inline-flex items-center rounded-full bg-gradient-to-r from-sky-100 via-teal-50 to-emerald-50 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-sky-100">
               {trip.themeTitle}
@@ -125,21 +125,24 @@ const AiTravelDetailPretty: React.FC<{ data?: TripData }> = ({ data }) => {
           </div>
         </div>
 
-        {/* 액션 */}
-        <div className="mt-2 flex gap-2">
-          <button onClick={() => navigate(-1)} className="rounded-xl bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 active:translate-y-[1px]">
+        {/* 오른쪽: 액션 버튼 */}
+        <div className="mt-3 flex gap-2 self-end xl:self-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="rounded-xl bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 active:translate-y-[1px] flex items-center justify-center"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-200 active:translate-y-[1px]"
             onClick={() => copyToClipboard(window.location.href)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-200 active:translate-y-[1px] flex items-center justify-center"
           >
-            <Share2 className="mr-1 inline h-4 w-4" />
+            <Share2 className="mr-1 h-4 w-4" />
             공유
           </button>
-
         </div>
       </header>
+
       {/* Day 탭 */}
 
       <nav className="sticky top-0 z-10 mt-5 -mx-4 border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
