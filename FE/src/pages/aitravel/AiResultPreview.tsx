@@ -123,7 +123,6 @@ const AiResultPreview: React.FC = () => {
               <RouteCard
                 key={item.id}
                 item={withCover}
-                to={to}
                 state={{ course: trip!.courses[idx], courseId }} // 상세에서 필요하면 사용
               />
             );
