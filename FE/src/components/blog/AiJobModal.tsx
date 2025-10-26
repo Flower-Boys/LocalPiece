@@ -41,7 +41,6 @@ export default function AiJobModal({ jobId, open, onCompleted, onFailed, onClose
           onFailed?.("TIMEOUT");
         }
       } catch (e) {
-        console.error("Job 상태 조회 실패:", e);
       }
     };
 
