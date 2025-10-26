@@ -24,7 +24,7 @@ function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const totalPages = 302;
+  const totalPages = 288;
 
   // Home 컴포넌트 내부 상단 어딘가에
   const buildSearch = (patch: Record<string, string | undefined | null>) => {
@@ -94,7 +94,6 @@ function Home() {
 
         setTourItems(data);
       } catch (err) {
-        console.error("API 호출 오류:", err);
         setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
       } finally {
         setIsLoading(false);
