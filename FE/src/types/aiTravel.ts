@@ -137,6 +137,7 @@ export interface SavedCourseSummary {
   tripTitle: string;
   themeTitle: string;
   authorNickname: string;
+  thumbnailUrl: string | null;
   /** ISO 8601 string (e.g., "2025-10-25T17:02:00") */
   createdAt: string;
 }
@@ -173,8 +174,8 @@ export interface PageResponse<T> {
 }
 
 export type GetPublicSavedCoursesParams = {
-  page?: number;                  // 기본 0
-  size?: number;                  // 기본 10
+  page?: number; // 기본 0
+  size?: number; // 기본 10
   /** "createdAt,desc" 또는 ["createdAt,desc","tripTitle,asc"] 처럼 다중 */
-  sort?: string | string[];       // 기본 "createdAt,desc"
+  sort?: string | string[]; // 기본 "createdAt,desc"
 };
