@@ -29,7 +29,6 @@ export const logout = async () => {
     }, 1500);
   } catch (err) {
     toast.error("로그아웃 중 오류가 발생했습니다");
-    console.error(err);
   }
 };
 
@@ -49,7 +48,6 @@ export const cancelUser = async () => {
     }, 1500);
   } catch (err) {
     toast.error("회원탈퇴 중 오류가 발생했습니다");
-    console.error(err);
   }
 };
 

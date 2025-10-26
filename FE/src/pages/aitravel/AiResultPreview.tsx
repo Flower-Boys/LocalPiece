@@ -78,8 +78,6 @@ const AiResultPreview: React.FC = () => {
             setThumbs((prev) => (prev[id] ? prev : { ...prev, [id]: url }));
           }
         } catch (e) {
-          // 실패해도 무시(폴백 썸네일 사용)
-          console.warn("thumbnail fetch failed:", contentId, e);
         }
       });
       await Promise.allSettled(tasks);
@@ -100,7 +98,7 @@ const AiResultPreview: React.FC = () => {
         </div>
         <button
           onClick={() => nav("/ai/travel/builder")}
-          className="inline-flex h-10 items-center justify-center rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium transition hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+          className="inline-flex h-10 items-center justify-center rounded-lg border border-gray-200 text-white bg-gray-600 px-4 text-sm font-medium transition hover:bg-gray-400 hover:text-gray-900"
         >
           다시 선택
         </button>
@@ -118,12 +116,10 @@ const AiResultPreview: React.FC = () => {
             const withCover = { ...item, cover: thumbs[item.id] ?? Logo };
             const courseId = savedIdMap.get(idx); // 저장된 코스의 PK
             const to = courseId ? `/travel/route/${courseId}` : undefined;
-            console.log(picks);
             return (
               <RouteCard
                 key={item.id}
                 item={withCover}
-                to={to}
                 state={{ course: trip!.courses[idx], courseId }} // 상세에서 필요하면 사용
               />
             );
@@ -133,12 +129,6 @@ const AiResultPreview: React.FC = () => {
 
       <div className="mt-10 flex flex-col items-center gap-3">
         <p className="text-sm text-gray-600 dark:text-gray-300">맘에 드는 루트를 선택하면 상세(지도 + 타임라인 + 교통수단)로 이동합니다.</p>
-        {/* <button
-          onClick={() => alert("TODO: 상세 생성 페이지로 이동(지도/타임라인)")}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:translate-y-[1px] hover:shadow-md dark:bg-white dark:text-black"
-        >
-          <MapIcon className="h-5 w-5" /> 임시 · 상세 보기 예시
-        </button> */}
       </div>
     </main>
   );

@@ -277,7 +277,6 @@ const BlogWrite = () => {
       alert("블로그 저장 완료!");
       navigate(`/blog/${response.id}`);
     } catch (err) {
-      console.error("❌ 저장 실패:", err);
       alert("블로그 저장 중 오류가 발생했습니다.");
     }
   };

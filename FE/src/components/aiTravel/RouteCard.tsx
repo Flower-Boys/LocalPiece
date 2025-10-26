@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, generatePath } from "react-router-dom";
 import { MapPinned, Clock4, ChevronRight, Star } from "lucide-react";
 import { RouteCardItem } from "@/types/aiTravel";
 import Logo from "@/assets/Logo.png";
@@ -32,12 +32,12 @@ const LikeStar = ({ value }: { value: number }) => {
 
 const RouteCard = ({
   item,
-  to, // true/경로 문자열/undefined → undefined면 기본 상세 경로 사용
+  // to, // true/경로 문자열/undefined → undefined면 기본 상세 경로 사용
   state,
   detailPathBase = "/ai/travel/detail",
 }: {
   item: RouteCardItem;
-  to?: string | boolean; // 경로 문자열 또는 boolean
+  // to?: string | boolean; // 경로 문자열 또는 boolean
   state?: RouteCardState;
   detailPathBase?: string; // 기본 상세 경로 prefix
 }) => {
@@ -58,10 +58,9 @@ const RouteCard = ({
   const disabled = courseId == null;
 
   // 링크 타겟 계산
-  const linkHref = typeof to === "string" ? to : `${detailPathBase}/${courseId ?? ""}`; // courseId 없으면 버튼 비활성로 fallback
+  const linkHref = courseId != null ? generatePath(`${detailPathBase}/:id`, { id: String(courseId) }) : "";
 
-  const showLink = !disabled && (to === undefined || to === true || typeof to === "string");
-
+  const showLink = courseId != null; // to 값 무시하고 courseId가 있을 때만 링크
   return (
     <article
       className="group relative overflow-hidden rounded-2xl border border-gray-200 
@@ -70,7 +69,16 @@ const RouteCard = ({
     >
       {/* 썸네일 */}
       <div className="relative aspect-[16/10] w-full overflow-hidden">
-        <img src={item.cover || Logo} alt={item.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+        <img
+          src={item.cover || Logo}
+          alt={item.title}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          onError={(e) => {
+            // ✅ 로드 실패 시 로고로 폴백 (무한 루프 방지)
+            const img = e.target as HTMLImageElement;
+            if (img.src !== Logo) img.src = Logo;
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute left-3 top-3 flex flex-wrap gap-1">
           <StatBadge icon={MapPinned} label={item.city} />

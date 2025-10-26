@@ -29,7 +29,6 @@ const CommentSection = ({ blogId, userId, comments = [], onAdd, onDelete }: Prop
       onAdd?.(newComment); // 부모에 알림
       setContent(""); // 입력창 초기화
     } catch (err: any) {
-      console.error(err);
       if (err?.response?.status === 400) {
         alert("잘못된 요청입니다. 내용을 확인해주세요.");
       } else if (err?.response?.status === 401) {
@@ -56,7 +55,6 @@ const CommentSection = ({ blogId, userId, comments = [], onAdd, onDelete }: Prop
       // ✅ 성공 알림
       toast.success("댓글이 삭제되었습니다.");
     } catch (err: any) {
-      console.error(err);
       toast.error("댓글 삭제 중 오류가 발생했습니다."); // ❌ 실패 알림
     } finally {
       setDeleting(null);

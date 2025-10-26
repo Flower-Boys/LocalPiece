@@ -47,7 +47,6 @@ export default function MyAiTravelRoutes() {
       const list = await getMyCourses();
       setCourses(list ?? []);
     } catch (e) {
-      console.error(e);
       setError("여행 루트를 불러오지 못했습니다.");
     } finally {
       setLoading(false);
@@ -98,7 +97,6 @@ export default function MyAiTravelRoutes() {
       setTargetCourse(null);
       setTimeout(() => setBanner(null), 1400);
     } catch (e) {
-      console.error(e);
       setBanner({ type: "error", msg: "삭제 중 오류가 발생했습니다." });
       setConfirmOpen(false);
       setTimeout(() => setBanner(null), 1600);

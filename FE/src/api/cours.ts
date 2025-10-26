@@ -14,18 +14,17 @@ import type {
   PageResponse,
   SavedCourseSummary,
 } from "@/types/aiTravel";
+export type CityMeta = { code: number; name: string };
 
 // ------ 삭제 API ------
 export const deleteSavedCourse = async (contentId: string | number) => {
   const res = await apiClient.delete<void>(`/saved-courses/${contentId}`);
-  console.log(res);
   return res.data;
 };
 
 // ------ 기존: 마이페이지 조회 ------
 export const getMyCourses = async () => {
   const res = await apiClient.get<MyTripSummary[]>(`/saved-courses`);
-  console.log(res);
   return res.data;
 };
 
@@ -36,14 +35,13 @@ export const coursesGenerate = async (payload: VisitCreateRequest) => {
 };
 
 export const getCourseDetail = async (contentId: string) => {
-  const res = await apiClient.get<CourseDetailResponse>(`/saved-courses/${contentId}`);
+  const res = await apiClient.get<CourseDetailResponse>(`/public/saved-courses/${contentId}`);
   console.log(res);
   return res.data;
 };
 
 export const getCourseGetAll = async () => {
   const res = await apiClient.get<CourseDetailResponse[]>(`/saved-courses`);
-  console.log(res);
   return res.data;
 };
 
@@ -81,25 +79,33 @@ const asNumber = (v: unknown): number => {
 
 // ------ (수정) 생성 응답 → 저장 요청 직렬화 ------
 
-export const toSaveCourseRequest = (trip: GeneratedTripResponse, option: Course): SaveCourseRequest => {
+export const toSaveCourseRequest = (
+  trip: GeneratedTripResponse,
+  option: Course,
+  payload: VisitCreateRequest,
+  cityMeta: CityMeta[] // ⬅ 추가
+): SaveCourseRequest => {
   const days = option.days.map((d) => ({
     day: asNumber(d.day),
-    date: asDateString(cleanStr(d.date)), // ✅ DateString으로 내로잉
+    date: asDateString(cleanStr(d.date)),
     route: d.route.map((r) => ({
       order: asNumber(r.order),
-      type: r.type, // "spot" | "meal"
+      type: r.type,
       name: String(cleanStr(r.name)),
       category: String(cleanStr(r.category)),
       address: String(cleanStr(r.address)),
       content_id: asNumber(r.content_id),
-      arrival_time: asTimeString(cleanStr(r.arrival_time)), // ✅ TimeString 내로잉
-      departure_time: asTimeString(cleanStr(r.departure_time)), // ✅ TimeString 내로잉
+      arrival_time: asTimeString(cleanStr(r.arrival_time)),
+      departure_time: asTimeString(cleanStr(r.departure_time)),
       duration_minutes: asNumber(r.duration_minutes),
     })),
   }));
 
+  // ✅ 동적 타이틀 생성
+  const dynamicTitle = buildDynamicTitle(payload, cityMeta);
+
   return {
-    tripTitle: trip.trip_title, // snake -> camel
+    tripTitle: dynamicTitle, // ✅ 여기!
     courseOption: {
       days,
       theme_title: option.theme_title, // 백엔드 규격 유지
@@ -114,8 +120,9 @@ export const saveCourseOption = async (payload: SaveCourseRequest) => {
   return data;
 };
 
-export const generateAndSaveAll = async (payload: VisitCreateRequest) => {
+export const generateAndSaveAll = async (payload: VisitCreateRequest, CityMeta: CityMeta[]) => {
   const generated = await coursesGenerate(payload);
+
 
   const results: {
     index: number;
@@ -127,7 +134,8 @@ export const generateAndSaveAll = async (payload: VisitCreateRequest) => {
 
   for (let i = 0; i < generated.courses.length; i++) {
     const course = generated.courses[i];
-    const req = toSaveCourseRequest(generated, course);
+    // ⬇ CityMeta 추가 전달
+    const req = toSaveCourseRequest(generated, course, payload, CityMeta);
 
     try {
       const data = await saveCourseOption(req);
@@ -149,3 +157,53 @@ export async function getPublicSavedCourses(params: GetPublicSavedCoursesParams 
 
   return res.data;
 }
+
+// ------ (추가) 동적 타이틀 빌더 ------
+const calcNightsDays = (start: string, end: string) => {
+  const s = new Date(start);
+  const e = new Date(end);
+  const ms = e.getTime() - s.getTime();
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1; // 같은 날이면 1일
+  const nights = Math.max(0, days - 1);
+  return { nights, days };
+};
+
+const buildCityPart = (codes: number[], metas: CityMeta[]) => {
+  const names = codes.map((code) => metas.find((m) => m.code === code)?.name).filter(Boolean) as string[];
+  if (names.length === 0) return "미정";
+  if (names.length === 1) return names[0];
+  return `${names[0]} 외 ${names.length - 1}곳`;
+};
+// 마지막 글자 받침 유무로 '과/와' 결정
+const josaGW = (word: string) => {
+  if (!word) return "와";
+  const ch = word.charAt(word.length - 1);
+  const code = ch.charCodeAt(0);
+  // 한글 범위 외면 기본 '와'
+  if (code < 0xac00 || code > 0xd7a3) return "와";
+  const jong = (code - 0xac00) % 28;
+  return jong === 0 ? "와" : "과";
+};
+
+const buildCompanionPhrase = (companions: VisitCreateRequest["companions"]) => {
+  if (companions === "혼자") {
+    return "혼자 떠나는"; // ✅ '함께' 금지
+  }
+  // 예: "커플/친구와 함께 하는", "가족과 함께 하는"
+  return `${companions}${josaGW(companions)} 함께 하는`;
+};
+
+const buildKeywordPart = (keywords: VisitCreateRequest["keywords"]) => {
+  if (!keywords || keywords.length === 0) return "여행";
+  // “맛집여행!” 처럼 자연스럽게 붙여 쓰고, 2개 이상이면 가운데 점으로 구분
+  return keywords.length === 1 ? `${keywords[0]}여행` : `${keywords.join("·")} 여행`;
+};
+
+/** 예: "0박 1일! 구미시 커플/친구와 함께 하는 맛집여행!" */
+export const buildDynamicTitle = (payload: VisitCreateRequest, cityMeta: CityMeta[]) => {
+  const { nights, days } = calcNightsDays(payload.start_date, payload.end_date);
+  const cityPart = buildCityPart(payload.cities, cityMeta);
+  const companionPhrase = buildCompanionPhrase(payload.companions);
+  const keywordPart = buildKeywordPart(payload.keywords);
+  return `${nights}박 ${days}일! ${cityPart} ${companionPhrase} ${keywordPart}!`;
+};

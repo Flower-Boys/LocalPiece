@@ -69,8 +69,6 @@ const TourDetail = () => {
       typeId?: number | null;
     };
   };
-  console.log(state);
-
   const navigate = useNavigate();
 
   const [common, setCommon] = useState<TourCommonResponse | null>(null);
@@ -86,8 +84,6 @@ const TourDetail = () => {
     // 👉 Home으로 이동하면서 검색 파라미터 전달
     navigate("/", { state: params });
   };
-  // console.log(state.type);
-  // console.log(state.typeId);
   useEffect(() => {
     if (!state) return;
 
@@ -98,7 +94,6 @@ const TourDetail = () => {
 
         // 2) 최종 문자열 변환 (둘 다 없으면 undefined 유지)
         const contentTypeId = rawContentType == null ? undefined : String(rawContentType);
-        console.log(contentTypeId);
         // 사용
         const [commonRes, introRes, infoRes, imageRes] = await Promise.all([
           getTourCommon(state.id),
@@ -112,7 +107,6 @@ const TourDetail = () => {
         setInfo(infoRes || []);
         setImages(imageRes || []);
       } catch (err) {
-        console.error("관광지 상세조회 에러:", err);
       } finally {
         setLoading(false);
       }
@@ -124,9 +118,6 @@ const TourDetail = () => {
   if (!state) return <div className="p-10 text-center">잘못된 접근입니다.</div>;
 
   const { id, title, location, image, mapx, mapy, type } = state;
-  console.log(location);
-  console.log(mapx, mapy);
-
   // const heroImage = common?.firstimage || image || "https://placehold.co/1200x600/png";
   // const prettyType = contentTypeLabel[String(type)] || "정보";
   const phoneText = formatTel(common?.tel);
@@ -152,7 +143,8 @@ const TourDetail = () => {
   const effAddr1 = common?.addr1 ?? "";
   const effAddr2 = common?.addr2 ?? "";
   const effAddr = [effAddr1, effAddr2].filter(Boolean).join(" ") || state.location || "";
-  const heroImage = common?.firstimage || state.image;
+  const heroImage: string | null =
+    common?.firstimage && common.firstimage !== "https://placekitten.com/400/300" ? common.firstimage : state?.image && state.image !== "https://placekitten.com/400/300" ? state.image : null;
 
   // 좌표 (API common 우선 → state 보조)
   const effLng = toNum(common?.mapx ?? state.mapx); // x = 경도
