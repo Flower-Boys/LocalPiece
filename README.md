@@ -247,33 +247,33 @@ AI/
 ## 🎯 AI 여행 일정 기능
 
 ### 🗺️ AI 여행 일정 생성
-<video src="image/tourCreate.mkv" controls width="600"></video>
+<video src="image/tourCreate.gif" controls width="600"></video>
 
 ### 🔍 여행지 상세 조회
-<video src="image/tourGet.mkv" controls width="600"></video>
+<video src="image/tourGet.gif" controls width="600"></video>
 
 ### 📋 여행지 리스트 조회
-<video src="image/tourList.mkv" controls width="600"></video>
+<video src="image/tourList.gif" controls width="600"></video>
 
 ---
 
 ## ✏️ AI 블로그 자동 생성
 
 ### 🖼️ 블로그 자동 생성 (AI 분석)
-<video src="image/blogGenerate.mkv" controls width="600"></video>
+<video src="image/blogGenerate.gif" controls width="600"></video>
 
 ### 📝 블로그 직접 작성
-<video src="image/blogCreate.mkv" controls width="600"></video>
+<video src="image/blogCreate.gif" controls width="600"></video>
 
 ### 📚 블로그 리스트 조회
-<video src="image/blogList.mkv" controls width="600"></video>
+<video src="image/blogList.gif" controls width="600"></video>
 
 ---
 
 ## 👤 마이페이지
 
 ### 🙋‍♂️ 마이페이지 전체 기능
-<video src="image/myPage.mkv" controls width="600"></video>
+<video src="image/myPage.gif" controls width="600"></video>
 
 ---
 
